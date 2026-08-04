@@ -1,3 +1,15 @@
+# [1.11.0](https://github.com/auditmos/signmos/compare/v1.10.0...v1.11.0) (2026-08-04)
+
+
+### Bug Fixes
+
+* protect server functions with csrf middleware ([98f6cc0](https://github.com/auditmos/signmos/commit/98f6cc0812a8af0c1cb2ffc88c5c8e8f91a36694))
+
+
+### Features
+
+* redesign ui on shared design system ([3e232f2](https://github.com/auditmos/signmos/commit/3e232f22aadbf1f4f9bfa2f7b2d1c921fe6cd342))
+
 # [1.10.0](https://github.com/auditmos/signmos/compare/v1.9.5...v1.10.0) (2026-07-22)
 
 
