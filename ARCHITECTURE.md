@@ -108,8 +108,11 @@ All requests enter `src/server.ts`.
 
 ### Design System And Styling
 
+- `docs/DESIGN.md` is the design-system contract: layout, surfaces, color, copy, and which shared component to reach for.
 - `src/components/ui/*` contains generated Shadcn primitives.
-- `src/styles.css` contains Tailwind CSS v4 setup, Shadcn CSS variables, and theme tokens.
+- `src/components/layout/*` owns the page skeleton (`PageShell`, `PageHeader`, `Wordmark`).
+- `src/components/patterns/*` owns shared app patterns (`Panel`, `StatusBadge`, `TextLink`/`BackLink`, `NativeSelect`, `EmptyState`, `LoadingText`).
+- `src/styles.css` contains Tailwind CSS v4 setup, Shadcn CSS variables, brand theme tokens, and the self-hosted Inter Variable font faces (`public/fonts/`).
 - `src/lib/utils.ts` contains shared class-name utility behavior.
 - `src/components/theme/*` owns the app theme provider.
 

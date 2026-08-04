@@ -2,6 +2,8 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Pencil, Trash2, UserPlus } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,25 +173,25 @@ function AddRecipientsForm({
 	const canSubmit = canSubmitRecipientForm(sourcePdfReady, partnerRecipient, isEditingPartner);
 
 	return (
-		<form
+		<Panel
+			as="form"
 			aria-label="Add recipients"
-			className="rounded-lg border bg-card p-5"
 			onSubmit={(event) => {
 				handleRecipientSubmit(event, canSubmit, recipientsForm.handleSubmit);
 			}}
 		>
 			<div className="space-y-5">
 				<div>
-					<h2 className="font-semibold text-lg">Recipients</h2>
-					<p className="text-muted-foreground text-sm">
+					<PanelTitle>Recipients</PanelTitle>
+					<PanelDescription>
 						{hasVerifiedSenderDetails
 							? "Add the partner before preparing fields."
 							: "Add the sender and partner before preparing fields."}
-					</p>
+					</PanelDescription>
 				</div>
 				<div className="grid gap-4 sm:grid-cols-2">
 					{senderQuery.isLoading ? (
-						<p className="text-muted-foreground text-sm sm:col-span-2">Loading sender details.</p>
+						<LoadingText className="sm:col-span-2">Loading sender details…</LoadingText>
 					) : null}
 					{hasVerifiedSenderDetails ? (
 						<SenderSummary name={senderRecipientName} email={senderRecipientEmail} />
@@ -227,7 +229,7 @@ function AddRecipientsForm({
 						</>
 					)}
 					{recipientsQuery.isLoading ? (
-						<p className="text-muted-foreground text-sm sm:col-span-2">Loading recipients.</p>
+						<LoadingText className="sm:col-span-2">Loading recipients…</LoadingText>
 					) : null}
 					{partnerRecipient && !isEditingPartner ? (
 						<PartnerSummary
@@ -302,7 +304,7 @@ function AddRecipientsForm({
 					prepareUrl={prepareUrl}
 				/>
 			</div>
-		</form>
+		</Panel>
 	);
 }
 
@@ -416,14 +418,14 @@ function RecipientActions({
 	return (
 		<div className="flex flex-wrap gap-2">
 			<Button type="submit" disabled={isPending || isDisabled}>
-				<UserPlus className="mr-2 size-4" />
-				{isPending ? "Saving..." : isEditing ? "Save recipient" : "Add recipients"}
+				<UserPlus aria-hidden="true" className="size-4" />
+				{isPending ? "Saving…" : isEditing ? "Save recipient" : "Add recipients"}
 			</Button>
 			{prepareUrl ? (
 				<Button asChild variant="outline">
 					<a href={prepareUrl}>
 						Continue to prepare fields
-						<ArrowRight className="ml-2 size-4" />
+						<ArrowRight aria-hidden="true" className="size-4" />
 					</a>
 				</Button>
 			) : null}
@@ -451,11 +453,11 @@ function PartnerSummary({
 			</div>
 			<div className="flex flex-wrap gap-2">
 				<Button type="button" size="sm" variant="outline" onClick={onEdit} disabled={isPending}>
-					<Pencil className="mr-2 size-4" />
+					<Pencil aria-hidden="true" className="size-4" />
 					Edit recipient
 				</Button>
 				<Button type="button" size="sm" variant="outline" onClick={onDelete} disabled={isPending}>
-					<Trash2 className="mr-2 size-4" />
+					<Trash2 aria-hidden="true" className="size-4" />
 					Delete recipient
 				</Button>
 			</div>

@@ -23,6 +23,16 @@ export const Route = createRootRouteWithContext<{
 				name: "viewport",
 				content: "width=device-width, initial-scale=1",
 			},
+			{
+				name: "theme-color",
+				media: "(prefers-color-scheme: light)",
+				content: "#fafbfd",
+			},
+			{
+				name: "theme-color",
+				media: "(prefers-color-scheme: dark)",
+				content: "#14161f",
+			},
 			...seo({
 				title: "Signmos | No-Account PDF Signatures",
 				description: "Start a no-account PDF signature envelope and verify by email.",

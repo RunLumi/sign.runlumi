@@ -89,7 +89,7 @@ describe("history creator controls", () => {
 		expect(deleteDialog.textContent).toContain("permanently removes stored PDFs");
 		fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
 		await waitFor(() => expect(actionCalls).toEqual(["cancel", "delete"]));
-		await screen.findByText("No documents match these filters.");
+		await screen.findAllByText("No documents match these filters.");
 	});
 
 	it("resumes draft preparation through history access without a sender token", async () => {

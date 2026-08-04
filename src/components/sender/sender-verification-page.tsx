@@ -1,5 +1,7 @@
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -84,43 +86,32 @@ export function SenderVerificationPage({
 	}, [apiUrl, onVerified]);
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-xl space-y-6">
-				<div>
-					<p className="text-sm font-medium text-primary">Signmos</p>
-					<h1 className="mt-3 text-3xl font-semibold text-foreground">Sender verification</h1>
-				</div>
+		<PageShell width="narrow">
+			<PageHeader title="Sender verification" />
 
-				{state.status === "verifying" ? (
-					<Alert>
-						<Loader2 className="size-4 animate-spin" />
-						<AlertTitle>Verifying email</AlertTitle>
-						<AlertDescription>Checking this sender link.</AlertDescription>
-					</Alert>
-				) : null}
+			{state.status === "verifying" ? <LoadingText boxed>Verifying email…</LoadingText> : null}
 
-				{state.status === "verified" ? (
-					<Alert>
-						<Check className="size-4" />
-						<AlertTitle>Email verified</AlertTitle>
-						<AlertDescription>{state.email} is verified for this envelope.</AlertDescription>
-					</Alert>
-				) : null}
+			{state.status === "verified" ? (
+				<Alert>
+					<Check aria-hidden="true" className="size-4" />
+					<AlertTitle>Email verified</AlertTitle>
+					<AlertDescription>{state.email} is verified for this envelope.</AlertDescription>
+				</Alert>
+			) : null}
 
-				{state.status === "error" ? (
-					<Alert variant="destructive" role="alert">
-						<AlertTitle>Verification failed</AlertTitle>
-						<AlertDescription>{state.message}</AlertDescription>
-					</Alert>
-				) : null}
+			{state.status === "error" ? (
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Verification failed</AlertTitle>
+					<AlertDescription>{state.message}</AlertDescription>
+				</Alert>
+			) : null}
 
-				{state.status === "verified" ? (
-					<Button asChild>
-						<a href={state.uploadUrl}>Continue to upload PDF</a>
-					</Button>
-				) : null}
-			</section>
-		</main>
+			{state.status === "verified" ? (
+				<Button asChild>
+					<a href={state.uploadUrl}>Continue to upload PDF</a>
+				</Button>
+			) : null}
+		</PageShell>
 	);
 }
 

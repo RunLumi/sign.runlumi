@@ -1,6 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { FilePlus2, FileUp } from "lucide-react";
 import { useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
 import { SignatureProfilePanel } from "@/components/sender/signature-profile-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -123,50 +126,51 @@ export function EnvelopePreparationPage({
 	}
 
 	return (
-		<div className="min-h-dvh bg-background p-6">
-			<div className="mx-auto max-w-5xl space-y-6">
-				<div>
-					<h1 className="text-balance font-semibold text-2xl">Envelope preparation</h1>
-					<p className="text-muted-foreground text-pretty text-sm">
-						Create a sender signature profile and place fields for each signer.
-					</p>
-				</div>
-				{preparation ? (
-					<>
-						<SignatureProfilePanel
-							envelopeId={preparation.envelopeId}
-							senderSessionToken={senderSessionToken}
-							historyAccess={historyAccess}
-						/>
-						<EnvelopeFieldEditor
-							envelopeId={preparation.envelopeId}
-							recipients={preparation.recipients}
-							senderSessionToken={senderSessionToken}
-							historyAccess={historyAccess}
-						/>
-						<SendEnvelopePanel
-							envelopeId={preparation.envelopeId}
-							senderSessionToken={senderSessionToken}
-							historyAccess={historyAccess}
-						/>
-					</>
-				) : (
-					<section className="rounded-lg border bg-card p-5 shadow-sm">
-						<div className="mb-4">
-							<h2 className="text-balance font-semibold text-lg">Review setup</h2>
-							<p className="text-muted-foreground text-pretty text-sm">
-								Create a draft review envelope before saving signatures or fields.
-							</p>
-						</div>
-						<Button type="button" onClick={createReviewEnvelope} disabled={isCreating}>
-							<FilePlus2 className="size-4" />
-							{isCreating ? "Creating..." : "Create review envelope"}
-						</Button>
-						{error && <p className="mt-3 text-destructive text-sm">{error}</p>}
-					</section>
-				)}
-			</div>
-		</div>
+		<PageShell width="wide">
+			<PageHeader
+				title="Envelope preparation"
+				lead="Create a sender signature profile and place fields for each signer."
+			/>
+			{preparation ? (
+				<>
+					<SignatureProfilePanel
+						envelopeId={preparation.envelopeId}
+						senderSessionToken={senderSessionToken}
+						historyAccess={historyAccess}
+					/>
+					<EnvelopeFieldEditor
+						envelopeId={preparation.envelopeId}
+						recipients={preparation.recipients}
+						senderSessionToken={senderSessionToken}
+						historyAccess={historyAccess}
+					/>
+					<SendEnvelopePanel
+						envelopeId={preparation.envelopeId}
+						senderSessionToken={senderSessionToken}
+						historyAccess={historyAccess}
+					/>
+				</>
+			) : (
+				<Panel className="space-y-4">
+					<div>
+						<PanelTitle>Review setup</PanelTitle>
+						<PanelDescription>
+							Create a draft review envelope before saving signatures or fields.
+						</PanelDescription>
+					</div>
+					<Button type="button" onClick={createReviewEnvelope} disabled={isCreating}>
+						<FilePlus2 aria-hidden="true" className="size-4" />
+						{isCreating ? "Creating…" : "Create review envelope"}
+					</Button>
+					{error ? (
+						<Alert variant="destructive" role="alert">
+							<AlertTitle>Review setup failed</AlertTitle>
+							<AlertDescription>{error}</AlertDescription>
+						</Alert>
+					) : null}
+				</Panel>
+			)}
+		</PageShell>
 	);
 }
 
@@ -197,24 +201,22 @@ function SendEnvelopePanel({
 	const uploadUrl = buildSourcePdfUploadUrl(envelopeId, senderSessionToken, historyAccess);
 
 	return (
-		<section className="rounded-lg border bg-card p-5 shadow-sm">
-			<div className="mb-4">
-				<h2 className="font-semibold text-lg">Send envelope</h2>
-				<p className="text-muted-foreground text-sm">
+		<Panel className="space-y-4">
+			<div>
+				<PanelTitle>Send envelope</PanelTitle>
+				<PanelDescription>
 					Send verification links to the recipients when fields are ready.
-				</p>
+				</PanelDescription>
 			</div>
-			{sourcePdfQuery.isLoading ? (
-				<p className="mb-4 text-muted-foreground text-sm">Checking source PDF.</p>
-			) : null}
+			{sourcePdfQuery.isLoading ? <LoadingText>Checking source PDF…</LoadingText> : null}
 			{sourcePdfMissing ? (
-				<Alert variant="destructive" role="alert" className="mb-4">
+				<Alert variant="destructive" role="alert">
 					<AlertTitle>Source PDF required</AlertTitle>
 					<AlertDescription className="space-y-3">
 						<p>{sourcePdfStatus.message}</p>
 						<Button asChild size="sm" variant="outline">
 							<a href={uploadUrl}>
-								<FileUp className="mr-2 size-4" />
+								<FileUp aria-hidden="true" className="size-4" />
 								Upload PDF
 							</a>
 						</Button>
@@ -222,30 +224,31 @@ function SendEnvelopePanel({
 				</Alert>
 			) : null}
 			{sourcePdfReady ? (
-				<Alert className="mb-4">
+				<Alert>
 					<AlertTitle>Source PDF ready</AlertTitle>
-					<AlertDescription>
+					<AlertDescription className="tabular-nums">
 						Version {sourcePdfStatus.document.version} · {sourcePdfStatus.document.byteSize} bytes
 					</AlertDescription>
 				</Alert>
 			) : null}
 			{sourcePdfError ? (
-				<Alert variant="destructive" role="alert" className="mb-4">
+				<Alert variant="destructive" role="alert">
 					<AlertTitle>Source PDF check failed</AlertTitle>
 					<AlertDescription>{sourcePdfError}</AlertDescription>
 				</Alert>
 			) : null}
 			{sendError ? (
-				<Alert variant="destructive" role="alert" className="mb-4">
+				<Alert variant="destructive" role="alert">
 					<AlertTitle>Send failed</AlertTitle>
 					<AlertDescription>{sendError}</AlertDescription>
 				</Alert>
 			) : null}
 			{sentEmailCount !== undefined ? (
-				<Alert className="mb-4">
+				<Alert>
 					<AlertTitle>Envelope sent</AlertTitle>
 					<AlertDescription>
-						Created {sentEmailCount} recipient email send record
+						Created <span className="tabular-nums">{sentEmailCount}</span> recipient email send
+						record
 						{sentEmailCount === 1 ? "" : "s"}.
 					</AlertDescription>
 				</Alert>
@@ -255,9 +258,9 @@ function SendEnvelopePanel({
 				onClick={() => sendMutation.mutate()}
 				disabled={sendMutation.isPending || sentEmailCount !== undefined || !sourcePdfReady}
 			>
-				{sendMutation.isPending ? "Sending..." : "Send envelope"}
+				{sendMutation.isPending ? "Sending…" : "Send envelope"}
 			</Button>
-		</section>
+		</Panel>
 	);
 }
 

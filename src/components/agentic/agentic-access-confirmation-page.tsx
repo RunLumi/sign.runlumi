@@ -1,4 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { TextLink } from "@/components/patterns/text-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -67,42 +70,31 @@ export function AgenticAccessConfirmationPage({
 				: null;
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-xl space-y-6">
-				<p className="text-sm font-medium text-primary">Signmos Agentic mode</p>
-				<h1 className="text-3xl font-semibold text-foreground">Confirm Agentic access</h1>
-				{inspection.isPending ? (
-					<output aria-live="polite" className="block text-muted-foreground">
-						Checking this secure link…
-					</output>
-				) : null}
-				{inspection.data?.state === "confirm" ? (
-					<>
-						<p className="text-muted-foreground">
-							Continue only if you requested Agentic access for this browser.
-						</p>
-						<Button
-							type="button"
-							onClick={() => redemption.mutate()}
-							disabled={redemption.isPending}
-						>
-							{redemption.isPending ? "Confirming..." : "Continue to token management"}
-						</Button>
-					</>
-				) : null}
-				{recovery ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>Link unavailable</AlertTitle>
-						<AlertDescription>
-							<p>{recovery}</p>
-							<a className="mt-2 inline-flex font-medium underline" href="/?task=agentic">
-								Request a new link
-							</a>
-						</AlertDescription>
-					</Alert>
-				) : null}
-			</section>
-		</main>
+		<PageShell width="narrow">
+			<PageHeader title="Confirm Agentic access" />
+			{inspection.isPending ? <LoadingText>Checking this secure link…</LoadingText> : null}
+			{inspection.data?.state === "confirm" ? (
+				<div className="space-y-4">
+					<p className="text-pretty text-muted-foreground">
+						Continue only if you requested Agentic access for this browser.
+					</p>
+					<Button type="button" onClick={() => redemption.mutate()} disabled={redemption.isPending}>
+						{redemption.isPending ? "Confirming…" : "Continue to token management"}
+					</Button>
+				</div>
+			) : null}
+			{recovery ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>Link unavailable</AlertTitle>
+					<AlertDescription>
+						<p>{recovery}</p>
+						<TextLink className="mt-2 inline-flex" href="/?task=agentic">
+							Request a new link
+						</TextLink>
+					</AlertDescription>
+				</Alert>
+			) : null}
+		</PageShell>
 	);
 }
 

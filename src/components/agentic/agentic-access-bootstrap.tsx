@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { PageShell } from "@/components/layout/page-shell";
+import { Wordmark } from "@/components/layout/wordmark";
+import { LoadingText } from "@/components/patterns/loading-text";
 import { AgenticAccessConfirmationPage } from "./agentic-access-confirmation-page";
 
 export function AgenticAccessBootstrap() {
@@ -14,9 +17,10 @@ export function AgenticAccessBootstrap() {
 
 	if (!credential) {
 		return (
-			<main className="min-h-dvh bg-background px-6 py-10">
-				<p className="mx-auto max-w-xl text-muted-foreground">Checking this secure link…</p>
-			</main>
+			<PageShell width="narrow">
+				<Wordmark />
+				<LoadingText boxed>Checking this secure link…</LoadingText>
+			</PageShell>
 		);
 	}
 	return <AgenticAccessConfirmationPage credential={credential} />;

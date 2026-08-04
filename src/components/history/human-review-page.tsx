@@ -1,5 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelTitle } from "@/components/patterns/panel";
+import { TextLink } from "@/components/patterns/text-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -68,95 +72,75 @@ export function HumanReviewPage({
 	const detail = detailQuery.data;
 	const pending = detail?.status === "pending_human_review" && !decision.isSuccess;
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-3xl space-y-6">
-				<p className="text-sm font-medium text-primary">Signmos human review</p>
-				<h1 className="text-3xl font-semibold text-foreground">Review requested action</h1>
-				{detailQuery.isPending ? (
-					<output aria-live="polite" className="block text-muted-foreground">
-						Loading review…
-					</output>
-				) : null}
-				{detailQuery.isError || decision.isError ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>Unable to continue this review</AlertTitle>
-						<AlertDescription>
-							The request may be unavailable, expired, changed, or already decided.
-						</AlertDescription>
-					</Alert>
-				) : null}
-				{detail ? <ReviewDetails detail={detail} /> : null}
-				{detail && detail.status !== "pending_human_review" ? (
-					<output
-						aria-live="polite"
-						className="block rounded-lg border bg-card p-4 text-foreground"
+		<PageShell width="content">
+			<PageHeader title="Review requested action" />
+			{detailQuery.isPending ? <LoadingText>Loading review…</LoadingText> : null}
+			{detailQuery.isError || decision.isError ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>Unable to continue this review</AlertTitle>
+					<AlertDescription>
+						The request may be unavailable, expired, changed, or already decided.
+					</AlertDescription>
+				</Alert>
+			) : null}
+			{detail ? <ReviewDetails detail={detail} /> : null}
+			{detail && detail.status !== "pending_human_review" ? (
+				<LoadingText boxed className="text-foreground">
+					{terminalStatusMessage(detail.status)}
+				</LoadingText>
+			) : null}
+			{pending ? (
+				<fieldset className="flex flex-wrap gap-3">
+					<legend className="sr-only">Human review decision</legend>
+					<Button
+						type="button"
+						onClick={() => decision.mutate("approve")}
+						disabled={decision.isPending}
 					>
-						{terminalStatusMessage(detail.status)}
-					</output>
-				) : null}
-				{pending ? (
-					<fieldset className="flex flex-wrap gap-3">
-						<legend className="sr-only">Human review decision</legend>
-						<Button
-							type="button"
-							onClick={() => decision.mutate("approve")}
-							disabled={decision.isPending}
-						>
-							{decision.isPending ? "Executing…" : "Approve and execute"}
-						</Button>
-						<Button
-							type="button"
-							variant="destructive"
-							onClick={() => decision.mutate("reject")}
-							disabled={decision.isPending}
-						>
-							Reject request
-						</Button>
-						<Button
-							type="button"
-							variant="outline"
-							onClick={onNotNow}
-							disabled={decision.isPending}
-						>
-							Not now
-						</Button>
-					</fieldset>
-				) : null}
-				{decision.isSuccess ? (
-					<output
-						ref={terminalStatusRef}
-						tabIndex={-1}
-						aria-live="polite"
-						className="block rounded-lg border bg-card p-4 text-foreground"
+						{decision.isPending ? "Executing…" : "Approve and execute"}
+					</Button>
+					<Button
+						type="button"
+						variant="destructive"
+						onClick={() => decision.mutate("reject")}
+						disabled={decision.isPending}
 					>
-						{terminalStatusMessage(decision.data.status)}
-					</output>
-				) : null}
-			</section>
-		</main>
+						Reject request
+					</Button>
+					<Button type="button" variant="outline" onClick={onNotNow} disabled={decision.isPending}>
+						Not now
+					</Button>
+				</fieldset>
+			) : null}
+			{decision.isSuccess ? (
+				<LoadingText ref={terminalStatusRef} tabIndex={-1} boxed className="text-foreground">
+					{terminalStatusMessage(decision.data.status)}
+				</LoadingText>
+			) : null}
+		</PageShell>
 	);
 }
 
 function ReviewDetails({ detail }: { detail: HumanReviewDetail }) {
 	return (
-		<div className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
+		<Panel className="space-y-5">
 			<div>
-				<h2 className="text-xl font-semibold text-foreground">{detail.document.title}</h2>
-				<p className="text-sm text-muted-foreground">
+				<PanelTitle>{detail.document.title}</PanelTitle>
+				<p className="text-muted-foreground text-sm tabular-nums">
 					Current revision {detail.document.sourceVersion} · Expires {formatDate(detail.expiresAt)}
 				</p>
 			</div>
 			{detail.document.sourcePdfUrl ? (
-				<a
-					className="inline-flex rounded-sm font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				<TextLink
+					className="inline-flex"
 					href={detail.document.sourcePdfUrl}
 					target="_blank"
 					rel="noreferrer"
 				>
 					Open current PDF
-				</a>
+				</TextLink>
 			) : (
-				<p className="text-sm text-muted-foreground">
+				<p className="text-muted-foreground text-sm">
 					The reviewed source PDF is no longer retained.
 				</p>
 			)}
@@ -175,7 +159,7 @@ function ReviewDetails({ detail }: { detail: HumanReviewDetail }) {
 				</pre>
 			</div>
 			{detail.document.assignedFields.length > 0 ? (
-				<ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+				<ul className="list-disc space-y-1 pl-5 text-muted-foreground text-sm tabular-nums">
 					{detail.document.assignedFields.map((field) => (
 						<li key={field.id}>
 							{field.type} field on page {field.page} at ({field.x}, {field.y}), {field.width} ×{" "}
@@ -184,7 +168,7 @@ function ReviewDetails({ detail }: { detail: HumanReviewDetail }) {
 					))}
 				</ul>
 			) : null}
-		</div>
+		</Panel>
 	);
 }
 

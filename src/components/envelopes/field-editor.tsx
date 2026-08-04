@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText } from "lucide-react";
 import type { MouseEvent, PointerEvent } from "react";
 import { useRef } from "react";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	buildNextSignatureField,
 	type EnvelopeFieldResponse,
@@ -107,22 +110,23 @@ export function EnvelopeFieldEditor({
 	}
 
 	return (
-		<section className="rounded-lg border bg-card p-5 shadow-sm">
-			<div className="mb-5 flex items-start gap-3">
-				<FileText className="mt-0.5 size-5 text-muted-foreground" />
+		<Panel className="space-y-5">
+			<div className="flex items-start gap-3">
+				<FileText aria-hidden="true" className="mt-0.5 size-5 text-muted-foreground" />
 				<div>
-					<h2 className="text-balance font-semibold text-lg">Signature placement</h2>
-					<p className="text-muted-foreground text-pretty text-sm">
+					<PanelTitle>Signature placement</PanelTitle>
+					<PanelDescription>
 						Place one signature box for each signer. Completed signers are locked so duplicates
 						cannot be added.
-					</p>
+					</PanelDescription>
 				</div>
 			</div>
-			{fieldsQuery.isLoading ? (
-				<p className="mb-4 text-muted-foreground text-sm">Loading existing placements.</p>
-			) : null}
+			{fieldsQuery.isLoading ? <LoadingText>Loading existing placements…</LoadingText> : null}
 			{fieldsQuery.isError ? (
-				<p className="mb-4 text-destructive text-sm">Unable to load existing placements.</p>
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Placements failed</AlertTitle>
+					<AlertDescription>Unable to load existing placements.</AlertDescription>
+				</Alert>
 			) : null}
 			<form.Subscribe selector={(state) => state.values}>
 				{(values) => (
@@ -148,7 +152,7 @@ export function EnvelopeFieldEditor({
 					/>
 				)}
 			</form.Subscribe>
-		</section>
+		</Panel>
 	);
 }
 

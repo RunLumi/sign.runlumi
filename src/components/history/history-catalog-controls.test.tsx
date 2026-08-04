@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HistoryDocumentsPage } from "./history-documents-page";
 
 function renderCatalog() {
@@ -63,8 +63,10 @@ describe("full history catalog controls", () => {
 		const retention = screen.getByText(/retained for 90 days/i);
 		expect(retention.textContent).toMatch(/not permanent storage/i);
 		expect(await screen.findByRole("heading", { name: "Contract.pdf" })).toBeTruthy();
-		expect(screen.getByText("Needs my action")).toBeTruthy();
-		expect(screen.getByText("Sent")).toBeTruthy();
+		const article = screen.getByRole("article");
+		expect(article.textContent).toContain("Needs my action");
+		const statusBadge = within(article).getByText("Sent");
+		expect(statusBadge.getAttribute("data-slot")).toBe("status-badge");
 		expect(screen.getByText(/A1B2C3D4/)).toBeTruthy();
 		expect(screen.getByText(/Grace Hopper/).textContent).toContain("grace@example.com");
 		expect(screen.getByRole("link", { name: "Review and sign" }).getAttribute("href")).toBe(

@@ -1,5 +1,6 @@
 import { FileText } from "lucide-react";
 import { pdfPage } from "@/components/envelopes/field-placement-workspace";
+import { TextLink } from "@/components/patterns/text-link";
 import { cn } from "@/lib/utils";
 import type { PartnerSignaturePreference } from "./partner-signature-form";
 
@@ -58,14 +59,14 @@ export function SigningDocumentPreview({
 	return (
 		<section className="space-y-3">
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<h2 className="text-base font-semibold">Source PDF</h2>
-				<a
-					className="inline-flex items-center gap-2 text-sm font-medium text-primary underline"
+				<h2 className="text-balance font-semibold text-xl">Source PDF</h2>
+				<TextLink
+					className="inline-flex items-center gap-2 text-sm"
 					href={session.sourceDocument.downloadUrl}
 				>
-					<FileText className="h-4 w-4" />
+					<FileText aria-hidden="true" className="size-4" />
 					Open source PDF
-				</a>
+				</TextLink>
 			</div>
 			<div className="grid gap-4">
 				{pages.map((page, index) => (

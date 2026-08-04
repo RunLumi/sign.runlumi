@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { LogOut } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,16 +45,19 @@ export function AuthenticatedProductNavigation({
 	}, [signOut.isSuccess]);
 
 	return (
-		<div className="space-y-3">
+		<div className="space-y-2">
 			<ProductModeNavigation activeMode={activeMode} />
 			<div className="flex justify-end">
 				<Button
 					type="button"
-					variant="outline"
+					variant="ghost"
+					size="sm"
+					className="text-muted-foreground hover:text-foreground"
 					disabled={signOut.isPending}
 					onClick={() => signOut.mutate()}
 				>
-					{signOut.isPending ? "Signing out..." : "Sign out"}
+					<LogOut aria-hidden="true" className="size-4" />
+					{signOut.isPending ? "Signing out…" : "Sign out"}
 				</Button>
 			</div>
 			{signOut.isError ? (
@@ -78,7 +82,7 @@ export function AuthenticatedProductNavigation({
 export function ProductModeNavigation({ activeMode }: { activeMode: ProductMode }) {
 	return (
 		<nav aria-label="Signmos options" className="w-full">
-			<ul className="grid grid-cols-2 gap-1 rounded-lg border bg-card p-1 sm:grid-cols-4">
+			<ul className="grid grid-cols-2 gap-1 rounded-xl border bg-card p-1 shadow-xs sm:grid-cols-4">
 				{productModes.map(({ mode, label }) => {
 					const active = mode === activeMode;
 					return (
@@ -87,9 +91,9 @@ export function ProductModeNavigation({ activeMode }: { activeMode: ProductMode 
 								href={`/api/navigate/${mode}`}
 								aria-current={active ? "page" : undefined}
 								className={cn(
-									"flex min-h-10 items-center justify-center rounded-md px-3 py-2 text-center text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+									"flex min-h-10 items-center justify-center rounded-lg px-3 py-2 text-center font-medium text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50",
 									active
-										? "bg-primary text-primary-foreground"
+										? "bg-primary text-primary-foreground shadow-xs"
 										: "text-muted-foreground hover:bg-muted hover:text-foreground",
 								)}
 							>

@@ -1,12 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { BackLink } from "@/components/patterns/text-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -66,6 +71,7 @@ export function ClientsPage() {
 	const queryClient = useQueryClient();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingClient, setEditingClient] = useState<Client | null>(null);
+	const [deletingClient, setDeletingClient] = useState<Client | null>(null);
 
 	const { data, isLoading, error } = useQuery({
 		queryKey: ["clients"],
@@ -93,6 +99,7 @@ export function ClientsPage() {
 		mutationFn: apiDeleteClient,
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["clients"] });
+			setDeletingClient(null);
 		},
 	});
 
@@ -126,128 +133,178 @@ export function ClientsPage() {
 	const mutationError = createMutation.error || updateMutation.error;
 
 	return (
-		<div className="min-h-screen bg-background">
-			<div className="mx-auto max-w-4xl p-6">
-				<div className="mb-6 flex items-center gap-4">
-					<Link to="/">
-						<Button variant="ghost" size="sm">
-							<ArrowLeft className="mr-2 h-4 w-4" />
-							Back
-						</Button>
-					</Link>
-					<div className="flex items-center gap-2">
-						<Users className="h-6 w-6" />
-						<h1 className="text-2xl font-bold">Clients</h1>
-					</div>
-				</div>
-
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between">
-						<CardTitle>{data ? `${data.pagination.total} clients` : "Clients"}</CardTitle>
-						<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-							<DialogTrigger asChild>
-								<Button size="sm" onClick={openCreate}>
-									<Plus className="mr-2 h-4 w-4" />
-									Add Client
-								</Button>
-							</DialogTrigger>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>{editingClient ? "Edit Client" : "New Client"}</DialogTitle>
-								</DialogHeader>
-								<form onSubmit={handleSubmit} className="space-y-4">
-									<div className="space-y-2">
-										<Label htmlFor="name">Name</Label>
-										<Input
-											id="name"
-											name="name"
-											required
-											maxLength={30}
-											defaultValue={editingClient?.name ?? ""}
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="surname">Surname</Label>
-										<Input
-											id="surname"
-											name="surname"
-											required
-											maxLength={30}
-											defaultValue={editingClient?.surname ?? ""}
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="email">Email</Label>
-										<Input
-											id="email"
-											name="email"
-											type="email"
-											required
-											defaultValue={editingClient?.email ?? ""}
-										/>
-									</div>
-									{mutationError && (
-										<p className="text-sm text-destructive">{mutationError.message}</p>
-									)}
-									<Button type="submit" disabled={isMutating} className="w-full">
-										{isMutating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-										{editingClient ? "Update" : "Create"}
-									</Button>
-								</form>
-							</DialogContent>
-						</Dialog>
-					</CardHeader>
-					<CardContent>
-						{isLoading && (
-							<div className="flex justify-center py-8">
-								<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-							</div>
-						)}
-						{error && <p className="py-4 text-center text-sm text-destructive">{error.message}</p>}
-						{data && data.data.length === 0 && (
-							<p className="py-8 text-center text-sm text-muted-foreground">
-								No clients yet. Add one to get started.
-							</p>
-						)}
-						{data && data.data.length > 0 && (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Name</TableHead>
-										<TableHead>Surname</TableHead>
-										<TableHead>Email</TableHead>
-										<TableHead className="w-24" />
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{data.data.map((client) => (
-										<TableRow key={client.id}>
-											<TableCell>{client.name}</TableCell>
-											<TableCell>{client.surname}</TableCell>
-											<TableCell>{client.email}</TableCell>
-											<TableCell className="text-right">
-												<div className="flex justify-end gap-1">
-													<Button variant="ghost" size="sm" onClick={() => openEdit(client)}>
-														<Pencil className="h-4 w-4" />
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => deleteMutation.mutate(client.id)}
-														disabled={deleteMutation.isPending}
-													>
-														<Trash2 className="h-4 w-4 text-destructive" />
-													</Button>
-												</div>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						)}
-					</CardContent>
-				</Card>
+		<PageShell width="wide">
+			<div className="space-y-4">
+				<BackLink href="/">Back</BackLink>
+				<PageHeader title="Clients" />
 			</div>
-		</div>
+
+			<Card>
+				<CardHeader className="flex flex-row items-center justify-between">
+					<CardTitle className="tabular-nums">
+						{data ? `${data.pagination.total} clients` : "Clients"}
+					</CardTitle>
+					<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+						<DialogTrigger asChild>
+							<Button size="sm" onClick={openCreate}>
+								<Plus aria-hidden="true" className="size-4" />
+								Add client
+							</Button>
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>{editingClient ? "Edit client" : "New client"}</DialogTitle>
+							</DialogHeader>
+							<form onSubmit={handleSubmit} className="space-y-4">
+								<div className="space-y-2">
+									<Label htmlFor="name">Name</Label>
+									<Input
+										id="name"
+										name="name"
+										required
+										maxLength={30}
+										defaultValue={editingClient?.name ?? ""}
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="surname">Surname</Label>
+									<Input
+										id="surname"
+										name="surname"
+										required
+										maxLength={30}
+										defaultValue={editingClient?.surname ?? ""}
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="email">Email</Label>
+									<Input
+										id="email"
+										name="email"
+										type="email"
+										required
+										defaultValue={editingClient?.email ?? ""}
+									/>
+								</div>
+								{mutationError && (
+									<p className="text-destructive text-sm">{mutationError.message}</p>
+								)}
+								<Button type="submit" disabled={isMutating} className="w-full">
+									{isMutating ? "Saving…" : editingClient ? "Update client" : "Create client"}
+								</Button>
+							</form>
+						</DialogContent>
+					</Dialog>
+				</CardHeader>
+				<CardContent>
+					{isLoading && <LoadingText className="py-8 text-center">Loading clients…</LoadingText>}
+					{error && <p className="py-4 text-center text-destructive text-sm">{error.message}</p>}
+					{data && data.data.length === 0 && (
+						<EmptyState
+							icon={Users}
+							title="No clients yet"
+							description="Add one to get started."
+							action={
+								<Button size="sm" onClick={openCreate}>
+									<Plus aria-hidden="true" className="size-4" />
+									Add client
+								</Button>
+							}
+						/>
+					)}
+					{data && data.data.length > 0 && (
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Name</TableHead>
+									<TableHead>Surname</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead className="w-24" />
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{data.data.map((client) => (
+									<TableRow key={client.id}>
+										<TableCell>{client.name}</TableCell>
+										<TableCell>{client.surname}</TableCell>
+										<TableCell>{client.email}</TableCell>
+										<TableCell className="text-right">
+											<div className="flex justify-end gap-1">
+												<Button
+													variant="ghost"
+													size="sm"
+													aria-label={`Edit ${client.name} ${client.surname}`}
+													onClick={() => openEdit(client)}
+												>
+													<Pencil aria-hidden="true" className="size-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													aria-label={`Delete ${client.name} ${client.surname}`}
+													onClick={() => setDeletingClient(client)}
+													disabled={deleteMutation.isPending}
+												>
+													<Trash2 aria-hidden="true" className="size-4 text-destructive" />
+												</Button>
+											</div>
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					)}
+				</CardContent>
+			</Card>
+
+			<DeleteClientDialog
+				client={deletingClient}
+				pending={deleteMutation.isPending}
+				onCancel={() => setDeletingClient(null)}
+				onConfirm={() => {
+					if (deletingClient) deleteMutation.mutate(deletingClient.id);
+				}}
+			/>
+		</PageShell>
+	);
+}
+
+function DeleteClientDialog({
+	client,
+	pending,
+	onCancel,
+	onConfirm,
+}: {
+	client: Client | null;
+	pending: boolean;
+	onCancel: () => void;
+	onConfirm: () => void;
+}) {
+	return (
+		<Dialog
+			open={client !== null}
+			onOpenChange={(open) => {
+				if (!open) onCancel();
+			}}
+		>
+			<DialogContent role="alertdialog">
+				<DialogHeader>
+					<DialogTitle>Delete client?</DialogTitle>
+					<DialogDescription>
+						{client
+							? `This permanently removes ${client.name} ${client.surname} (${client.email}).`
+							: ""}
+					</DialogDescription>
+				</DialogHeader>
+				<DialogFooter>
+					<Button type="button" variant="outline" onClick={onCancel}>
+						Cancel
+					</Button>
+					<Button type="button" variant="destructive" disabled={pending} onClick={onConfirm}>
+						{pending ? "Deleting…" : "Delete client"}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }

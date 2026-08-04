@@ -1,4 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import { BackLink, TextLink } from "@/components/patterns/text-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface HistoryDocumentDetailPageProps {
@@ -46,52 +50,40 @@ export function HistoryDocumentDetailPage({ envelopeId }: HistoryDocumentDetailP
 	});
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-3xl space-y-6">
-				<a
-					className="rounded-sm text-primary text-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-					href="/my-documents"
-				>
-					Back to My documents
-				</a>
-				<h1 className="text-3xl font-semibold text-foreground">Completed document</h1>
-				{detailQuery.isPending ? (
-					<output aria-live="polite" className="block text-muted-foreground">
-						Loading completed document…
-					</output>
-				) : null}
-				{detailQuery.isError ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>Document unavailable</AlertTitle>
-						<AlertDescription>Return to My documents and try again.</AlertDescription>
-					</Alert>
-				) : null}
-				{detailQuery.data ? (
-					<>
-						<p className="text-muted-foreground">Status: Completed</p>
-						<a
-							className="inline-flex rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-							href={detailQuery.data.finalPdf.downloadUrl}
-						>
-							Download signed PDF
-						</a>
-						<section aria-labelledby="history-parties-heading" className="space-y-3">
-							<h2 id="history-parties-heading" className="text-xl font-semibold text-foreground">
-								Parties
-							</h2>
-							<ul className="grid gap-3">
-								{detailQuery.data.parties.map((party) => (
-									<li key={party.id} className="rounded-lg border bg-card p-4">
-										<p className="font-medium text-foreground">{party.name}</p>
-										<p className="text-muted-foreground text-sm">{party.email}</p>
-									</li>
-								))}
-							</ul>
-						</section>
-					</>
-				) : null}
-			</section>
-		</main>
+		<PageShell width="content">
+			<BackLink href="/my-documents">Back to My documents</BackLink>
+			<PageHeader title="Completed document" />
+			{detailQuery.isPending ? <LoadingText>Loading completed document…</LoadingText> : null}
+			{detailQuery.isError ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>Document unavailable</AlertTitle>
+					<AlertDescription>Return to My documents and try again.</AlertDescription>
+				</Alert>
+			) : null}
+			{detailQuery.data ? (
+				<>
+					<div>
+						<StatusBadge tone="success">Completed</StatusBadge>
+					</div>
+					<TextLink className="inline-flex" href={detailQuery.data.finalPdf.downloadUrl}>
+						Download signed PDF
+					</TextLink>
+					<section aria-labelledby="history-parties-heading" className="space-y-3">
+						<h2 id="history-parties-heading" className="font-semibold text-foreground text-xl">
+							Parties
+						</h2>
+						<ul className="grid gap-3">
+							{detailQuery.data.parties.map((party) => (
+								<li key={party.id} className="rounded-lg border bg-card p-4">
+									<p className="font-medium text-foreground">{party.name}</p>
+									<p className="text-muted-foreground text-sm">{party.email}</p>
+								</li>
+							))}
+						</ul>
+					</section>
+				</>
+			) : null}
+		</PageShell>
 	);
 }
 

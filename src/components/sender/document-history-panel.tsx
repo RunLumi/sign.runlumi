@@ -1,9 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Ban, Download, History, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { NativeSelect } from "@/components/patterns/native-select";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
+import { StatusBadge, type StatusTone } from "@/components/patterns/status-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 
 type DocumentHistoryState = "draft" | "in_progress" | "completed";
 type HistoryFilter = DocumentHistoryState | "all";
@@ -74,16 +87,16 @@ export function DocumentHistoryPanel({
 	});
 
 	return (
-		<section className="rounded-lg border bg-card p-5" aria-label="Document history">
+		<Panel aria-label="Document history">
 			<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div>
-					<h2 className="flex items-center gap-2 font-semibold text-lg">
-						<History className="size-5 text-muted-foreground" />
+					<PanelTitle className="flex items-center gap-2">
+						<History aria-hidden="true" className="size-5 text-muted-foreground" />
 						Document history
-					</h2>
-					<p className="text-muted-foreground text-sm">
+					</PanelTitle>
+					<PanelDescription>
 						Documents linked to the confirmed email from the last 30 days.
-					</p>
+					</PanelDescription>
 				</div>
 				<Button type="button" variant="outline" onClick={() => setExpanded((value) => !value)}>
 					{expanded ? "Hide document history" : "Show document history"}
@@ -103,7 +116,7 @@ export function DocumentHistoryPanel({
 					onCreatorAction={(input) => controlMutation.mutate(input)}
 				/>
 			) : null}
-		</section>
+		</Panel>
 	);
 }
 
@@ -136,9 +149,7 @@ function ExpandedDocumentHistory({
 
 	return (
 		<div className="mt-5 space-y-4">
-			{isLoading ? (
-				<p className="text-muted-foreground text-sm">Loading document history.</p>
-			) : null}
+			{isLoading ? <LoadingText>Loading document history…</LoadingText> : null}
 			{historyMessage ? (
 				<HistoryErrorAlert title="History failed" message={historyMessage} />
 			) : null}
@@ -179,10 +190,9 @@ function HistoryFilterControl({
 	return (
 		<div className="flex flex-col gap-2 sm:max-w-64">
 			<Label htmlFor="document-history-filter">State</Label>
-			<select
+			<NativeSelect
 				id="document-history-filter"
 				aria-label="Filter document history by state"
-				className="h-10 rounded-md border bg-background px-3 text-sm"
 				value={value}
 				onChange={(event) => onChange(event.target.value as HistoryFilter)}
 			>
@@ -190,7 +200,7 @@ function HistoryFilterControl({
 				<option value="draft">Draft</option>
 				<option value="in_progress">In progress</option>
 				<option value="completed">Completed</option>
-			</select>
+			</NativeSelect>
 		</div>
 	);
 }
@@ -207,52 +217,67 @@ function DocumentHistoryTable({
 	onCreatorAction: (input: PendingCreatorAction) => void;
 }) {
 	if (documents.length === 0) {
-		return <p className="text-muted-foreground text-sm">No documents match this filter.</p>;
+		return <EmptyState icon={History} title="No documents match this filter." />;
 	}
 
 	return (
-		<div className="overflow-x-auto">
-			<table
-				className="w-full min-w-[720px] text-left text-sm"
-				aria-label="Confirmed email document history"
-			>
-				<thead className="border-b text-muted-foreground">
-					<tr>
-						<th className="py-3 pr-4 font-medium">Document</th>
-						<th className="py-3 pr-4 font-medium">Type</th>
-						<th className="py-3 pr-4 font-medium">State</th>
-						<th className="py-3 pr-4 font-medium">Created</th>
-						<th className="py-3 pr-4 font-medium">Action</th>
-					</tr>
-				</thead>
-				<tbody className="divide-y">
-					{documents.map((document) => (
-						<tr key={document.envelopeId}>
-							<td className="py-3 pr-4 align-top">
-								<p className="font-medium">{document.title}</p>
-								<p className="text-muted-foreground text-xs">{formatRole(document.role)}</p>
-							</td>
-							<td className="py-3 pr-4 align-top">{formatDocumentType(document.documentType)}</td>
-							<td className="py-3 pr-4 align-top">
-								<span className="rounded-md bg-muted px-2 py-1 text-xs">{document.status}</span>
-							</td>
-							<td className="py-3 pr-4 align-top">
-								<time dateTime={document.createdAt}>{formatDate(document.createdAt)}</time>
-							</td>
-							<td className="py-3 pr-4 align-top">
-								<DocumentHistoryActions
-									document={document}
-									pendingAction={pendingAction}
-									isActionPending={isActionPending}
-									onCreatorAction={onCreatorAction}
-								/>
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
+		<Table className="min-w-[720px]" aria-label="Confirmed email document history">
+			<TableHeader>
+				<TableRow>
+					<TableHead>Document</TableHead>
+					<TableHead>Type</TableHead>
+					<TableHead>State</TableHead>
+					<TableHead>Created</TableHead>
+					<TableHead>Action</TableHead>
+				</TableRow>
+			</TableHeader>
+			<TableBody>
+				{documents.map((document) => (
+					<TableRow key={document.envelopeId}>
+						<TableCell className="py-3 align-top">
+							<p className="font-medium">{document.title}</p>
+							<p className="text-muted-foreground text-xs">{formatRole(document.role)}</p>
+						</TableCell>
+						<TableCell className="py-3 align-top">
+							{formatDocumentType(document.documentType)}
+						</TableCell>
+						<TableCell className="py-3 align-top">
+							<StatusBadge tone={documentStatusTone(document.status)}>
+								{document.status}
+							</StatusBadge>
+						</TableCell>
+						<TableCell className="py-3 align-top">
+							<time className="tabular-nums" dateTime={document.createdAt}>
+								{formatDate(document.createdAt)}
+							</time>
+						</TableCell>
+						<TableCell className="py-3 align-top">
+							<DocumentHistoryActions
+								document={document}
+								pendingAction={pendingAction}
+								isActionPending={isActionPending}
+								onCreatorAction={onCreatorAction}
+							/>
+						</TableCell>
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
 	);
+}
+
+function documentStatusTone(status: string): StatusTone {
+	if (status === "completed") return "success";
+	if (status === "declined") return "destructive";
+	if (
+		status === "sent" ||
+		status === "in_progress" ||
+		status.startsWith("awaiting") ||
+		status.startsWith("pending")
+	) {
+		return "warning";
+	}
+	return "neutral";
 }
 
 function DocumentHistoryActions({
@@ -277,14 +302,14 @@ function DocumentHistoryActions({
 				<Button asChild size="sm">
 					<a href={action.url}>
 						{action.label}
-						<ArrowRight className="size-4" />
+						<ArrowRight aria-hidden="true" className="size-4" />
 					</a>
 				</Button>
 			) : null}
 			{action?.type === "completed" && action.downloadUrl ? (
 				<Button asChild size="sm" variant="outline">
 					<a href={action.downloadUrl}>
-						<Download className="size-4" />
+						<Download aria-hidden="true" className="size-4" />
 						Download PDF
 					</a>
 				</Button>
@@ -309,9 +334,9 @@ function DocumentHistoryActions({
 					}
 				>
 					{creatorAction.action === "cancel" ? (
-						<Ban className="size-4" />
+						<Ban aria-hidden="true" className="size-4" />
 					) : (
-						<Trash2 className="size-4" />
+						<Trash2 aria-hidden="true" className="size-4" />
 					)}
 					{creatorAction.label}
 				</Button>

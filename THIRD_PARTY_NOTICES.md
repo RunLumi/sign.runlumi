@@ -26,6 +26,14 @@ Package license texts, copyright notices, and source/homepage metadata remain
 available in each installed package and its linked upstream project. Consumers
 redistributing those packages must follow their respective terms.
 
+## Bundled fonts
+
+Files under `public/fonts/` are the Inter typeface by Rasmus Andersson
+(<https://rsms.me/inter/>), obtained via the
+[Fontsource](https://fontsource.org/) `@fontsource-variable/inter` package and
+distributed under the [SIL Open Font License 1.1](https://openfontlicense.org/).
+The font remains under the OFL; it is not relicensed by Signmos.
+
 ## Copied or generated UI material
 
 Files under `src/components/ui/` were generated from or adapted from

@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, useMemo, useState } from "react";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,16 +91,12 @@ export function HistoryEnvelopeStart({
 	}
 
 	return (
-		<form
-			aria-label="Start a new document"
-			className="space-y-5 rounded-lg border bg-card p-5 shadow-sm"
-			onSubmit={submit}
-		>
+		<Panel as="form" aria-label="Start a new document" className="space-y-5" onSubmit={submit}>
 			<div>
-				<h2 className="font-semibold text-foreground">Start a new document</h2>
-				<p className="mt-1 text-muted-foreground text-sm">
-					Your verified My Documents session replaces another email verification step.
-				</p>
+				<PanelTitle>Start a new document</PanelTitle>
+				<PanelDescription className="mt-1">
+					Your verified My documents session replaces another email verification step.
+				</PanelDescription>
 			</div>
 			<div className="space-y-1">
 				<p className="font-medium text-sm">Your verified email</p>
@@ -137,7 +134,7 @@ export function HistoryEnvelopeStart({
 									checked={field.state.value === value}
 									onChange={() => field.handleChange(value)}
 									required
-									className="size-4 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+									className="size-4 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2"
 								/>
 								{label}
 							</label>
@@ -161,7 +158,7 @@ export function HistoryEnvelopeStart({
 					</Button>
 				) : null}
 			</div>
-		</form>
+		</Panel>
 	);
 }
 

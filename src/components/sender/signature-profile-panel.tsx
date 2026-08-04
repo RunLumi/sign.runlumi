@@ -3,6 +3,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, PenLine, RotateCcw, Save, Type } from "lucide-react";
 import type { MouseEvent, ReactNode } from "react";
 import { useState } from "react";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { NativeSelect } from "@/components/patterns/native-select";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,9 +62,17 @@ type SignatureProfileResponse = {
 };
 
 const typedSignatureFonts: Array<{ label: string; value: TypedSignatureFont; stack: string }> = [
-	{ label: "Script", value: "cursive", stack: "cursive" },
-	{ label: "Serif", value: "serif", stack: "serif" },
-	{ label: "Clean", value: "sans-serif", stack: "sans-serif" },
+	{
+		label: "Script",
+		value: "cursive",
+		stack: "'Savoye LET', 'Snell Roundhand', 'Segoe Script', cursive",
+	},
+	{ label: "Serif", value: "serif", stack: "'Iowan Old Style', Palatino, Georgia, serif" },
+	{
+		label: "Clean",
+		value: "sans-serif",
+		stack: "'InterVariable', 'Helvetica Neue', Arial, sans-serif",
+	},
 ];
 
 export function SignatureProfilePanel({
@@ -75,19 +87,22 @@ export function SignatureProfilePanel({
 	});
 
 	return (
-		<section className="rounded-lg border bg-card p-5 shadow-sm">
-			<div className="mb-5">
-				<h2 className="text-balance font-semibold text-lg">Signature preference</h2>
-				<p className="text-muted-foreground text-pretty text-sm">
+		<Panel className="space-y-5">
+			<div>
+				<PanelTitle>Signature preference</PanelTitle>
+				<PanelDescription>
 					Choose one signing method. Typed signatures render your name in a selected font; drawn
 					signatures reuse the stroke you draw below.
-				</p>
+				</PanelDescription>
 			</div>
 			{profileQuery.isLoading ? (
-				<p className="text-muted-foreground text-sm">Loading saved signature preference.</p>
+				<LoadingText>Loading saved signature preference…</LoadingText>
 			) : null}
 			{profileQuery.isError ? (
-				<p className="mb-4 text-destructive text-sm">Unable to load saved signature preference.</p>
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Signature preference failed</AlertTitle>
+					<AlertDescription>Unable to load saved signature preference.</AlertDescription>
+				</Alert>
 			) : null}
 			{!profileQuery.isLoading ? (
 				<SignaturePreferenceEditor
@@ -98,7 +113,7 @@ export function SignatureProfilePanel({
 					initialProfile={profileQuery.data ?? null}
 				/>
 			) : null}
-		</section>
+		</Panel>
 	);
 }
 
@@ -184,7 +199,7 @@ function SignaturePreferenceEditor({
 								<legend className="sr-only">Signature method</legend>
 								<SignatureMethodButton
 									isActive={values.mode === "typed"}
-									icon={<Type className="size-4" />}
+									icon={<Type aria-hidden="true" className="size-4" />}
 									title="Typed"
 									description="Best when a clean rendered name is enough."
 									onClick={() => {
@@ -194,7 +209,7 @@ function SignaturePreferenceEditor({
 								/>
 								<SignatureMethodButton
 									isActive={values.mode === "drawn"}
-									icon={<PenLine className="size-4" />}
+									icon={<PenLine aria-hidden="true" className="size-4" />}
 									title="Drawn"
 									description="Best when you want a hand-drawn stroke."
 									onClick={() => {
@@ -235,21 +250,20 @@ function SignaturePreferenceEditor({
 											{(field) => (
 												<div className="space-y-2">
 													<Label htmlFor="signature-font">Signature font</Label>
-													<select
+													<NativeSelect
 														id="signature-font"
 														value={field.state.value}
 														onBlur={field.handleBlur}
 														onChange={(event) =>
 															field.handleChange(event.target.value as TypedSignatureFont)
 														}
-														className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
 													>
 														{typedSignatureFonts.map((font) => (
 															<option key={font.value} value={font.value}>
 																{font.label}
 															</option>
 														))}
-													</select>
+													</NativeSelect>
 												</div>
 											)}
 										</form.Field>
@@ -278,7 +292,7 @@ function SignaturePreferenceEditor({
 										/>
 									</svg>
 									<Button type="button" variant="outline" onClick={clearDrawing}>
-										<RotateCcw className="size-4" />
+										<RotateCcw aria-hidden="true" className="size-4" />
 										Clear drawing
 									</Button>
 								</div>
@@ -304,20 +318,28 @@ function SignaturePreferenceEditor({
 
 			<div className="flex flex-wrap items-center gap-2">
 				<Button type="submit" disabled={saveMutation.isPending}>
-					<Save className="size-4" />
-					{saveMutation.isPending ? "Saving..." : "Save signature preference"}
+					<Save aria-hidden="true" className="size-4" />
+					{saveMutation.isPending ? "Saving…" : "Save signature preference"}
 				</Button>
 				{savedMessage ? (
 					<span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
-						<CheckCircle2 className="size-4" />
+						<CheckCircle2 aria-hidden="true" className="size-4" />
 						{savedMessage}
 					</span>
 				) : null}
 			</div>
 
-			{validationError ? <p className="text-destructive text-sm">{validationError}</p> : null}
+			{validationError ? (
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Signature incomplete</AlertTitle>
+					<AlertDescription>{validationError}</AlertDescription>
+				</Alert>
+			) : null}
 			{saveMutation.isError ? (
-				<p className="text-destructive text-sm">Unable to save signature preference.</p>
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Save failed</AlertTitle>
+					<AlertDescription>Unable to save signature preference.</AlertDescription>
+				</Alert>
 			) : null}
 			{selectedLabel ? (
 				<p className="rounded-lg border bg-background px-3 py-2 text-muted-foreground text-sm">

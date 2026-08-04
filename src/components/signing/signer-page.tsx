@@ -1,6 +1,12 @@
-import { CheckCircle2, Download, FileText, MessageSquare, X } from "lucide-react";
+import { Download, FileText, MessageSquare, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { pdfPage } from "@/components/envelopes/field-placement-workspace";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel } from "@/components/patterns/panel";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import { TextLink } from "@/components/patterns/text-link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,61 +163,58 @@ export function SignerPage(props: SignerPageProps) {
 	}
 
 	return (
-		<div className="mx-auto max-w-4xl space-y-6 p-6">
-			<div>
-				<h1 className="text-balance text-2xl font-semibold">Review and sign</h1>
-				<p className="text-pretty text-sm text-muted-foreground">
-					{historyMode
+		<PageShell width="wide">
+			<PageHeader
+				title="Review and sign"
+				lead={
+					historyMode
 						? "Your verified My documents session protects this signing task."
-						: "No account is required for this signing link."}
-				</p>
-			</div>
+						: "No account is required for this signing link."
+				}
+			/>
 			{error && (
-				<div className="rounded-md border border-destructive/40 p-4 text-sm">
-					<p className="font-medium">{error.message}</p>
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>{error.message}</AlertTitle>
 					{error.verificationUrl && (
-						<a className="text-primary underline" href={error.verificationUrl}>
-							Verify email
-						</a>
+						<AlertDescription>
+							<TextLink href={error.verificationUrl}>Verify email</TextLink>
+						</AlertDescription>
 					)}
-				</div>
+				</Alert>
 			)}
 			{completedDocument && (
-				<section className="rounded-md border p-4">
+				<Panel>
 					<div className="flex flex-wrap items-start justify-between gap-4">
-						<div className="space-y-1">
-							<p className="inline-flex items-center gap-2 font-medium">
-								<CheckCircle2 className="h-4 w-4 text-emerald-700" />
-								Document complete
-							</p>
-							<p className="text-sm text-muted-foreground">
+						<div className="space-y-2">
+							<StatusBadge tone="success">Document complete</StatusBadge>
+							<p className="text-pretty text-muted-foreground text-sm">
 								The final document is ready for review and download.
 							</p>
 						</div>
 						<div className="flex flex-wrap gap-3">
-							<a
-								className="inline-flex h-10 items-center gap-2 rounded-md border px-4 text-sm font-medium"
-								href={completedDocument.url}
-							>
-								<FileText className="h-4 w-4" />
-								View completed document
-							</a>
-							<a
-								className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-								href={completedDocument.downloadUrl}
-							>
-								<Download className="h-4 w-4" />
-								Download final PDF
-							</a>
+							<Button asChild variant="outline" size="lg">
+								<a href={completedDocument.url}>
+									<FileText aria-hidden="true" className="size-4" />
+									View completed document
+								</a>
+							</Button>
+							<Button asChild size="lg">
+								<a href={completedDocument.downloadUrl}>
+									<Download aria-hidden="true" className="size-4" />
+									Download final PDF
+								</a>
+							</Button>
 						</div>
 					</div>
-				</section>
+				</Panel>
 			)}
 			{!session && !error && !completedDocument && (
-				<div className="rounded-md border p-4 text-sm text-muted-foreground">
-					<p className="font-medium text-foreground">Loading signing session</p>
-					<p className="text-pretty">Fetching the document and assigned signing fields.</p>
-				</div>
+				<LoadingText boxed>
+					<span className="block font-medium text-foreground">Loading signing session…</span>
+					<span className="mt-1 block text-pretty">
+						Fetching the document and assigned signing fields.
+					</span>
+				</LoadingText>
 			)}
 			{session?.sourceDocument && (
 				<SigningDocumentPreview
@@ -224,11 +227,11 @@ export function SignerPage(props: SignerPageProps) {
 			)}
 			{session && (
 				<>
-					<div className="grid gap-3 rounded-md border p-4 md:grid-cols-2">
+					<Panel className="grid gap-3 md:grid-cols-2">
 						{session.fields.length === 0 ? (
 							<div className="space-y-1 md:col-span-2">
 								<p className="font-medium">No assigned fields</p>
-								<p className="text-pretty text-sm text-muted-foreground">
+								<p className="text-pretty text-muted-foreground text-sm">
 									{session.signingMode === "only_me"
 										? "This signing link has no signature or date fields assigned."
 										: "Request changes if this document is missing a signature or date field."}
@@ -236,15 +239,15 @@ export function SignerPage(props: SignerPageProps) {
 							</div>
 						) : (
 							session.fields.map((field) => (
-								<div key={field.id} className="rounded-md border bg-muted/30 p-3">
+								<div key={field.id} className="rounded-lg border bg-muted/30 p-3">
 									<p className="font-medium capitalize">{field.type}</p>
-									<p className="text-sm text-muted-foreground">
+									<p className="text-muted-foreground text-sm tabular-nums">
 										Page {field.page}, x {field.x}, y {field.y}, {field.width}x{field.height}
 									</p>
 								</div>
 							))
 						)}
-					</div>
+					</Panel>
 					<PartnerSignatureForm
 						key={session.signaturePreference?.id ?? "new-partner-signature"}
 						initialPreference={session.signaturePreference}
@@ -303,8 +306,8 @@ export function SignerPage(props: SignerPageProps) {
 					)}
 				</>
 			)}
-			{message && <p className="text-sm text-muted-foreground">{message}</p>}
-		</div>
+			{message && <p className="text-muted-foreground text-sm">{message}</p>}
+		</PageShell>
 	);
 }
 

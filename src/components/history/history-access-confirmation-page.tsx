@@ -1,5 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { TextLink } from "@/components/patterns/text-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -90,50 +93,35 @@ export function HistoryAccessConfirmationPage({
 	}, [recovery]);
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-xl space-y-6">
-				<p className="text-sm font-medium text-primary">Signmos</p>
-				<h1 className="text-3xl font-semibold text-foreground">Confirm My documents access</h1>
-
-				{inspection.isPending ? (
-					<output aria-live="polite" className="block text-muted-foreground">
-						Checking this secure link…
-					</output>
-				) : null}
-				{inspection.data?.state === "confirm" ? (
-					<>
-						<p className="text-muted-foreground">
-							Continue only if you requested access to your Signmos documents.
-						</p>
-						<Button
-							type="button"
-							onClick={() => redemption.mutate()}
-							disabled={redemption.isPending}
-						>
-							{redemption.isPending ? "Confirming..." : "Continue to My documents"}
-						</Button>
-					</>
-				) : null}
-				{recovery ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>
-							<h2 ref={recoveryHeadingRef} tabIndex={-1}>
-								{recovery.title}
-							</h2>
-						</AlertTitle>
-						<AlertDescription>
-							<p>{recovery.message}</p>
-							<a
-								className="mt-2 inline-flex rounded-sm font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-								href="/?task=my-documents"
-							>
-								Request a new link
-							</a>
-						</AlertDescription>
-					</Alert>
-				) : null}
-			</section>
-		</main>
+		<PageShell width="narrow">
+			<PageHeader title="Confirm My documents access" />
+			{inspection.isPending ? <LoadingText>Checking this secure link…</LoadingText> : null}
+			{inspection.data?.state === "confirm" ? (
+				<>
+					<p className="text-pretty text-muted-foreground">
+						Continue only if you requested access to your Signmos documents.
+					</p>
+					<Button type="button" onClick={() => redemption.mutate()} disabled={redemption.isPending}>
+						{redemption.isPending ? "Confirming…" : "Continue to My documents"}
+					</Button>
+				</>
+			) : null}
+			{recovery ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>
+						<h2 ref={recoveryHeadingRef} tabIndex={-1}>
+							{recovery.title}
+						</h2>
+					</AlertTitle>
+					<AlertDescription>
+						<p>{recovery.message}</p>
+						<TextLink className="mt-2 inline-flex" href="/?task=my-documents">
+							Request a new link
+						</TextLink>
+					</AlertDescription>
+				</Alert>
+			) : null}
+		</PageShell>
 	);
 }
 

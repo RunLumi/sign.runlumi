@@ -1,4 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelTitle } from "@/components/patterns/panel";
+import { BackLink } from "@/components/patterns/text-link";
 import { SourcePdfUploadPanel } from "@/components/sender/source-pdf-upload-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -21,52 +25,42 @@ export function HistoryCreatorPage({ envelopeId }: { envelopeId: string }) {
 	const preparing = view?.status === "draft" || view?.status === "changes_requested";
 
 	return (
-		<main className="min-h-dvh bg-background p-6">
-			<div className="mx-auto max-w-3xl space-y-6">
-				<a className="text-primary text-sm underline" href="/my-documents">
-					Back to My documents
-				</a>
-				<div>
-					<h1 className="text-2xl font-semibold">
-						{preparing ? "Resume document" : "Review document"}
-					</h1>
-					{view ? (
-						<p className="text-muted-foreground text-sm">
-							Status: {historyCreatorStatus(view.status)}
-						</p>
-					) : null}
-				</div>
-				{creatorQuery.isPending ? <p aria-live="polite">Loading creator access…</p> : null}
-				{creatorQuery.isError ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>Creator access unavailable</AlertTitle>
-						<AlertDescription>
-							Return to My documents and refresh the current status.
-						</AlertDescription>
-					</Alert>
-				) : null}
-				{view && preparing ? (
-					<SourcePdfUploadPanel
-						envelopeId={view.envelopeId}
-						senderSessionToken=""
-						historyAccess
-						senderName={view.sender.name}
-						senderEmail={view.sender.email}
-						signingMode={view.signingMode}
-					/>
-				) : null}
-				{view && !preparing ? (
-					<section className="rounded-lg border p-5">
-						<h2 className="font-semibold">Current creator actions</h2>
-						<p className="text-muted-foreground text-sm">
-							{view.allowedActions.length > 0
-								? view.allowedActions.join(", ")
-								: "No creator action is available."}
-						</p>
-					</section>
-				) : null}
-			</div>
-		</main>
+		<PageShell width="content">
+			<BackLink href="/my-documents">Back to My documents</BackLink>
+			<PageHeader
+				title={preparing ? "Resume document" : "Review document"}
+				lead={view ? `Status: ${historyCreatorStatus(view.status)}` : undefined}
+			/>
+			{creatorQuery.isPending ? <LoadingText boxed>Loading creator access…</LoadingText> : null}
+			{creatorQuery.isError ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>Creator access unavailable</AlertTitle>
+					<AlertDescription>
+						Return to My documents and refresh the current status.
+					</AlertDescription>
+				</Alert>
+			) : null}
+			{view && preparing ? (
+				<SourcePdfUploadPanel
+					envelopeId={view.envelopeId}
+					senderSessionToken=""
+					historyAccess
+					senderName={view.sender.name}
+					senderEmail={view.sender.email}
+					signingMode={view.signingMode}
+				/>
+			) : null}
+			{view && !preparing ? (
+				<Panel className="space-y-2">
+					<PanelTitle>Current creator actions</PanelTitle>
+					<p className="text-muted-foreground text-sm">
+						{view.allowedActions.length > 0
+							? view.allowedActions.join(", ")
+							: "No creator action is available."}
+					</p>
+				</Panel>
+			) : null}
+		</PageShell>
 	);
 }
 

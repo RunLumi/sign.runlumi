@@ -1,6 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, useRef, useState } from "react";
+import { Panel } from "@/components/patterns/panel";
+import { BackLink } from "@/components/patterns/text-link";
 import { readTurnstileToken, TurnstileWidget } from "@/components/turnstile-widget";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -62,14 +64,10 @@ export function AgenticAccessRequestForm({
 	}
 
 	return (
-		<form
-			aria-label="Request Agentic access"
-			onSubmit={submitForm}
-			className="rounded-lg border bg-card p-5 shadow-sm"
-		>
-			<Button type="button" variant="outline" onClick={onBack} className="mb-4 cursor-pointer">
+		<Panel as="form" aria-label="Request Agentic access" onSubmit={submitForm}>
+			<BackLink onClick={onBack} className="mb-5">
 				Back to task choices
-			</Button>
+			</BackLink>
 			<div className="space-y-5">
 				<form.Field
 					name="email"
@@ -130,11 +128,11 @@ export function AgenticAccessRequestForm({
 
 				<div className="flex flex-wrap gap-3">
 					<Button type="submit" disabled={requestMutation.isPending || !hasTurnstileConfig}>
-						{requestMutation.isPending ? "Requesting..." : "Email me an Agentic link"}
+						{requestMutation.isPending ? "Requesting…" : "Email me an Agentic link"}
 					</Button>
 				</div>
 			</div>
-		</form>
+		</Panel>
 	);
 }
 

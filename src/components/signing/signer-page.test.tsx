@@ -8,7 +8,7 @@ describe("SignerPage", () => {
 
 		render(<SignerPage token="valid-token" />);
 
-		expect(screen.getByText("Loading signing session")).toBeTruthy();
+		expect(screen.getByText("Loading signing session…")).toBeTruthy();
 	});
 
 	it("loads assigned fields and submits typed signing values", async () => {

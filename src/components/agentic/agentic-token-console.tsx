@@ -1,9 +1,24 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { AuthenticatedProductNavigation } from "@/components/navigation/product-mode-navigation";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelTitle } from "@/components/patterns/panel";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import { TextLink } from "@/components/patterns/text-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -120,28 +135,24 @@ export function AgenticTokenConsole() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-2xl space-y-6">
+		<>
+			<PageShell width="content">
 				<AuthenticatedProductNavigation activeMode="agentic" />
-				<div className="space-y-2">
-					<p className="text-sm font-medium text-primary">Signmos Agentic mode</p>
-					<h1 className="text-3xl font-semibold text-foreground">Create an Agentic token</h1>
-					<p className="text-muted-foreground">
-						Anyone holding this token can send, sign, decline, cancel, and delete documents as your
-						verified email. Sign, decline, cancel, expire, and delete requests still require the
-						matching human to approve the exact action in Signmos before it runs.
-					</p>
-				</div>
+				<PageHeader
+					title="Create an Agentic token"
+					lead="Anyone holding this token can send, sign, decline, cancel, and delete documents as your verified email. Sign, decline, cancel, expire, and delete requests still require the matching human to approve the exact action in Signmos before it runs."
+				/>
 
 				<TokenListing listing={listing} onRevoke={setPendingRevoke} />
 
-				<form
+				<Panel
+					as="form"
 					aria-label="Generate Agentic token"
+					className="space-y-4"
 					onSubmit={(event) => {
 						event.preventDefault();
 						void form.handleSubmit();
 					}}
-					className="space-y-4 rounded-lg border bg-card p-5 shadow-sm"
 				>
 					<form.Field name="name">
 						{(field) => (
@@ -161,7 +172,7 @@ export function AgenticTokenConsole() {
 					</form.Field>
 					<form.Field name="acknowledgeFullAuthority">
 						{(field) => (
-							<label className="flex items-start gap-3 text-sm text-foreground">
+							<label className="flex items-start gap-3 text-foreground text-sm">
 								<input
 									type="checkbox"
 									name={field.name}
@@ -180,12 +191,12 @@ export function AgenticTokenConsole() {
 						)}
 					</form.Field>
 					<Button type="submit" disabled={generation.isPending || atLimit}>
-						{generation.isPending ? "Generating..." : "Generate token"}
+						{generation.isPending ? "Generating…" : "Generate token"}
 					</Button>
 					{atLimit && listing.data ? (
-						<p className="text-sm text-muted-foreground">Revoke a token to create another.</p>
+						<p className="text-muted-foreground text-sm">Revoke a token to create another.</p>
 					) : null}
-				</form>
+				</Panel>
 
 				{generation.isError ? (
 					<Alert role="alert" variant="destructive">
@@ -199,7 +210,7 @@ export function AgenticTokenConsole() {
 						<AlertTitle>Copy this token now</AlertTitle>
 						<AlertDescription className="space-y-3">
 							<p>This secret is shown once and cannot be recovered after this page reloads.</p>
-							<code className="block overflow-wrap-anywhere rounded bg-muted p-3 font-mono text-sm">
+							<code className="block wrap-anywhere rounded-md bg-muted p-3 font-mono text-sm">
 								{generation.data.secret}
 							</code>
 							<Button
@@ -215,13 +226,11 @@ export function AgenticTokenConsole() {
 					</Alert>
 				) : null}
 
-				<section aria-labelledby="agent-prompt-title" className="space-y-3 rounded-lg border p-5">
-					<h2 id="agent-prompt-title" className="text-lg font-semibold">
-						Agent prompt
-					</h2>
+				<Panel aria-labelledby="agent-prompt-title" className="space-y-4">
+					<PanelTitle id="agent-prompt-title">Agent prompt</PanelTitle>
 					<fieldset className="space-y-2 rounded-md border p-4">
-						<legend className="px-1 text-sm font-medium">Token used in Agent prompt</legend>
-						<label className="flex items-start gap-3 text-sm text-foreground">
+						<legend className="px-1 font-medium text-sm">Token used in Agent prompt</legend>
+						<label className="flex items-start gap-3 text-foreground text-sm">
 							<input
 								type="radio"
 								name="agent-prompt-token-source"
@@ -232,7 +241,7 @@ export function AgenticTokenConsole() {
 							<span>Use environment variable ($SIGNMOS_TOKEN)</span>
 						</label>
 						{generation.data ? (
-							<label className="flex items-start gap-3 text-sm text-foreground">
+							<label className="flex items-start gap-3 text-foreground text-sm">
 								<input
 									type="radio"
 									name="agent-prompt-token-source"
@@ -243,11 +252,11 @@ export function AgenticTokenConsole() {
 								<span>Use {generation.data.token.name}</span>
 							</label>
 						) : (
-							<p className="text-sm text-muted-foreground">
+							<p className="text-muted-foreground text-sm">
 								Generate a new token to select its one-time secret here.
 							</p>
 						)}
-						<label className="flex items-start gap-3 text-sm text-foreground">
+						<label className="flex items-start gap-3 text-foreground text-sm">
 							<input
 								type="radio"
 								name="agent-prompt-token-source"
@@ -270,7 +279,7 @@ export function AgenticTokenConsole() {
 									setPromptTokenSource("saved");
 								}}
 							/>
-							<p className="text-sm text-muted-foreground">
+							<p className="text-muted-foreground text-sm">
 								Existing tokens cannot be recovered from Signmos. Paste the full token you saved, or
 								generate a new token above.
 							</p>
@@ -278,17 +287,13 @@ export function AgenticTokenConsole() {
 					</fieldset>
 					<pre
 						data-testid="agent-prompt"
-						className="whitespace-pre-wrap text-sm text-muted-foreground"
+						className="wrap-anywhere whitespace-pre-wrap rounded-md bg-muted p-3 font-mono text-muted-foreground text-sm"
 					>
 						{agentPrompt}
 					</pre>
 					<nav aria-label="Agent API resources" className="flex flex-wrap gap-4 text-sm">
-						<a className="font-medium text-primary underline" href={agentGuideUrl}>
-							Open Agent guide
-						</a>
-						<a className="font-medium text-primary underline" href={openApiUrl}>
-							OpenAPI schema
-						</a>
+						<TextLink href={agentGuideUrl}>Open Agent guide</TextLink>
+						<TextLink href={openApiUrl}>OpenAPI schema</TextLink>
 					</nav>
 					<Button
 						type="button"
@@ -297,45 +302,48 @@ export function AgenticTokenConsole() {
 					>
 						Copy agent prompt
 					</Button>
-				</section>
-				{copyStatus ? (
-					<output aria-live="polite" className="block text-sm text-muted-foreground">
-						{copyStatus}
-					</output>
-				) : null}
-			</section>
-			{pendingRevoke ? (
-				<div
-					role="alertdialog"
-					aria-modal="true"
-					aria-labelledby="revoke-token-title"
-					className="fixed inset-0 grid place-items-center bg-black/40 p-6"
-				>
-					<div className="max-w-md space-y-4 rounded-lg bg-background p-6 shadow-lg">
-						<h2 id="revoke-token-title" className="text-lg font-semibold">
-							Revoke {pendingRevoke.name}?
-						</h2>
-						<p className="text-sm text-muted-foreground">
+				</Panel>
+				{copyStatus ? <LoadingText>{copyStatus}</LoadingText> : null}
+			</PageShell>
+
+			<Dialog
+				open={pendingRevoke !== null}
+				onOpenChange={(open) => {
+					if (!open) setPendingRevoke(null);
+				}}
+			>
+				<DialogContent role="alertdialog">
+					<DialogHeader>
+						<DialogTitle>Revoke {pendingRevoke?.name}?</DialogTitle>
+						<DialogDescription>
 							This token will stop working immediately. Your other tokens remain active.
+						</DialogDescription>
+					</DialogHeader>
+					{revocation.isError ? (
+						<p role="alert" className="text-destructive text-sm">
+							{revocation.error.message}
 						</p>
-						{revocation.isError ? <p role="alert">{revocation.error.message}</p> : null}
-						<div className="flex gap-3">
-							<Button type="button" variant="outline" onClick={() => setPendingRevoke(null)}>
+					) : null}
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button type="button" variant="outline">
 								Cancel
 							</Button>
-							<Button
-								type="button"
-								variant="destructive"
-								disabled={revocation.isPending}
-								onClick={() => revocation.mutate(pendingRevoke)}
-							>
-								{revocation.isPending ? "Revoking..." : "Confirm revoke"}
-							</Button>
-						</div>
-					</div>
-				</div>
-			) : null}
-		</main>
+						</DialogClose>
+						<Button
+							type="button"
+							variant="destructive"
+							disabled={revocation.isPending}
+							onClick={() => {
+								if (pendingRevoke) revocation.mutate(pendingRevoke);
+							}}
+						>
+							{revocation.isPending ? "Revoking…" : "Confirm revoke"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }
 
@@ -361,7 +369,7 @@ function TokenListing({
 	listing: ReturnType<typeof useQuery<{ activeLimit: number; tokens: AgenticTokenMetadata[] }>>;
 	onRevoke: (token: AgenticTokenMetadata) => void;
 }) {
-	if (listing.isPending) return <output>Loading Agentic tokens…</output>;
+	if (listing.isPending) return <LoadingText>Loading Agentic tokens…</LoadingText>;
 	if (listing.isError) {
 		const expired =
 			listing.error instanceof AgenticConsoleError &&
@@ -375,7 +383,7 @@ function TokenListing({
 				</AlertTitle>
 				<AlertDescription>
 					{expired ? (
-						<a href="/?task=agentic">Verify email again</a>
+						<TextLink href="/?task=agentic">Verify email again</TextLink>
 					) : (
 						"Retry or verify your connection."
 					)}
@@ -385,43 +393,62 @@ function TokenListing({
 	}
 	const activeCount = listing.data.tokens.filter((token) => token.status === "active").length;
 	return (
-		<section aria-labelledby="agentic-token-list-title" className="space-y-3 rounded-lg border p-5">
+		<Panel aria-labelledby="agentic-token-list-title" className="space-y-4">
 			<div className="flex items-center justify-between gap-4">
-				<h2 id="agentic-token-list-title" className="text-lg font-semibold">
-					Your Agentic tokens
-				</h2>
-				<p className="text-sm font-medium">
+				<PanelTitle id="agentic-token-list-title">Your Agentic tokens</PanelTitle>
+				<p className="font-medium text-sm tabular-nums">
 					{activeCount} of {listing.data.activeLimit} active
 				</p>
 			</div>
 			{listing.data.tokens.length === 0 ? (
-				<output className="block text-sm text-muted-foreground">No Agentic tokens yet.</output>
+				<EmptyState
+					title="No Agentic tokens yet"
+					description="Generate a token below to connect your agent."
+				/>
 			) : (
 				<ul className="space-y-3">
 					{listing.data.tokens.map((token) => (
-						<li key={token.id} className="space-y-2 rounded-md border p-4">
-							<h3 className="font-medium">
-								{token.name} — {token.status === "active" ? "Active" : "Revoked"}
-							</h3>
-							<code className="text-sm">{token.hint}</code>
-							<p className="text-sm text-muted-foreground">Created {formatDate(token.createdAt)}</p>
-							<p className="text-sm text-muted-foreground">
-								{token.lastUsedAt ? `Last used ${formatDate(token.lastUsedAt)}` : "Never used"}
-							</p>
-							{token.status === "active" ? (
-								<Button type="button" variant="outline" onClick={() => onRevoke(token)}>
-									Revoke {token.name}
-								</Button>
-							) : token.revokedAt ? (
-								<p className="text-sm text-muted-foreground">
-									Revoked {formatDate(token.revokedAt)}
-								</p>
-							) : null}
-						</li>
+						<TokenListItem key={token.id} token={token} onRevoke={onRevoke} />
 					))}
 				</ul>
 			)}
-		</section>
+		</Panel>
+	);
+}
+
+function TokenListItem({
+	token,
+	onRevoke,
+}: {
+	token: AgenticTokenMetadata;
+	onRevoke: (token: AgenticTokenMetadata) => void;
+}) {
+	const active = token.status === "active";
+	return (
+		<li className="space-y-2 rounded-lg border bg-card p-4">
+			<h3 className="flex flex-wrap items-center gap-2 font-medium">
+				{token.name}
+				<StatusBadge tone={active ? "success" : "destructive"}>
+					{active ? "Active" : "Revoked"}
+				</StatusBadge>
+			</h3>
+			<code className="font-mono text-muted-foreground text-sm">{token.hint}</code>
+			<p className="text-muted-foreground text-sm tabular-nums">
+				Created {formatDate(token.createdAt)}
+			</p>
+			<p className="text-muted-foreground text-sm tabular-nums">
+				{token.lastUsedAt ? `Last used ${formatDate(token.lastUsedAt)}` : "Never used"}
+			</p>
+			{active ? (
+				<Button type="button" variant="outline" onClick={() => onRevoke(token)}>
+					Revoke {token.name}
+				</Button>
+			) : token.revokedAt ? (
+				<p className="text-muted-foreground text-sm tabular-nums">
+					Revoked {formatDate(token.revokedAt)}
+				</p>
+			) : null}
+		</li>
 	);
 }
 

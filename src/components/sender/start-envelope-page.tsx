@@ -11,16 +11,19 @@ import {
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AgenticAccessRequestForm } from "@/components/agentic/agentic-access-request-form";
 import { HistoryRequestForm } from "@/components/history/history-request-form";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { Wordmark } from "@/components/layout/wordmark";
 import {
 	type ProductMode,
 	ProductModeNavigation,
 } from "@/components/navigation/product-mode-navigation";
+import { Panel } from "@/components/patterns/panel";
+import { BackLink } from "@/components/patterns/text-link";
 import { readTurnstileToken, TurnstileWidget } from "@/components/turnstile-widget";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 interface StartEnvelopePageProps {
 	initialTask?: ProductMode;
@@ -226,40 +229,32 @@ export function StartEnvelopePage({
 	const isTaskChooserVisible = activeTask === null;
 	const activeTaskHeroContent = getLandingTaskHeroContent(activeTask);
 
-	return (
-		<main
-			className={cn(
-				"min-h-dvh bg-background px-6 py-10",
-				isTaskChooserVisible && "flex items-center",
-			)}
-		>
-			<section
-				className={cn(
-					"mx-auto grid w-full max-w-5xl gap-8",
-					isTaskChooserVisible ? "max-w-3xl gap-10" : "lg:grid-cols-[1fr_420px] lg:items-start",
-				)}
-			>
-				{activeTask ? (
-					<div className="lg:col-span-2">
-						<ProductModeNavigation activeMode={activeTask} />
-					</div>
-				) : null}
-				<div
-					className={cn(isTaskChooserVisible ? "mx-auto max-w-2xl text-center" : "pt-8 lg:pt-20")}
-				>
-					<p className="text-sm font-medium text-primary">Signmos</p>
-					<h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold text-foreground sm:text-5xl">
-						{activeTaskHeroContent.heading}
+	if (isTaskChooserVisible) {
+		return (
+			<PageShell width="content" center>
+				<div className="mx-auto max-w-2xl text-center">
+					<Wordmark linked={false} />
+					<h1 className="mt-6 text-balance font-semibold text-4xl text-foreground sm:text-5xl">
+						{taskChooserHeroContent.heading}
 					</h1>
-					<p
-						className={cn(
-							"mt-5 max-w-xl text-pretty text-base leading-7 text-muted-foreground",
-							isTaskChooserVisible && "mx-auto",
-						)}
-					>
-						{activeTaskHeroContent.description}
+					<p className="mx-auto mt-5 max-w-xl text-pretty text-muted-foreground leading-7">
+						{taskChooserHeroContent.description}
 					</p>
 				</div>
+				<LandingTaskChooser onChoose={chooseTask} />
+			</PageShell>
+		);
+	}
+
+	return (
+		<PageShell width="wide">
+			<ProductModeNavigation activeMode={activeTask} />
+			<section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+				<PageHeader
+					className="lg:pt-10"
+					title={activeTaskHeroContent.heading}
+					lead={activeTaskHeroContent.description}
+				/>
 
 				<LandingTaskPanel
 					activeTask={activeTask}
@@ -269,19 +264,10 @@ export function StartEnvelopePage({
 					turnstileSiteKey={activeTurnstileSiteKey}
 					testTurnstileToken={activeTestTurnstileToken}
 				>
-					<form
-						aria-label="Start envelope"
-						onSubmit={submitForm}
-						className="rounded-lg border bg-card p-5 shadow-sm"
-					>
-						<Button
-							type="button"
-							variant="outline"
-							onClick={returnToTaskChooser}
-							className="mb-4 cursor-pointer"
-						>
+					<Panel as="form" aria-label="Start envelope" onSubmit={submitForm}>
+						<BackLink onClick={returnToTaskChooser} className="mb-5">
 							Back to task choices
-						</Button>
+						</BackLink>
 						<div className="space-y-5">
 							<form.Field name="name">
 								{(field) => (
@@ -349,14 +335,14 @@ export function StartEnvelopePage({
 								className="w-full"
 								disabled={state.status === "submitting" || !hasTurnstileConfig}
 							>
-								<Send className="mr-2 size-4" />
-								{state.status === "submitting" ? "Starting..." : "Start envelope"}
+								<Send aria-hidden="true" className="size-4" />
+								{state.status === "submitting" ? "Starting…" : "Start envelope"}
 							</Button>
 						</div>
-					</form>
+					</Panel>
 				</LandingTaskPanel>
 			</section>
-		</main>
+		</PageShell>
 	);
 }
 
@@ -438,27 +424,29 @@ function LandingTaskChooser({ onChoose }: { onChoose: (task: LandingTask) => voi
 		<fieldset className="grid gap-3 sm:grid-cols-2">
 			<legend className="sr-only">Choose a task</legend>
 			{landingTaskChoices.map(({ task, label, description, icon: Icon }) => (
-				<Button
+				<button
 					key={task}
 					type="button"
-					variant="outline"
 					aria-label={label}
 					onClick={() => onChoose(task)}
-					className="h-auto min-h-28 cursor-pointer justify-between whitespace-normal rounded-xl border-border/80 bg-card p-5 text-left shadow-sm hover:border-foreground/30 hover:bg-accent/60"
+					className="group flex min-h-28 items-center justify-between gap-3 rounded-xl border bg-card p-5 text-left shadow-xs outline-none transition-colors hover:border-ring/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 				>
 					<span className="flex min-w-0 items-start gap-4">
-						<span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+						<span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
 							<Icon aria-hidden="true" className="size-5" />
 						</span>
 						<span className="min-w-0">
-							<span className="block text-base font-semibold text-foreground">{label}</span>
-							<span className="mt-1 block text-pretty text-sm font-normal text-muted-foreground">
+							<span className="block font-semibold text-base text-foreground">{label}</span>
+							<span className="mt-1 block text-pretty text-muted-foreground text-sm">
 								{description}
 							</span>
 						</span>
 					</span>
-					<ArrowRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-				</Button>
+					<ArrowRight
+						aria-hidden="true"
+						className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+					/>
+				</button>
 			))}
 		</fieldset>
 	);

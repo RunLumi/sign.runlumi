@@ -1,5 +1,8 @@
 import { Check, FileText, Play, Send, ShieldCheck } from "lucide-react";
 import { useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { Panel } from "@/components/patterns/panel";
+import { TextLink } from "@/components/patterns/text-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +41,7 @@ export function ManualSigningSmokePage() {
 	const [message, setMessage] = useState<string | null>(null);
 
 	async function runSetup() {
-		setMessage("Creating envelope");
+		setMessage("Creating envelope…");
 		const envelope = await postJson<{ id: string }>("/api/envelopes", undefined, {
 			"x-internal-user-id": "manual-ui",
 			"idempotency-key": `manual-ui-create-${crypto.randomUUID()}`,
@@ -127,92 +130,88 @@ export function ManualSigningSmokePage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-background p-6">
-			<div className="mx-auto max-w-4xl space-y-6">
-				<div>
-					<h1 className="text-2xl font-semibold">Manual signing smoke test</h1>
-					<p className="text-sm text-muted-foreground">
-						Create, prepare, send, sign, and verify one envelope from the browser.
-					</p>
-				</div>
-				<div className="rounded-md border p-4">
-					<Button type="button" onClick={runSetup}>
-						<Play className="h-4 w-4" />
-						Run setup
-					</Button>
-				</div>
-				{state && (
-					<div className="grid gap-4 rounded-md border p-4">
-						<div className="grid gap-2 text-sm">
-							<p>
-								Envelope: <span className="font-mono">{state.envelopeId}</span>
-							</p>
-							<a className="text-primary underline" href={state.verificationLink.url}>
-								{state.verificationLink.url}
-							</a>
-							{state.signingLink && (
-								<a className="text-primary underline" href={state.signingLink.url}>
-									{state.signingLink.url}
-								</a>
-							)}
-						</div>
-						<Button type="button" variant="outline" onClick={verifyPartner}>
-							<ShieldCheck className="h-4 w-4" />
-							Verify partner
-						</Button>
-						<form onSubmit={completeInPage} className="grid gap-4 md:grid-cols-3">
-							<div className="space-y-2">
-								<Label htmlFor="manual-signature-name">Typed signature</Label>
-								<Input
-									id="manual-signature-name"
-									value={signatureName}
-									onChange={(event) => setSignatureName(event.target.value)}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="manual-signing-date">Signing date</Label>
-								<Input
-									id="manual-signing-date"
-									type="date"
-									value={date}
-									onChange={(event) => setDate(event.target.value)}
-								/>
-							</div>
-							<div className="flex items-end">
-								<Button type="submit" className="w-full" disabled={!state.signingLink}>
-									<Send className="h-4 w-4" />
-									Complete in page
-								</Button>
-							</div>
-						</form>
-						{state.finalPdfAvailable && state.completedDocument && (
-							<div className="flex flex-wrap gap-3">
-								<a
-									className="inline-flex items-center gap-2 text-primary underline"
-									href={state.completedDocument.url}
-								>
-									<FileText className="h-4 w-4" />
-									View completed document
-								</a>
-								<a
-									className="inline-flex items-center gap-2 text-primary underline"
-									href={state.completedDocument.downloadUrl}
-								>
-									<FileText className="h-4 w-4" />
-									Download final PDF
-								</a>
-							</div>
+		<PageShell width="wide">
+			<PageHeader
+				title="Manual signing smoke test"
+				lead="Create, prepare, send, sign, and verify one envelope from the browser."
+			/>
+			<Panel>
+				<Button type="button" onClick={runSetup}>
+					<Play aria-hidden="true" className="size-4" />
+					Run setup
+				</Button>
+			</Panel>
+			{state && (
+				<Panel className="grid gap-4">
+					<div className="grid gap-2 text-sm">
+						<p>
+							Envelope: <span className="font-mono">{state.envelopeId}</span>
+						</p>
+						<TextLink className="break-all" href={state.verificationLink.url}>
+							{state.verificationLink.url}
+						</TextLink>
+						{state.signingLink && (
+							<TextLink className="break-all" href={state.signingLink.url}>
+								{state.signingLink.url}
+							</TextLink>
 						)}
 					</div>
-				)}
-				{message && (
-					<p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-						<Check className="h-4 w-4" />
-						{message}
-					</p>
-				)}
-			</div>
-		</div>
+					<Button type="button" variant="outline" onClick={verifyPartner}>
+						<ShieldCheck aria-hidden="true" className="size-4" />
+						Verify partner
+					</Button>
+					<form onSubmit={completeInPage} className="grid gap-4 md:grid-cols-3">
+						<div className="space-y-2">
+							<Label htmlFor="manual-signature-name">Typed signature</Label>
+							<Input
+								id="manual-signature-name"
+								value={signatureName}
+								onChange={(event) => setSignatureName(event.target.value)}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="manual-signing-date">Signing date</Label>
+							<Input
+								id="manual-signing-date"
+								type="date"
+								value={date}
+								onChange={(event) => setDate(event.target.value)}
+							/>
+						</div>
+						<div className="flex items-end">
+							<Button type="submit" className="w-full" disabled={!state.signingLink}>
+								<Send aria-hidden="true" className="size-4" />
+								Complete in page
+							</Button>
+						</div>
+					</form>
+					{state.finalPdfAvailable && state.completedDocument && (
+						<div className="flex flex-wrap gap-3">
+							<TextLink
+								className="inline-flex items-center gap-2"
+								href={state.completedDocument.url}
+							>
+								<FileText aria-hidden="true" className="size-4" />
+								View completed document
+							</TextLink>
+							<TextLink
+								className="inline-flex items-center gap-2"
+								href={state.completedDocument.downloadUrl}
+							>
+								<FileText aria-hidden="true" className="size-4" />
+								Download final PDF
+							</TextLink>
+						</div>
+					)}
+				</Panel>
+			)}
+			{message && (
+				<p className="inline-flex items-center gap-2 text-muted-foreground text-sm">
+					<Check aria-hidden="true" className="size-4" />
+					{message}
+				</p>
+			)}
+		</PageShell>
 	);
 }
 

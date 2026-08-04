@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, FileText, FileUp, UploadCloud } from "lucide-react";
 import { type DragEvent, type FormEvent, useMemo, useRef, useState } from "react";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,18 +128,12 @@ export function UploadSourcePdfForm({
 	}
 
 	return (
-		<form
-			aria-label="Upload source PDF"
-			className="rounded-lg border bg-card p-5"
-			onSubmit={submitUpload}
-		>
+		<Panel as="form" aria-label="Upload source PDF" onSubmit={submitUpload}>
 			<div className="space-y-5">
 				<div className="space-y-3">
 					<div>
-						<h2 className="font-semibold text-lg text-balance">Source PDF</h2>
-						<p className="text-muted-foreground text-pretty text-sm">
-							Select the PDF document to prepare for signing.
-						</p>
+						<PanelTitle>Source PDF</PanelTitle>
+						<PanelDescription>Select the PDF document to prepare for signing.</PanelDescription>
 					</div>
 					<Input
 						id="source-pdf"
@@ -153,9 +149,9 @@ export function UploadSourcePdfForm({
 						htmlFor="source-pdf"
 						className={cn(
 							"flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-6 text-center transition-colors",
-							"hover:border-primary/60 hover:bg-muted/40",
+							"hover:border-ring/50 hover:bg-muted/40",
 							"peer-focus-visible:border-ring peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50",
-							isDragging && "border-primary bg-muted/40",
+							isDragging && "border-ring bg-muted/40 ring-[3px] ring-ring/50",
 							uploadError && "border-destructive bg-destructive/5",
 						)}
 						onDragLeave={() => setIsDragging(false)}
@@ -163,7 +159,7 @@ export function UploadSourcePdfForm({
 						onDrop={handleDrop}
 					>
 						<span className="mb-3 flex size-12 items-center justify-center rounded-full bg-background">
-							<UploadCloud className="size-6 text-muted-foreground" />
+							<UploadCloud aria-hidden="true" className="size-6 text-muted-foreground" />
 						</span>
 						<span className="font-medium text-base">{file ? "PDF selected" : "Choose PDF"}</span>
 						<span className="mt-1 text-muted-foreground text-pretty text-sm">
@@ -183,16 +179,14 @@ export function UploadSourcePdfForm({
 					</Alert>
 				) : null}
 
-				{sourcePdfQuery.isLoading ? (
-					<p className="text-muted-foreground text-sm">Checking existing PDF.</p>
-				) : null}
+				{sourcePdfQuery.isLoading ? <LoadingText>Checking existing PDF…</LoadingText> : null}
 
 				{currentDocument ? (
 					<Alert>
 						<AlertTitle>PDF uploaded</AlertTitle>
-						<AlertDescription>
+						<AlertDescription className="tabular-nums">
 							Version {currentDocument.version} · {currentDocument.byteSize} bytes ·{" "}
-							<span className="font-mono tabular-nums">{currentDocument.sha256}</span>
+							<span className="font-mono">{currentDocument.sha256}</span>
 						</AlertDescription>
 					</Alert>
 				) : null}
@@ -208,16 +202,16 @@ export function UploadSourcePdfForm({
 				) : null}
 
 				<Button type="submit" disabled={uploadMutation.isPending || !file}>
-					<FileUp className="mr-2 size-4" />
+					<FileUp aria-hidden="true" className="size-4" />
 					{uploadButtonLabel}
 				</Button>
 			</div>
-		</form>
+		</Panel>
 	);
 }
 
 function getUploadButtonLabel(isPending: boolean, hasFile: boolean) {
-	if (isPending) return "Uploading...";
+	if (isPending) return "Uploading…";
 	return hasFile ? "Upload selected PDF" : "Select a PDF first";
 }
 
@@ -237,18 +231,20 @@ function SelfSignPreviewAndAction({
 	return (
 		<section className="space-y-3 rounded-lg border bg-muted/20 p-4" aria-label="PDF preview">
 			<div>
-				<h3 className="font-medium text-base">Preview</h3>
-				<p className="text-muted-foreground text-sm">Review the uploaded PDF before signing.</p>
+				<h3 className="text-balance font-medium text-base">Preview</h3>
+				<p className="text-pretty text-muted-foreground text-sm">
+					Review the uploaded PDF before signing.
+				</p>
 			</div>
 			<iframe
-				className="h-[520px] w-full rounded-md border bg-background"
+				className="aspect-[612/792] w-full rounded-md border bg-white"
 				src={buildPreviewUrl(envelopeId, senderSessionToken, fieldPage, historyAccess)}
 				title="Uploaded source PDF preview"
 			/>
 			<Button asChild>
 				<a href={signingUrl}>
 					Continue to sign
-					<ArrowRight className="size-4" />
+					<ArrowRight aria-hidden="true" className="size-4" />
 				</a>
 			</Button>
 		</section>
@@ -258,7 +254,7 @@ function SelfSignPreviewAndAction({
 function SelectedPdf({ file }: { file: File }) {
 	return (
 		<div className="flex items-center gap-3 rounded-md border bg-muted/30 p-3">
-			<FileText className="size-5 shrink-0 text-muted-foreground" />
+			<FileText aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
 			<div className="min-w-0">
 				<p className="truncate font-medium text-sm">{file.name}</p>
 				<p className="text-muted-foreground text-xs tabular-nums">{formatBytes(file.size)}</p>

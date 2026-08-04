@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { AuthenticatedProductNavigation } from "@/components/navigation/product-mode-navigation";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { TextLink } from "@/components/patterns/text-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	HistoryEnvelopeStart,
@@ -14,7 +17,7 @@ interface HistoryIdentityResponse {
 const signingModeContent = {
 	only_me: {
 		heading: "Sign a PDF by yourself",
-		description: "Start a new document using your verified My Documents identity.",
+		description: "Start a new document using your verified My documents identity.",
 	},
 	me_and_another_signer: {
 		heading: "Sign a PDF with someone else",
@@ -30,41 +33,26 @@ export function HistorySigningStartPage({ signingMode }: { signingMode: HistoryS
 	const content = signingModeContent[signingMode];
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-3xl space-y-8">
-				<AuthenticatedProductNavigation activeMode={signingMode} />
-				<div>
-					<p className="text-sm font-medium text-primary">Signmos</p>
-					<h1 className="mt-3 text-balance text-3xl font-semibold text-foreground">
-						{content.heading}
-					</h1>
-					<p className="mt-3 text-pretty text-muted-foreground">{content.description}</p>
-				</div>
-
-				{identity.isPending ? (
-					<output aria-live="polite" className="block rounded-lg border p-5 text-muted-foreground">
-						Loading your verified identity…
-					</output>
-				) : null}
-				{identity.isError ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>My Documents access required</AlertTitle>
-						<AlertDescription>
-							<a className="font-medium underline" href="/?task=my-documents">
-								Verify your email to continue
-							</a>
-						</AlertDescription>
-					</Alert>
-				) : null}
-				{identity.data ? (
-					<HistoryEnvelopeStart
-						identity={identity.data}
-						initialSigningMode={signingMode}
-						collapsible={false}
-					/>
-				) : null}
-			</section>
-		</main>
+		<PageShell width="content">
+			<AuthenticatedProductNavigation activeMode={signingMode} />
+			<PageHeader title={content.heading} lead={content.description} />
+			{identity.isPending ? <LoadingText boxed>Loading your verified identity…</LoadingText> : null}
+			{identity.isError ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>My documents access required</AlertTitle>
+					<AlertDescription>
+						<TextLink href="/?task=my-documents">Verify your email to continue</TextLink>
+					</AlertDescription>
+				</Alert>
+			) : null}
+			{identity.data ? (
+				<HistoryEnvelopeStart
+					identity={identity.data}
+					initialSigningMode={signingMode}
+					collapsible={false}
+				/>
+			) : null}
+		</PageShell>
 	);
 }
 
@@ -72,7 +60,7 @@ async function fetchHistoryIdentity(): Promise<HistorySessionIdentity> {
 	const response = await fetch("/api/history/documents?page=1", { credentials: "same-origin" });
 	const body: unknown = await response.json().catch(() => null);
 	if (!response.ok || !isHistoryIdentityResponse(body)) {
-		throw new Error("My Documents access is required");
+		throw new Error("My documents access is required");
 	}
 	return body.data.identity;
 }

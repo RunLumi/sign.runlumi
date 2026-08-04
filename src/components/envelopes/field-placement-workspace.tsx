@@ -1,5 +1,6 @@
 import { CheckCircle2, Circle, Save } from "lucide-react";
 import type { MouseEvent, PointerEvent, RefObject } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -224,10 +225,15 @@ function SignaturePlacementActions({
 				className="w-full"
 				disabled={isSaving || allSignaturesPlaced || !activeRecipient}
 			>
-				<Save className="size-4" />
+				<Save aria-hidden="true" className="size-4" />
 				{signatureButtonLabel(isSaving, activeRecipient)}
 			</Button>
-			{isSaveError ? <p className="text-destructive text-sm">Unable to place signature</p> : null}
+			{isSaveError ? (
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Placement failed</AlertTitle>
+					<AlertDescription>Unable to place signature</AlertDescription>
+				</Alert>
+			) : null}
 		</form>
 	);
 }
@@ -271,7 +277,11 @@ function RecipientPlacementList({
 							)}
 						>
 							<span className={cn("mt-0.5", recipientAccentText(index))}>
-								{isPlaced ? <CheckCircle2 className="size-5" /> : <Circle className="size-5" />}
+								{isPlaced ? (
+									<CheckCircle2 aria-hidden="true" className="size-5" />
+								) : (
+									<Circle aria-hidden="true" className="size-5" />
+								)}
 							</span>
 							<span className="min-w-0">
 								<span className="block truncate font-medium text-sm">{recipient.name}</span>
@@ -440,7 +450,7 @@ function signatureButtonLabel(
 	isSaving: boolean,
 	activeRecipient: FieldEditorRecipient | null,
 ): string {
-	if (isSaving) return "Saving...";
+	if (isSaving) return "Saving…";
 	return activeRecipient ? `Place ${activeRecipient.name} signature` : "All signatures placed";
 }
 

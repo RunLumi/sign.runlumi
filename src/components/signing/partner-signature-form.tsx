@@ -2,6 +2,8 @@ import { useForm } from "@tanstack/react-form";
 import { Check, PenLine, RotateCcw, Type } from "lucide-react";
 import type { MouseEvent, ReactNode } from "react";
 import { useState } from "react";
+import { NativeSelect } from "@/components/patterns/native-select";
+import { Panel } from "@/components/patterns/panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,9 +52,17 @@ type SignatureFormValues = {
 };
 
 const typedSignatureFonts: Array<{ label: string; value: TypedSignatureFont; stack: string }> = [
-	{ label: "Script", value: "cursive", stack: "cursive" },
-	{ label: "Serif", value: "serif", stack: "serif" },
-	{ label: "Clean", value: "sans-serif", stack: "sans-serif" },
+	{
+		label: "Script",
+		value: "cursive",
+		stack: "'Savoye LET', 'Snell Roundhand', 'Segoe Script', cursive",
+	},
+	{ label: "Serif", value: "serif", stack: "'Iowan Old Style', Palatino, Georgia, serif" },
+	{
+		label: "Clean",
+		value: "sans-serif",
+		stack: "'InterVariable', 'Helvetica Neue', Arial, sans-serif",
+	},
 ];
 
 export function PartnerSignatureForm({
@@ -105,13 +115,14 @@ export function PartnerSignatureForm({
 	}
 
 	return (
-		<form
+		<Panel
+			as="form"
 			onSubmit={(event) => {
 				event.preventDefault();
 				event.stopPropagation();
 				void form.handleSubmit();
 			}}
-			className="space-y-5 rounded-md border p-4"
+			className="space-y-5"
 		>
 			<form.Subscribe selector={(state) => state.values}>
 				{(values) => {
@@ -150,7 +161,7 @@ export function PartnerSignatureForm({
 									<div
 										aria-label="Typed signature preview"
 										role="img"
-										className="flex min-h-28 items-center justify-center rounded-md border bg-background px-4 text-3xl"
+										className="flex h-32 items-center justify-center rounded-lg border bg-background px-4 text-pretty text-3xl"
 										style={{ fontFamily: fontStack }}
 									>
 										{values.typedText || "Typed name"}
@@ -174,21 +185,20 @@ export function PartnerSignatureForm({
 											{(field) => (
 												<div className="space-y-2">
 													<Label htmlFor="partner-signature-font">Signature font</Label>
-													<select
+													<NativeSelect
 														id="partner-signature-font"
 														value={field.state.value}
 														onBlur={field.handleBlur}
 														onChange={(event) =>
 															field.handleChange(event.target.value as TypedSignatureFont)
 														}
-														className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
 													>
 														{typedSignatureFonts.map((font) => (
 															<option key={font.value} value={font.value}>
 																{font.label}
 															</option>
 														))}
-													</select>
+													</NativeSelect>
 												</div>
 											)}
 										</form.Field>
@@ -200,7 +210,7 @@ export function PartnerSignatureForm({
 										aria-label="Draw signature pad"
 										role="img"
 										viewBox="0 0 320 128"
-										className="h-32 w-full touch-none rounded-md border bg-background"
+										className="h-32 w-full touch-none rounded-lg border bg-background"
 										onMouseDown={startDrawing}
 										onMouseMove={continueDrawing}
 										onMouseUp={stopDrawing}
@@ -249,7 +259,7 @@ export function PartnerSignatureForm({
 			</form.Subscribe>
 
 			{validationError ? <p className="text-destructive text-sm">{validationError}</p> : null}
-		</form>
+		</Panel>
 	);
 }
 
@@ -273,7 +283,7 @@ function SignatureMethodButton({
 			aria-label={`Choose ${title.toLowerCase()} signature`}
 			onClick={onClick}
 			className={cn(
-				"flex min-h-20 items-start gap-3 rounded-md border bg-background p-4 text-left transition-colors",
+				"flex min-h-24 items-start gap-3 rounded-lg border bg-background p-4 text-left transition-colors",
 				"hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
 				isActive && "border-primary bg-muted/40",
 			)}

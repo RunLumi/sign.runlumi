@@ -1,11 +1,13 @@
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Link, rootRouteId, useMatch, useRouter } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, Bug, ChevronDown, Home, Mail, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { Panel } from "@/components/patterns/panel";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 	const router = useRouter();
@@ -15,8 +17,10 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 	});
 	const [showDetails, setShowDetails] = useState(false);
 
-	// biome-ignore lint/suspicious/noConsole: surface route errors for debugging
-	console.error(error);
+	useEffect(() => {
+		// biome-ignore lint/suspicious/noConsole: surface route errors for debugging
+		console.error(error);
+	}, [error]);
 
 	// Format error details for display
 	const errorMessage = error?.message || "An unexpected error occurred";
@@ -24,109 +28,84 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 	const hasStack = errorStack.length > 0;
 
 	const handleReportError = () => {
-		const subject = encodeURIComponent("Error Report");
+		const subject = encodeURIComponent("Error report");
 		const body = encodeURIComponent(
-			`An error occurred in the application:\n\nError: ${errorMessage}\n\nStack Trace:\n${errorStack}\n\nPlease describe what you were doing when this error occurred:`,
+			`An error occurred in the application:\n\nError: ${errorMessage}\n\nStack trace:\n${errorStack}\n\nPlease describe what you were doing when this error occurred:`,
 		);
 		window.location.href = `mailto:support@example.com?subject=${subject}&body=${body}`;
 	};
 
 	return (
-		<div className="min-h-[60vh] flex items-center justify-center p-4">
-			<Card className="w-full max-w-2xl">
-				<CardHeader>
-					<div className="flex items-center space-x-2">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-							<AlertTriangle className="h-5 w-5 text-destructive" />
-						</div>
-						<div>
-							<CardTitle className="text-xl">Something went wrong</CardTitle>
-							<p className="text-sm text-muted-foreground">
-								We encountered an unexpected error. Please try again.
-							</p>
-						</div>
-					</div>
-				</CardHeader>
+		<PageShell width="narrow" center>
+			<Panel className="space-y-6">
+				<PageHeader
+					title="Something went wrong"
+					lead="We encountered an unexpected error. Please try again."
+				/>
 
-				<CardContent className="space-y-6">
-					{/* Error Alert */}
-					<Alert variant="destructive">
-						<AlertTriangle className="h-4 w-4" />
-						<AlertDescription className="font-medium">{errorMessage}</AlertDescription>
-					</Alert>
+				<Alert variant="destructive">
+					<AlertTriangle aria-hidden="true" className="size-4" />
+					<AlertDescription className="font-medium">{errorMessage}</AlertDescription>
+				</Alert>
 
-					{/* Action Buttons */}
-					<div className="flex flex-col sm:flex-row gap-3">
-						<Button onClick={() => router.invalidate()} className="flex items-center gap-2">
-							<RefreshCw className="h-4 w-4" />
-							Try Again
+				<div className="flex flex-col gap-3 sm:flex-row">
+					<Button onClick={() => router.invalidate()}>
+						<RefreshCw aria-hidden="true" className="size-4" />
+						Try again
+					</Button>
+
+					{isRoot ? (
+						<Button variant="outline" asChild>
+							<Link to="/">
+								<Home aria-hidden="true" className="size-4" />
+								Go home
+							</Link>
 						</Button>
-
-						{isRoot ? (
-							<Button variant="outline" asChild>
-								<Link to="/" className="flex items-center gap-2">
-									<Home className="h-4 w-4" />
-									Go to Home
-								</Link>
-							</Button>
-						) : (
-							<Button
-								variant="outline"
-								onClick={() => window.history.back()}
-								className="flex items-center gap-2"
-							>
-								<ArrowLeft className="h-4 w-4" />
-								Go Back
-							</Button>
-						)}
-					</div>
-
-					{/* Error Details (Collapsible) */}
-					{hasStack && (
-						<Collapsible open={showDetails} onOpenChange={setShowDetails}>
-							<CollapsibleTrigger asChild>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-								>
-									<Bug className="h-4 w-4" />
-									Technical Details
-									<ChevronDown
-										className={`h-4 w-4 transition-transform duration-200 ${showDetails ? "rotate-180" : ""}`}
-									/>
-								</Button>
-							</CollapsibleTrigger>
-							<CollapsibleContent className="space-y-2">
-								<div className="rounded-lg bg-muted p-4">
-									<h4 className="text-sm font-medium mb-2">Error Stack Trace:</h4>
-									<pre className="text-xs text-muted-foreground whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
-										{errorStack}
-									</pre>
-								</div>
-							</CollapsibleContent>
-						</Collapsible>
+					) : (
+						<Button variant="outline" onClick={() => window.history.back()}>
+							<ArrowLeft aria-hidden="true" className="size-4" />
+							Go back
+						</Button>
 					)}
+				</div>
 
-					{/* Help Section */}
-					<div className="border-t pt-4">
-						<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-							<div className="text-sm text-muted-foreground">
-								If this error persists, please report it to our support team.
-							</div>
+				{hasStack && (
+					<Collapsible open={showDetails} onOpenChange={setShowDetails}>
+						<CollapsibleTrigger asChild>
 							<Button
-								variant="outline"
+								variant="ghost"
 								size="sm"
-								onClick={handleReportError}
-								className="flex items-center gap-2"
+								className="text-muted-foreground hover:text-foreground"
 							>
-								<Mail className="h-4 w-4" />
-								Report Error
+								<Bug aria-hidden="true" className="size-4" />
+								Technical details
+								<ChevronDown
+									aria-hidden="true"
+									className={cn("size-4 transition-transform", showDetails && "rotate-180")}
+								/>
 							</Button>
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-		</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent className="space-y-2">
+							<div className="rounded-md bg-muted p-3">
+								<p className="mb-2 font-medium text-sm">Error stack trace</p>
+								<pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-muted-foreground text-xs">
+									{errorStack}
+								</pre>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
+				)}
+
+				<div className="flex flex-col items-start justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center">
+					<p className="text-muted-foreground text-sm">
+						If this error persists, please report it to our support team.
+					</p>
+					<Button variant="outline" size="sm" onClick={handleReportError}>
+						<Mail aria-hidden="true" className="size-4" />
+						Report error
+					</Button>
+				</div>
+			</Panel>
+		</PageShell>
 	);
 }

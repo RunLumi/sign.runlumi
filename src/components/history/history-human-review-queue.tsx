@@ -1,4 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import { TextLink } from "@/components/patterns/text-link";
 
 interface HumanReviewQueueItem {
 	commandId: string;
@@ -22,29 +25,29 @@ export function HistoryHumanReviewQueue() {
 	});
 	if (!queue.data || queue.data.length === 0) return null;
 	return (
-		<section className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-			<h2 className="text-xl font-semibold text-foreground">Pending human reviews</h2>
-			<p className="text-sm text-muted-foreground">
+		<Panel className="space-y-3">
+			<div className="flex flex-wrap items-center gap-3">
+				<PanelTitle>Pending human reviews</PanelTitle>
+				<StatusBadge tone="warning">Action needed</StatusBadge>
+			</div>
+			<PanelDescription>
 				These agent-requested actions will not run until you explicitly approve them.
-			</p>
+			</PanelDescription>
 			<ul className="space-y-3">
 				{queue.data.map((item) => (
-					<li key={item.commandId} className="rounded-md border bg-card p-4">
+					<li key={item.commandId} className="rounded-lg border bg-card p-4">
 						<p className="font-medium text-foreground">{item.title}</p>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-muted-foreground text-sm tabular-nums">
 							{item.actionLabel} requested by {item.agentName}. Expires {formatDate(item.expiresAt)}
 							.
 						</p>
-						<a
-							className="mt-2 inline-flex rounded-sm font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							href={item.reviewUrl}
-						>
+						<TextLink className="mt-2 inline-flex" href={item.reviewUrl}>
 							Review requested action
-						</a>
+						</TextLink>
 					</li>
 				))}
 			</ul>
-		</section>
+		</Panel>
 	);
 }
 

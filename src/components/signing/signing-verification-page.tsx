@@ -1,5 +1,6 @@
 import { Check, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -68,43 +69,38 @@ export function SigningVerificationPage({
 	}, [apiUrl, onVerified]);
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-xl space-y-6">
-				<div>
-					<p className="text-sm font-medium text-primary">Signmos</p>
-					<h1 className="mt-3 text-3xl font-semibold text-foreground">Signing verification</h1>
-				</div>
+		<PageShell width="narrow">
+			<PageHeader title="Signing verification" />
 
-				{state.status === "verifying" ? (
-					<Alert>
-						<Loader2 className="size-4 animate-spin" />
-						<AlertTitle>Verifying email</AlertTitle>
-						<AlertDescription>Checking this signing link.</AlertDescription>
-					</Alert>
-				) : null}
+			{state.status === "verifying" ? (
+				<Alert>
+					<Loader2 className="size-4 animate-spin" />
+					<AlertTitle>Verifying email</AlertTitle>
+					<AlertDescription>Checking this signing link.</AlertDescription>
+				</Alert>
+			) : null}
 
-				{state.status === "verified" ? (
-					<Alert>
-						<Check className="size-4" />
-						<AlertTitle>Email verified</AlertTitle>
-						<AlertDescription>You can now open the signing page.</AlertDescription>
-					</Alert>
-				) : null}
+			{state.status === "verified" ? (
+				<Alert>
+					<Check className="size-4" />
+					<AlertTitle>Email verified</AlertTitle>
+					<AlertDescription>You can now open the signing page.</AlertDescription>
+				</Alert>
+			) : null}
 
-				{state.status === "error" ? (
-					<Alert variant="destructive" role="alert">
-						<AlertTitle>Verification failed</AlertTitle>
-						<AlertDescription>{state.message}</AlertDescription>
-					</Alert>
-				) : null}
+			{state.status === "error" ? (
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Verification failed</AlertTitle>
+					<AlertDescription>{state.message}</AlertDescription>
+				</Alert>
+			) : null}
 
-				{state.status === "verified" ? (
-					<Button asChild>
-						<a href={state.signingUrl}>Continue to sign</a>
-					</Button>
-				) : null}
-			</section>
-		</main>
+			{state.status === "verified" ? (
+				<Button asChild>
+					<a href={state.signingUrl}>Continue to sign</a>
+				</Button>
+			) : null}
+		</PageShell>
 	);
 }
 

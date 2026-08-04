@@ -100,7 +100,7 @@ describe("StartEnvelopePage", () => {
 		"Agentic mode",
 	])("shows the task chooser return action first in the card for %s", (choiceLabel) => {
 		// Assumptions for this UI consistency slice:
-		// - My Documents and Agentic mode establish the intended outlined-button treatment.
+		// - All four tasks use the shared BackLink treatment (data-slot="back-link").
 		// - All four tasks keep the same button name and chooser-reset behavior.
 		// - Sign by myself establishes the intended top-of-card placement.
 		renderStartEnvelopePage({ testTurnstileToken: "test-pass" });
@@ -112,7 +112,7 @@ describe("StartEnvelopePage", () => {
 			"page",
 		);
 		const backButton = screen.getByRole("button", { name: "Back to task choices" });
-		expect(backButton.classList.contains("border")).toBe(true);
+		expect(backButton.getAttribute("data-slot")).toBe("back-link");
 		expect(backButton.closest("form")?.firstElementChild).toBe(backButton);
 	});
 

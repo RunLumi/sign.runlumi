@@ -1,11 +1,18 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { AuthenticatedProductNavigation } from "@/components/navigation/product-mode-navigation";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { LoadingText } from "@/components/patterns/loading-text";
+import { NativeSelect } from "@/components/patterns/native-select";
+import { Panel } from "@/components/patterns/panel";
+import { StatusBadge, type StatusTone } from "@/components/patterns/status-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
 	type CatalogGroup,
 	type CatalogRole,
@@ -126,57 +133,46 @@ export function HistoryDocumentsPage({
 	}
 
 	return (
-		<main className="min-h-dvh bg-background px-6 py-10">
-			<section className="mx-auto max-w-3xl space-y-6">
-				<AuthenticatedProductNavigation activeMode="my_documents" onSignedOut={onSignedOut} />
-				<div>
-					<p className="text-sm font-medium text-primary">Signmos</p>
-					<h1 className="mt-3 text-3xl font-semibold text-foreground">My documents</h1>
-				</div>
+		<PageShell width="content">
+			<AuthenticatedProductNavigation activeMode="my_documents" onSignedOut={onSignedOut} />
+			<PageHeader
+				title="My documents"
+				lead="Completed and expired documents are retained for 90 days unless deleted earlier. My documents is not permanent storage."
+			/>
+			{catalog?.identity ? (
+				<HistoryEnvelopeStart identity={catalog.identity} initialSigningMode={initialSigningMode} />
+			) : null}
+			<HistoryHumanReviewQueue />
+			<CatalogFilters onApply={applyFilters} />
 
-				<p className="text-muted-foreground text-sm">
-					Completed and expired documents are retained for 90 days unless deleted earlier. My
-					documents is not permanent storage.
-				</p>
-				{catalog?.identity ? (
-					<HistoryEnvelopeStart
-						identity={catalog.identity}
-						initialSigningMode={initialSigningMode}
-					/>
-				) : null}
-				<HistoryHumanReviewQueue />
-				<CatalogFilters onApply={applyFilters} />
-
-				{documentsQuery.isPending ? (
-					<output aria-live="polite" className="block text-muted-foreground">
-						Loading your documents…
-					</output>
-				) : null}
-				{documentsQuery.isError ? (
-					<Alert role="alert" variant="destructive">
-						<AlertTitle>Unable to load My documents</AlertTitle>
-						<AlertDescription>Request a new secure link and try again.</AlertDescription>
-					</Alert>
-				) : null}
-				{recovery ? <CatalogRecovery recovery={recovery} headingRef={recoveryHeadingRef} /> : null}
-				{catalog ? (
-					<>
-						<output
-							ref={catalogStatusRef}
-							tabIndex={-1}
-							aria-live="polite"
-							className="block text-muted-foreground text-sm"
-						>
-							{catalog.items.length === 0
-								? "No documents match these filters."
-								: `Showing ${catalog.items.length} of ${catalog.pagination.totalItems} documents.`}
-						</output>
+			{documentsQuery.isPending ? <LoadingText>Loading your documents…</LoadingText> : null}
+			{documentsQuery.isError ? (
+				<Alert role="alert" variant="destructive">
+					<AlertTitle>Unable to load My documents</AlertTitle>
+					<AlertDescription>Request a new secure link and try again.</AlertDescription>
+				</Alert>
+			) : null}
+			{recovery ? <CatalogRecovery recovery={recovery} headingRef={recoveryHeadingRef} /> : null}
+			{catalog ? (
+				<>
+					<LoadingText
+						ref={catalogStatusRef}
+						tabIndex={-1}
+						className={cn("tabular-nums", catalog.items.length === 0 && "sr-only")}
+					>
+						{catalog.items.length === 0
+							? "No documents match these filters."
+							: `Showing ${catalog.items.length} of ${catalog.pagination.totalItems} documents.`}
+					</LoadingText>
+					{catalog.items.length === 0 ? (
+						<EmptyState title="No documents match these filters." />
+					) : (
 						<CatalogRows items={catalog.items} />
-						<CatalogPaginationNav pagination={catalog.pagination} onSelect={selectPage} />
-					</>
-				) : null}
-			</section>
-		</main>
+					)}
+					<CatalogPaginationNav pagination={catalog.pagination} onSelect={selectPage} />
+				</>
+			) : null}
+		</PageShell>
 	);
 }
 
@@ -190,11 +186,7 @@ function CatalogFilters({ onApply }: { onApply: (filters: CatalogFilterValues) =
 		void form.handleSubmit();
 	}
 	return (
-		<form
-			aria-label="Filter My documents"
-			className="grid gap-4 rounded-lg border p-4"
-			onSubmit={submit}
-		>
+		<Panel as="form" aria-label="Filter My documents" className="grid gap-4" onSubmit={submit}>
 			<form.Field name="search">
 				{(field) => (
 					<div className="space-y-2">
@@ -244,7 +236,7 @@ function CatalogFilters({ onApply }: { onApply: (filters: CatalogFilterValues) =
 				</form.Field>
 			</div>
 			<Button type="submit">Apply filters</Button>
-		</form>
+		</Panel>
 	);
 }
 
@@ -264,9 +256,8 @@ function CatalogSelect({
 	return (
 		<div className="space-y-2">
 			<Label htmlFor={`history-${name}`}>{label}</Label>
-			<select
+			<NativeSelect
 				id={`history-${name}`}
-				className="h-9 w-full rounded-md border bg-background px-3 text-sm"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			>
@@ -276,23 +267,37 @@ function CatalogSelect({
 						{optionLabel}
 					</option>
 				))}
-			</select>
+			</NativeSelect>
 		</div>
 	);
 }
+
+const catalogStatusTones: Record<CatalogStatus, StatusTone> = {
+	awaiting_verification: "warning",
+	draft: "neutral",
+	changes_requested: "warning",
+	sent: "warning",
+	completed: "success",
+	declined: "destructive",
+	expired: "neutral",
+};
 
 function CatalogRows({ items }: { items: HistoryDocumentRow[] }) {
 	return (
 		<ul className="grid gap-4">
 			{items.map((item) => (
 				<li key={item.envelopeId}>
-					<article className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
-						<h2 className="font-semibold text-foreground">{item.title}</h2>
+					<Panel as="article" className="space-y-3">
+						<div className="flex flex-wrap items-center justify-between gap-3">
+							<h2 className="font-semibold text-foreground">{item.title}</h2>
+							<StatusBadge tone={catalogStatusTones[item.status]}>
+								{historyStatusLabel(item.status)}
+							</StatusBadge>
+						</div>
 						<p className="text-muted-foreground text-sm">
-							{historyGroupLabel(item.group)} · {historyStatusLabel(item.status)} ·{" "}
-							{historyRoleLabel(item.role)}
+							{historyGroupLabel(item.group)} · {historyRoleLabel(item.role)}
 						</p>
-						<p className="text-muted-foreground text-xs">
+						<p className="text-muted-foreground text-xs tabular-nums">
 							Created {new Date(item.createdAt).toLocaleDateString()} · Reference{" "}
 							{item.shortReference}
 						</p>
@@ -339,7 +344,7 @@ function CatalogRows({ items }: { items: HistoryDocumentRow[] }) {
 							title={item.title}
 							allowedActions={item.allowedActions}
 						/>
-					</article>
+					</Panel>
 				</li>
 			))}
 		</ul>
@@ -360,8 +365,10 @@ function CatalogPaginationNav({
 				<Button
 					key={page}
 					type="button"
+					size="sm"
 					variant={page === pagination.page ? "default" : "outline"}
 					aria-current={page === pagination.page ? "page" : undefined}
+					className="tabular-nums"
 					onClick={() => onSelect(page)}
 				>
 					Page {page}
