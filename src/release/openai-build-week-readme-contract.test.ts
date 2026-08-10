@@ -106,11 +106,17 @@ describe("OpenAI Build Week README release contract", () => {
 		const templateVariables = [...read(".example.vars").matchAll(/^([A-Z][A-Z0-9_]*)=/gm)].map(
 			(match) => match[1],
 		);
+		// Derived, not hardcoded: a literal version here drifts silently from the
+		// `packageManager` pin and stops proving the README is reproducible.
+		const pinnedPnpm = (JSON.parse(read("package.json")).packageManager as string).replace(
+			/^pnpm@/,
+			"",
+		);
 
 		for (const phrase of [
 			"### Local setup requirements",
 			"current Node.js LTS",
-			"pnpm 11.15.0",
+			`pnpm ${pinnedPnpm}`,
 			"Neon Postgres",
 			"Cloudflare Workers",
 			"Cloudflare R2",

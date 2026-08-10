@@ -101,7 +101,7 @@ Known product gaps:
 
 ### Local setup requirements
 
-Use the current Node.js LTS and pnpm 11.15.0 (the version pinned by `packageManager` in `package.json`). A full local end-to-end run uses these services and bindings:
+Use the current Node.js LTS and pnpm 11.20.0 (the version pinned by `packageManager` in `package.json`). A full local end-to-end run uses these services and bindings:
 
 | Dependency | Local purpose |
 | --- | --- |
