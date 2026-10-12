@@ -1,3 +1,9 @@
+> **RunLumi deployment:** The current deployment target is https://sign.runlumi.app.
+> It uses Cloudflare D1, R2, and Cloudflare Email Service; Turnstile is disabled
+> while IP/email rate limits and email verification remain enabled. Historical
+> Signmos/Neon/Resend submission evidence below describes the upstream project.
+> See the [production deployment runbook](./docs/PRODUCTION_DEPLOYMENT.md).
+
 # Signmos
 
 *AI agent index: [llms.txt](./llms.txt)*
@@ -420,10 +426,9 @@ Migration workflow:
 ```bash
 pnpm db:generate:dev
 pnpm db:migrate:dev
-pnpm db:studio
 ```
 
-Generate staging/production migrations with the corresponding `db:generate:*` scripts when deploying to those environments.
+Generate D1 SQLite migrations with `pnpm db:generate:dev`; apply locally with `pnpm db:migrate:dev`. Production migrations are applied by the guarded deployment script.
 
 ## Scripts
 
@@ -432,9 +437,9 @@ Generate staging/production migrations with the corresponding `db:generate:*` sc
 | `pnpm dev` | Dev server on port 3000. |
 | `pnpm build` | Production build. |
 | `pnpm serve` | Preview production build locally. |
-| `pnpm deploy` | Build and deploy to Cloudflare Workers. |
+| `pnpm deploy` | Guarded production build, D1 migration, and Cloudflare Worker deploy. |
 | `./scripts/deploy-production.sh --dry-run` | Build the production Cloudflare environment and validate its generated deployment config without changing remote state. |
-| `./scripts/deploy-production.sh --deploy` | Guarded clean-commit deployment to `signmos.com`; follow the [production deployment runbook](./docs/PRODUCTION_DEPLOYMENT.md). |
+| `./scripts/deploy-production.sh --deploy` | Guarded clean-commit deployment to `sign.runlumi.app`; follow the [production deployment runbook](./docs/PRODUCTION_DEPLOYMENT.md). |
 | `pnpm cf-typegen` | Generate Cloudflare `Env` types. |
 | `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` | Vitest. |
 | `pnpm agentic:smoke` | Preflight public docs/identity, queue a live protected self-sign command, pause for matching-human browser approval, poll its terminal result, then run retained lifecycle tests. Requires `SIGNMOS_TOKEN`; optional `SIGNMOS_BASE_URL`. The completed smoke document remains under normal retention controls. |
@@ -444,11 +449,9 @@ Generate staging/production migrations with the corresponding `db:generate:*` sc
 | `pnpm knip` | Detect unused files, dependencies, and exports. |
 | `pnpm db:generate:{dev,staging,production}` | Generate Drizzle migrations. |
 | `pnpm db:migrate:{dev,staging,production}` | Apply migrations. |
-| `pnpm db:pull:{dev,staging,production}` | Pull schema from DB. |
-| `pnpm db:studio` | Open Drizzle Studio against dev. |
-| `pnpm db:seed:{dev,staging,production}` | Seed demo client data. |
+| `pnpm db:seed:dev` | Seed local D1 demo client data. |
 
-All `db:*` scripts load per-environment vars with `@dotenvx/dotenvx`.
+D1 commands use Cloudflare bindings; production does not need database passwords.
 
 ## Verification
 

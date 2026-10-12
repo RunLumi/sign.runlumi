@@ -1,72 +1,92 @@
-import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { envelopes } from "@/db/envelope/table";
 
-export const historyAccessLinks = pgTable(
+export const historyAccessLinks = sqliteTable(
 	"history_access_links",
 	{
-		id: uuid("id").defaultRandom().primaryKey(),
+		id: text("id")
+			.$defaultFn(() => crypto.randomUUID())
+			.primaryKey(),
 		email: text("email").notNull(),
 		credentialHash: text("credential_hash").notNull(),
 		status: text("status").notNull().default("pending"),
-		expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-		activatedAt: timestamp("activated_at", { withTimezone: true }),
-		consumedAt: timestamp("consumed_at", { withTimezone: true }),
-		revokedAt: timestamp("revoked_at", { withTimezone: true }),
-		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+		expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+		activatedAt: integer("activated_at", { mode: "timestamp_ms" }),
+		consumedAt: integer("consumed_at", { mode: "timestamp_ms" }),
+		revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
 	},
 	(table) => [uniqueIndex("history_access_links_credential_hash_unique").on(table.credentialHash)],
 );
 
-export const historyAccessRequests = pgTable(
+export const historyAccessRequests = sqliteTable(
 	"history_access_requests",
 	{
-		id: uuid("id").defaultRandom().primaryKey(),
+		id: text("id")
+			.$defaultFn(() => crypto.randomUUID())
+			.primaryKey(),
 		idempotencyKey: text("idempotency_key").notNull(),
 		email: text("email").notNull(),
-		linkId: uuid("link_id").references(() => historyAccessLinks.id),
-		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+		linkId: text("link_id").references(() => historyAccessLinks.id),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
 	},
 	(table) => [
 		uniqueIndex("history_access_requests_idempotency_key_unique").on(table.idempotencyKey),
 	],
 );
 
-export const historyEmailRecords = pgTable("history_email_records", {
-	id: uuid("id").defaultRandom().primaryKey(),
-	linkId: uuid("link_id")
+export const historyEmailRecords = sqliteTable("history_email_records", {
+	id: text("id")
+		.$defaultFn(() => crypto.randomUUID())
+		.primaryKey(),
+	linkId: text("link_id")
 		.notNull()
 		.references(() => historyAccessLinks.id),
 	email: text("email").notNull(),
 	kind: text("kind").notNull(),
 	deliveryStatus: text("delivery_status").notNull(),
 	providerMessage: text("provider_message"),
-	sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+	sentAt: integer("sent_at", { mode: "timestamp_ms" })
+		.$defaultFn(() => new Date())
+		.notNull(),
 });
 
-export const historySessions = pgTable(
+export const historySessions = sqliteTable(
 	"history_sessions",
 	{
-		id: uuid("id").defaultRandom().primaryKey(),
-		linkId: uuid("link_id")
+		id: text("id")
+			.$defaultFn(() => crypto.randomUUID())
+			.primaryKey(),
+		linkId: text("link_id")
 			.notNull()
 			.references(() => historyAccessLinks.id),
 		email: text("email").notNull(),
 		sessionHash: text("session_hash").notNull(),
 		status: text("status").notNull().default("active"),
-		expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-		revokedAt: timestamp("revoked_at", { withTimezone: true }),
-		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+		expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+		revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
 	},
 	(table) => [uniqueIndex("history_sessions_session_hash_unique").on(table.sessionHash)],
 );
 
-export const historySecurityEvents = pgTable("history_security_events", {
-	id: uuid("id").defaultRandom().primaryKey(),
-	linkId: uuid("link_id").references(() => historyAccessLinks.id),
-	sessionId: uuid("session_id").references(() => historySessions.id),
-	envelopeId: uuid("envelope_id").references(() => envelopes.id),
+export const historySecurityEvents = sqliteTable("history_security_events", {
+	id: text("id")
+		.$defaultFn(() => crypto.randomUUID())
+		.primaryKey(),
+	linkId: text("link_id").references(() => historyAccessLinks.id),
+	sessionId: text("session_id").references(() => historySessions.id),
+	envelopeId: text("envelope_id").references(() => envelopes.id),
 	email: text("email").notNull(),
 	eventType: text("event_type").notNull(),
 	requestIp: text("request_ip"),
-	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.$defaultFn(() => new Date())
+		.notNull(),
 });

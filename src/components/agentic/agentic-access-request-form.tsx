@@ -52,7 +52,7 @@ export function AgenticAccessRequestForm({
 		const formData = new FormData(event.currentTarget);
 		const turnstileToken = readTurnstileToken(
 			formData.get("cf-turnstile-response"),
-			testTurnstileToken,
+			testTurnstileToken || (turnstileSiteKey === "disabled" ? "disabled" : ""),
 		);
 		if (!turnstileToken) {
 			setTurnstileError("Complete the Turnstile challenge before requesting access.");
@@ -98,7 +98,9 @@ export function AgenticAccessRequestForm({
 					)}
 				</form.Field>
 
-				{turnstileSiteKey ? <TurnstileWidget siteKey={turnstileSiteKey} /> : null}
+				{turnstileSiteKey && turnstileSiteKey !== "disabled" ? (
+					<TurnstileWidget siteKey={turnstileSiteKey} />
+				) : null}
 				{!hasTurnstileConfig ? (
 					<Alert role="alert" variant="destructive">
 						<AlertTitle>Turnstile is not configured</AlertTitle>

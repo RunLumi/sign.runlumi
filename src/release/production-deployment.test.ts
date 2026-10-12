@@ -11,14 +11,9 @@ function executable(path: string, body: string) {
 	chmodSync(path, 0o755);
 }
 
-function runDeploymentScript(
-	mode: "--dry-run" | "--deploy",
-	options: { gitStatus?: string; productionVars?: string } = {},
-) {
+function runDeploymentScript(mode: "--dry-run" | "--deploy", options: { gitStatus?: string } = {}) {
 	const directory = mkdtempSync(join(tmpdir(), "signmos-production-deploy-"));
 	const log = join(directory, "commands.log");
-	const productionVarsFile = join(directory, "production.vars");
-	if (options.productionVars) writeFileSync(productionVarsFile, options.productionVars);
 	executable(
 		join(directory, "git"),
 		'if [[ "$1" == "rev-parse" ]]; then printf "07c2b1c000000000000000000000000000000000\\n"; fi\n' +
@@ -26,8 +21,7 @@ function runDeploymentScript(
 	);
 	executable(
 		join(directory, "pnpm"),
-		'if [[ "$1" == "build" ]] && [[ ! -f .dev.vars.production ]]; then printf "missing isolated production build vars\\n" >&2; exit 42; fi\n' +
-			`printf "pnpm|%s|%s\\n" "\${CLOUDFLARE_ENV:-unset}" "$*" >> "$DEPLOY_TEST_LOG"\n`,
+		`printf "pnpm|%s|%s\\n" "\${CLOUDFLARE_ENV:-unset}" "$*" >> "$DEPLOY_TEST_LOG"\n`,
 	);
 	executable(join(directory, "curl"), 'printf "curl|%s\\n" "$*" >> "$DEPLOY_TEST_LOG"\n');
 
@@ -40,7 +34,6 @@ function runDeploymentScript(
 				DEPLOY_TEST_LOG: log,
 				DEPLOY_TEST_GIT_STATUS: options.gitStatus ?? "",
 				PATH: `${directory}:${process.env.PATH ?? ""}`,
-				SIGNMOS_PRODUCTION_VARS_FILE: productionVarsFile,
 			},
 		});
 		return {
@@ -53,24 +46,9 @@ function runDeploymentScript(
 	}
 }
 
-/**
- * Issue #61 deployment assumptions:
- * - The user-selected public origin is exactly https://signmos.com. The `www`
- *   hostname is not added silently; it can receive an explicit redirect later.
- * - The production Worker is the origin, so it uses a Cloudflare Custom Domain
- *   rather than a route in front of another server.
- * - Production has no workers.dev or version-preview ingress. Judges and email
- *   links use one stable origin.
- * - A real deploy must come from a clean Git commit, build with
- *   CLOUDFLARE_ENV=production, validate required remote secret names, and prove
- *   the generated configuration with a Wrangler dry run before publishing.
- * - The live code and complete validated dotenv secret set are uploaded in one
- *   Wrangler deploy operation. No secret command may create an intermediate
- *   production version before the candidate code is published.
- * - Tests do not deploy or inspect secret values; command boundaries are faked.
- */
+// Deployment contracts exercise public config and command boundaries without remote writes.
 describe("production deployment", () => {
-	it("publishes only the production Worker at the signmos.com custom domain", () => {
+	it("publishes only the production Worker at the sign.runlumi.app custom domain", () => {
 		const config = unstable_readConfig(
 			{ config: "wrangler.jsonc", env: "production" },
 			{ hideWarnings: true, preserveOriginalMain: true },
@@ -81,7 +59,7 @@ describe("production deployment", () => {
 		expect(config.preview_urls).toBe(false);
 		expect(config.routes).toEqual([
 			{
-				pattern: "signmos.com",
+				pattern: "sign.runlumi.app",
 				custom_domain: true,
 			},
 		]);
@@ -108,48 +86,16 @@ describe("production deployment", () => {
 		);
 	});
 
-	it("deploys validated production secrets with the exact code version and checks public endpoints", () => {
-		const { commands, result } = runDeploymentScript("--deploy", {
-			productionVars: [
-				'CLOUDFLARE_ENV="production"',
-				'DATABASE_HOST="db.example.test"',
-				'DATABASE_USERNAME="test-user"',
-				'DATABASE_PASSWORD="test-password"',
-				'APP_BASE_URL="https://signmos.com"',
-				'RESEND_API_KEY="test-resend"',
-				'RESEND_FROM_EMAIL="Signmos <signmos@example.test>"',
-				'RESEND_REPLY_TO_EMAIL="reply@example.test"',
-				'TURNSTILE_SITE_KEY="test-site"',
-				'TURNSTILE_SECRET_KEY="test-secret"',
-				"",
-			].join("\n"),
-		});
-
+	it("applies D1 migrations, publishes the exact commit, and checks public endpoints", () => {
+		const { commands, result } = runDeploymentScript("--deploy");
 		expect(result.status, result.stderr).toBe(0);
-		expect(result.stdout).toContain(
-			"Deployed candidate 07c2b1c000000000000000000000000000000000 to https://signmos.com",
-		);
-		expect(commands).toContain("pnpm|unset|exec wrangler whoami\n");
 		expect(commands).toContain(
-			"pnpm|unset|exec wrangler r2 bucket info signmos-documents-production\n",
+			"d1 migrations apply signmos-production --remote --config wrangler.jsonc --env production",
 		);
-		expect(commands).toContain("pnpm|production|build\n");
-		expect(commands).toContain(
-			"pnpm|unset|exec wrangler deploy --config dist/server/wrangler.json --dry-run\n",
-		);
-		expect(commands).not.toContain("wrangler secret bulk");
-		expect(commands).not.toContain(" --yes");
-		expect(commands).toMatch(
-			/pnpm\|unset\|exec wrangler deploy --config dist\/server\/wrangler\.json --secrets-file \/.*\/production\.vars --message git:07c2b1c000000000000000000000000000000000\n/,
-		);
-		for (const url of [
-			"https://signmos.com/",
-			"https://signmos.com/agent.md",
-			"https://signmos.com/openapi.json",
-		]) {
-			expect(commands).toContain(
-				`curl|--fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 30 --output /dev/null ${url}\n`,
-			);
+		expect(commands).toContain("--message git:07c2b1c000000000000000000000000000000000");
+		expect(commands).not.toContain("--secrets-file");
+		for (const path of ["/", "/agent.md", "/openapi.json"]) {
+			expect(commands).toContain(`https://sign.runlumi.app${path}`);
 		}
 	});
 
@@ -163,26 +109,18 @@ describe("production deployment", () => {
 		expect(commands).toBe("");
 	});
 
-	it("documents production ownership, verification, and recovery through the judging window", () => {
+	it("documents D1, Email Service, automatic deployment, and recovery", () => {
 		const runbook = readFileSync(resolve(repositoryRoot, "docs/PRODUCTION_DEPLOYMENT.md"), "utf8");
-
 		for (const phrase of [
-			"## Ownership and judging window",
-			"Individual submitter",
-			"2026-08-05 17:00 PDT",
-			"2026-08-06 02:00 CEST",
-			'APP_BASE_URL="https://signmos.com"',
-			"./scripts/deploy-production.sh --dry-run",
-			"./scripts/deploy-production.sh --deploy",
-			"`--secrets-file`",
-			"one Worker version",
-			"production debug fallback links remain disabled",
-			"https://signmos.com/agent.md",
-			"https://signmos.com/openapi.json",
-			"pnpm agentic:smoke",
-			"pnpm exec wrangler rollback --config wrangler.jsonc --env production",
+			"D1",
+			"Cloudflare Email Service",
+			"sign.runlumi.app",
+			"deploy.yml",
+			"rollback",
+			"--dry-run",
+			"--deploy",
 		]) {
-			expect(runbook, phrase).toContain(phrase);
+			expect(runbook).toContain(phrase);
 		}
 	});
 

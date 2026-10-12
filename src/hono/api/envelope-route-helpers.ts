@@ -69,6 +69,7 @@ export async function verifyTurnstileToken(input: {
 	token: string;
 	ip: string;
 }): Promise<boolean> {
+	if (input.env.TURNSTILE_DISABLED === "true") return true;
 	if (
 		input.env.CLOUDFLARE_ENV !== "production" &&
 		input.env.TURNSTILE_TEST_BYPASS === "true" &&
@@ -94,4 +95,19 @@ export async function verifyTurnstileToken(input: {
 	const json: unknown = await response.json();
 	const parsed = TurnstileSiteVerifyResponseSchema.safeParse(json);
 	return parsed.success && parsed.data.success;
+}
+
+export function publicInitiationBody(
+	body: unknown,
+	env: Pick<Env, "TURNSTILE_DISABLED"> | undefined,
+): unknown {
+	if (
+		env?.TURNSTILE_DISABLED === "true" &&
+		body &&
+		typeof body === "object" &&
+		!Array.isArray(body)
+	) {
+		return { ...body, turnstileToken: "disabled" };
+	}
+	return body;
 }

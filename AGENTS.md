@@ -1,6 +1,6 @@
 # signmos Agent Map
 
-Signmos is a lightweight e-signature workflow on TanStack Start, Hono, Cloudflare Workers, Neon Postgres, Drizzle, and Cloudflare R2.
+Signmos is a lightweight e-signature workflow on TanStack Start, Hono, Cloudflare Workers, D1 SQLite, Drizzle, and Cloudflare R2.
 
 Use this file as the always-loaded map. Load deeper docs only when the task touches that area.
 
@@ -25,7 +25,7 @@ Use this file as the always-loaded map. Load deeper docs only when the task touc
 - `/api/v1` is the stable role-authorized Bearer document API. `/agent.md` is its public operating guide and `/openapi.json` is its runtime-parity machine contract; every mutation requires `Idempotency-Key`.
 - `/manual-signing-smoke` is the local browser smoke path for create -> prepare -> send -> sign -> final PDF.
 - `/envelope-fields` is a field placement/review screen, not a full envelope dashboard.
-- Resend delivers transactional email when configured; development/test flows may expose restricted fallback links.
+- Cloudflare Email Service delivers transactional email when configured; development/test flows may expose restricted fallback links.
 
 ## Issue Implementation Workflow
 

@@ -1,3 +1,11 @@
+> RunLumi infrastructure amendment (2026-10-12): the active runtime uses
+> Cloudflare D1 through `drizzle-orm/d1`, SQLite schemas in the existing table
+> modules, request-scoped database access in `src/db/setup.ts`, R2 PDF storage,
+> and Cloudflare Email Service (`EMAIL` binding). Turnstile is disabled through
+> `TURNSTILE_DISABLED=true`; verified-email authority and IP/email rate limits
+> remain enforced. The PostgreSQL migrations and upstream provider references
+> below describe historical implementation. See `docs/PRODUCTION_DEPLOYMENT.md`.
+
 # ARCHITECTURE
 
 This is the stable physical map for signmos. It names important files and modules but avoids deep links so the document stays useful as code moves. Use symbol search and filenames from this map when navigating.
