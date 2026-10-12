@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/RunLumi/sign.runlumi/compare/v1.12.0...v1.13.0) (2026-10-12)
+
+
+### Features
+
+* rename the product to Lumi Sign ([#2](https://github.com/RunLumi/sign.runlumi/issues/2)) ([753ef86](https://github.com/RunLumi/sign.runlumi/commit/753ef86d07add838c93ad1e77ae1e0983bfc4050))
+
 # [1.12.0](https://github.com/RunLumi/sign.runlumi/compare/v1.11.0...v1.12.0) (2026-10-12)
 
 
