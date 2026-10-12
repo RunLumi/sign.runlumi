@@ -11,7 +11,12 @@ import {
 	revokeAgenticToken,
 } from "@/db/agentic-access";
 import { createHono } from "@/hono/factory";
-import { getRequestIp, type SenderStartEnv, verifyTurnstileToken } from "./envelope-route-helpers";
+import {
+	getRequestIp,
+	publicInitiationBody,
+	type SenderStartEnv,
+	verifyTurnstileToken,
+} from "./envelope-route-helpers";
 
 const agenticEndpoint = createHono();
 
@@ -97,7 +102,7 @@ agenticEndpoint.post("/access-links/redeem", async (c) => {
 
 agenticEndpoint.post("/access-requests", async (c) => {
 	const body: unknown = await c.req.json().catch(() => null);
-	const parsed = AgenticAccessRequestSchema.safeParse(body);
+	const parsed = AgenticAccessRequestSchema.safeParse(publicInitiationBody(body, c.env));
 	if (!parsed.success) {
 		return c.json(
 			{

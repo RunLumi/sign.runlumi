@@ -18,7 +18,7 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
 
 	useEffect(() => {
 		const container = containerRef.current;
-		if (!container) return;
+		if (!container || siteKey === "disabled") return;
 		let disposed = false;
 		let widgetId: string | undefined;
 		const renderTurnstile = () => {

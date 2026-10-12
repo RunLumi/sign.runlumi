@@ -1,4 +1,7 @@
 export interface EmailDeliveryEnv {
+	EMAIL?: SendEmail;
+	EMAIL_FROM?: string;
+	EMAIL_REPLY_TO?: string;
 	APP_BASE_URL?: string;
 	CLOUDFLARE_ENV?: string;
 	EMAIL_DELIVERY_TEST_BYPASS?: string;
@@ -77,13 +80,25 @@ export class EmailDeliveryError extends Error {
 }
 
 export function isResendConfigured(env: EmailDeliveryEnv | undefined): boolean {
-	return getResendConfig(env) !== null;
+	return Boolean(env?.EMAIL && env.EMAIL_FROM) || getResendConfig(env) !== null;
 }
 
 export async function deliverTransactionalEmail(
 	email: TransactionalEmail,
 	options: EmailDeliveryOptions,
 ): Promise<{ providerMessage: string | null }> {
+	if (options.env?.EMAIL && options.env.EMAIL_FROM) {
+		try {
+			const result = await options.env.EMAIL.send({
+				...email,
+				from: options.env.EMAIL_FROM,
+				replyTo: options.env.EMAIL_REPLY_TO,
+			});
+			return { providerMessage: result.messageId };
+		} catch {
+			throw new EmailDeliveryError(502, "Cloudflare Email Service rejected the message");
+		}
+	}
 	const config = getResendConfig(options.env);
 	if (!config) return { providerMessage: null };
 

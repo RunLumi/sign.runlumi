@@ -16,7 +16,12 @@ import {
 	revokeHistorySession,
 } from "@/db/history-access";
 import { createHono } from "@/hono/factory";
-import { getRequestIp, type SenderStartEnv, verifyTurnstileToken } from "./envelope-route-helpers";
+import {
+	getRequestIp,
+	publicInitiationBody,
+	type SenderStartEnv,
+	verifyTurnstileToken,
+} from "./envelope-route-helpers";
 import { type HistoryErrorCode, historyError } from "./history-errors";
 
 const historyAccessEndpoint = createHono();
@@ -233,7 +238,7 @@ historyAccessEndpoint.get("/documents/:envelopeId/pdf", async (c) => {
 
 historyAccessEndpoint.post("/access-requests", async (c) => {
 	const body: unknown = await c.req.json().catch(() => null);
-	const parsed = HistoryAccessRequestSchema.safeParse(body);
+	const parsed = HistoryAccessRequestSchema.safeParse(publicInitiationBody(body, c.env));
 	if (!parsed.success) {
 		return c.json(
 			{

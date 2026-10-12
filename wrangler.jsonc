@@ -4,27 +4,12 @@
 	"compatibility_date": "2025-09-02",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./src/server.ts",
-	// Top-level config is the default/dev Worker. Use --env staging or --env production for deployed pilot environments.
 	"r2_buckets": [
 		{
 			"binding": "DOCUMENTS_BUCKET",
 			"bucket_name": "signmos-documents-dev"
 		}
 	],
-	"secrets": {
-		"required": [
-			"CLOUDFLARE_ENV",
-			"DATABASE_HOST",
-			"DATABASE_USERNAME",
-			"DATABASE_PASSWORD",
-			"APP_BASE_URL",
-			"RESEND_API_KEY",
-			"RESEND_FROM_EMAIL",
-			"RESEND_REPLY_TO_EMAIL",
-			"TURNSTILE_SITE_KEY",
-			"TURNSTILE_SECRET_KEY"
-		]
-	},
 	"env": {
 		"staging": {
 			"name": "signmos-staging",
@@ -34,19 +19,24 @@
 					"bucket_name": "signmos-documents-staging"
 				}
 			],
-			"secrets": {
-				"required": [
-					"CLOUDFLARE_ENV",
-					"DATABASE_HOST",
-					"DATABASE_USERNAME",
-					"DATABASE_PASSWORD",
-					"APP_BASE_URL",
-					"RESEND_API_KEY",
-					"RESEND_FROM_EMAIL",
-					"RESEND_REPLY_TO_EMAIL",
-					"TURNSTILE_SITE_KEY",
-					"TURNSTILE_SECRET_KEY"
-				]
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "signmos-staging",
+					"migrations_dir": "src/db/migrations/d1"
+				}
+			],
+			"send_email": [
+				{
+					"name": "EMAIL"
+				}
+			],
+			"vars": {
+				"CLOUDFLARE_ENV": "dev",
+				"APP_BASE_URL": "https://signmos-staging.workers.dev",
+				"EMAIL_FROM": "Signmos <sign@runlumi.app>",
+				"EMAIL_REPLY_TO": "sign@runlumi.app",
+				"TURNSTILE_DISABLED": "true"
 			}
 		},
 		"production": {
@@ -55,7 +45,7 @@
 			"preview_urls": false,
 			"routes": [
 				{
-					"pattern": "signmos.com",
+					"pattern": "sign.runlumi.app",
 					"custom_domain": true
 				}
 			],
@@ -65,20 +55,38 @@
 					"bucket_name": "signmos-documents-production"
 				}
 			],
-			"secrets": {
-				"required": [
-					"CLOUDFLARE_ENV",
-					"DATABASE_HOST",
-					"DATABASE_USERNAME",
-					"DATABASE_PASSWORD",
-					"APP_BASE_URL",
-					"RESEND_API_KEY",
-					"RESEND_FROM_EMAIL",
-					"RESEND_REPLY_TO_EMAIL",
-					"TURNSTILE_SITE_KEY",
-					"TURNSTILE_SECRET_KEY"
-				]
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "signmos-production",
+					"database_id": "76c5b134-6582-43e3-97c0-c144e4420259",
+					"migrations_dir": "src/db/migrations/d1"
+				}
+			],
+			"send_email": [
+				{
+					"name": "EMAIL"
+				}
+			],
+			"vars": {
+				"CLOUDFLARE_ENV": "production",
+				"APP_BASE_URL": "https://sign.runlumi.app",
+				"EMAIL_FROM": "Signmos <sign@runlumi.app>",
+				"EMAIL_REPLY_TO": "sign@runlumi.app",
+				"TURNSTILE_DISABLED": "true"
 			}
 		}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "signmos-dev",
+			"migrations_dir": "src/db/migrations/d1"
+		}
+	],
+	"vars": {
+		"CLOUDFLARE_ENV": "dev",
+		"APP_BASE_URL": "http://localhost:3000",
+		"TURNSTILE_DISABLED": "true"
 	}
 }

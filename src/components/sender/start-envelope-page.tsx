@@ -147,7 +147,8 @@ export function StartEnvelopePage({
 	const idempotencyKey = useMemo(() => crypto.randomUUID(), []);
 	const pendingTurnstileTokenRef = useRef("");
 	const activeTurnstileSiteKey = turnstileSiteKey?.trim() ?? "";
-	const activeTestTurnstileToken = testTurnstileToken.trim();
+	const activeTestTurnstileToken =
+		testTurnstileToken.trim() || (turnstileSiteKey === "disabled" ? "disabled" : "");
 	const hasTurnstileConfig =
 		activeTurnstileSiteKey.length > 0 || activeTestTurnstileToken.length > 0;
 	const form = useForm({
@@ -303,7 +304,9 @@ export function StartEnvelopePage({
 								)}
 							</form.Field>
 
-							{activeTurnstileSiteKey ? <TurnstileWidget siteKey={activeTurnstileSiteKey} /> : null}
+							{activeTurnstileSiteKey && activeTurnstileSiteKey !== "disabled" ? (
+								<TurnstileWidget siteKey={activeTurnstileSiteKey} />
+							) : null}
 
 							{!hasTurnstileConfig ? (
 								<Alert variant="destructive" role="alert">

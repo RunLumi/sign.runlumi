@@ -58,6 +58,7 @@ import {
 	isPdf,
 	parseNow,
 	parseSourceFilename,
+	publicInitiationBody,
 	type SenderStartEnv,
 	sha256Hex,
 	verifyTurnstileToken,
@@ -97,7 +98,7 @@ envelopesEndpoint.use("/:id/*", async (c, next) => {
 });
 envelopesEndpoint.post("/sender-start", async (c) => {
 	const body: unknown = await c.req.json().catch(() => null);
-	const parsed = SenderStartRequestSchema.safeParse(body);
+	const parsed = SenderStartRequestSchema.safeParse(publicInitiationBody(body, c.env));
 	if (!parsed.success) {
 		return c.json(
 			{
