@@ -89,8 +89,8 @@ The supported judging target is desktop Chromium with JavaScript, cookies, PDF v
 - Revise a PDF after a change request, clear old fields, resend, and complete the envelope.
 - Generate and store a completed PDF with flattened field values plus an audit certificate/checksum.
 - Open completed-document details and download the final PDF from verified sender or signer process links.
-- Expire/delete envelopes and check 90-day retention eligibility.
-- Request privacy-safe My Documents access by email through a single-use 30-minute link and a fixed eight-hour HTTP-only browser session.
+- Expire signing links or explicitly delete envelopes. Documents remain stored indefinitely until the creator deletes them.
+- Request privacy-safe My Documents access by email through a single-use 30-minute link and a fixed seven-day HTTP-only browser session.
 - Browse all matching retained creator/signer documents with server-side search, role/state filters, action-first ordering, and numbered pagination.
 - Resume creator preparation, review status, cancel/delete where permitted, recover active signer work, and download completed PDFs through the history session without exposing process bearer tokens.
 - Start a new self-sign or two-party draft from an active My Documents session without repeating email verification.
@@ -251,7 +251,7 @@ Success responses use `{ "data": ... }`. Known errors use `{ "error": { "code": 
 | `POST /api/envelopes/{id}/actions` | Send, cancel, expire, or delete an envelope with `{ "action": ... }`. |
 | `POST /api/envelopes/{id}/recipients/{recipientId}/resend` | Create a new invitation send record and signing token. |
 | `GET /api/envelopes/{id}/status` | Poll lifecycle state and final PDF availability. |
-| `GET /api/envelopes/{id}/retention` | Check 90-day retention eligibility for completed or expired envelopes. |
+| `GET /api/envelopes/{id}/retention` | Inspect indefinite retention; no age-based deletion eligibility. |
 | `GET /api/envelopes/{id}/history` | Read the verified sender's legacy document history. |
 | `GET /api/envelopes/{id}/final-pdf` | Download the completed PDF artifact with a verified sender session token. |
 | `GET /api/final-documents/{token}` | Resolve completed-document detail through an existing process link. |

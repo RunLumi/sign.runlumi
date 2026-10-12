@@ -72,11 +72,11 @@ POST cancel or expire only when current allowedActions permit it. The command re
 
 ## Delete and revoke
 
-Delete first requires retention eligibility and matching-creator human approval. After approval, it removes stored source/final artifacts and immediately removes the document from Bearer and My Documents catalogs. Creator, signer, process-link, history-session, detail, PDF, and action paths must all treat it as deleted or not found.
+Delete requires matching-creator human approval and has no document-age waiting period. After approval, it removes stored source/final artifacts and immediately removes the document from Bearer and My Documents catalogs. Creator, signer, process-link, history-session, detail, PDF, and action paths must all treat it as deleted or not found.
 
 ## Inspect retention
 
-Creators can GET the retention projection. Completed and expired documents become eligible exactly 90 days after the recorded terminal timestamp; signer-only and unrelated identities cannot use this creator route.
+Creators can GET the retention projection. Documents are retained indefinitely until explicitly deleted. The retention projection returns no automatic deletion date and eligibility stays false; signer-only and unrelated identities cannot use this creator route.
 `;
 
 function successAndErrors(responseSchema: z.ZodType, humanReview = false) {

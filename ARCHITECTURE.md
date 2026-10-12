@@ -175,7 +175,7 @@ Envelope metadata lives in Neon. Source and final PDFs live in R2 under envelope
 
 ### Time
 
-Sender verification, history access links, and Agentic access links expire after 30 minutes; Agentic management sessions expire after 15 minutes, history sessions after a fixed eight hours, and signer tokens after seven days. Tests that depend on time should control time explicitly through a boundary such as headers, fake timers, or injectable clock behavior.
+Sender verification, history access links, and Agentic access links expire after 30 minutes; Agentic management sessions expire after 15 minutes, history sessions after a fixed seven days, and signer tokens after seven days. Tests that depend on time should control time explicitly through a boundary such as headers, fake timers, or injectable clock behavior.
 
 ### UI
 
@@ -184,3 +184,5 @@ Route files should stay thin. Feature components own UI state and fetch/mutation
 ### Issue-Driven Work
 
 For future pilot issues, start from the live issue acceptance criteria and load the local TDD skill for the implementation loop. The architecture map should help choose the right public boundary: HTTP API for lifecycle work, component boundary for signer/editor UX, or R2/PDF artifact boundary for finalization. Agentic changes must also preserve the runtime/OpenAPI drift contract, universal mutation-idempotency enumeration, credential redaction scan, capability matrix, and browser compatibility evidence.
+
+Documents have no automatic retention expiry. Source and final PDFs remain in R2 until creator deletion. The retention API returns a null automatic deletion date and false eligibility; explicit creator deletion remains available, including through Agentic human approval. Successful sender email verification remembers the browser for seven days, and returning to the homepage uses that session to open My Documents or the requested signing mode.

@@ -52,6 +52,7 @@ import {
 	resolveHistorySessionState,
 } from "@/db/history-access";
 import { createHono } from "@/hono/factory";
+import { rememberVerifiedSenderLogin } from "@/hono/remember-sender-login";
 import {
 	detectPdfLastPage,
 	getRequestIp,
@@ -228,6 +229,7 @@ envelopesEndpoint.get("/sender-verifications/:token", async (c) => {
 		);
 	}
 
+	await rememberVerifiedSenderLogin(c, result.data.sender.email, parseNow(c.req.header("x-now")));
 	return c.json({ data: result.data });
 });
 

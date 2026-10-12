@@ -40,7 +40,9 @@ describe("SenderVerificationPage", () => {
 			expectedUrl,
 		);
 		await waitFor(() => expect(onVerified).toHaveBeenCalledWith(expectedUrl));
-		expect(fetchMock).toHaveBeenCalledWith("/api/envelopes/sender-verifications/sender-token");
+		expect(fetchMock).toHaveBeenCalledWith("/api/envelopes/sender-verifications/sender-token", {
+			headers: { "x-remember-sign-in": "true" },
+		});
 	});
 
 	it("shows verification errors without redirecting", async () => {

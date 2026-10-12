@@ -136,8 +136,8 @@ export function HistoryRequestForm({
 						<AlertTitle>Check your email</AlertTitle>
 						<AlertDescription>
 							If eligible documents are associated with that address, a secure link is on its way.
-							Check the spelling, look in spam, or try another email address. Completed and expired
-							documents are retained for 90 days unless deleted earlier.
+							Check the spelling, look in spam, or try another email address. Documents are kept
+							until you delete them. Your login is remembered for seven days.
 						</AlertDescription>
 					</Alert>
 				) : null}

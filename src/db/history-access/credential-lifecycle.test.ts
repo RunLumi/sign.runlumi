@@ -161,6 +161,7 @@ describe("history credential and session security lifecycle", () => {
 
 		expect(result.status).toBe("authenticated");
 		expect(state.sessions).toHaveLength(1);
+		expect(state.sessions[0]?.expiresAt).toEqual(new Date("2026-07-24T08:29:59.000Z"));
 		expect(state.events).toEqual([
 			expect.objectContaining({
 				linkId: "10000000-0000-4000-8000-000000000001",

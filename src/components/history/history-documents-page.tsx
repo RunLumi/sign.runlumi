@@ -137,7 +137,7 @@ export function HistoryDocumentsPage({
 			<AuthenticatedProductNavigation activeMode="my_documents" onSignedOut={onSignedOut} />
 			<PageHeader
 				title="My documents"
-				lead="Completed and expired documents are retained for 90 days unless deleted earlier. My documents is not permanent storage."
+				lead="Your documents are kept until you delete them. Your login is remembered on this browser for seven days."
 			/>
 			{catalog?.identity ? (
 				<HistoryEnvelopeStart identity={catalog.identity} initialSigningMode={initialSigningMode} />

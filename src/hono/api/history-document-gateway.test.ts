@@ -125,7 +125,7 @@ describe("history completed-document gateway", () => {
 				email: "owner@example.com",
 				sessionHash: await hashHistoryCredential(rawSession),
 				status: "active",
-				expiresAt: new Date("2026-07-17T16:29:59.000Z"),
+				expiresAt: new Date("2026-07-24T08:29:59.000Z"),
 				revokedAt: null,
 				createdAt: new Date("2026-07-17T08:29:59.000Z"),
 			},
@@ -184,16 +184,16 @@ describe("history completed-document gateway", () => {
 		});
 	});
 
-	it("keeps the session expiry fixed and rejects it at and after eight hours", async () => {
+	it("keeps the session expiry fixed and rejects it at and after seven days", async () => {
 		const cookie = `signmos_history_session=${rawSession}`;
 		const originalExpiry = state.sessions[0]?.expiresAt;
 		const beforeExpiry = await apiHono.request("/api/history/documents", {
-			headers: { cookie, "x-now": "2026-07-17T16:29:58.999Z" },
+			headers: { cookie, "x-now": "2026-07-24T08:29:58.999Z" },
 		});
 		expect(beforeExpiry.status).toBe(200);
 		expect(state.sessions[0]?.expiresAt).toBe(originalExpiry);
 
-		for (const now of ["2026-07-17T16:29:59.000Z", "2026-07-17T16:29:59.001Z"]) {
+		for (const now of ["2026-07-24T08:29:59.000Z", "2026-07-24T08:29:59.001Z"]) {
 			const response = await apiHono.request("/api/history/documents", {
 				headers: { cookie, "x-now": now },
 			});

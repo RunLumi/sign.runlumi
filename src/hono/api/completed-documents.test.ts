@@ -489,7 +489,9 @@ async function createCurrentFinalPdf(): Promise<Uint8Array> {
 async function createLargeCurrentFinalPdf(): Promise<Uint8Array> {
 	const pdf = await PDFDocument.create();
 	pdf.setProducer(FINAL_PDF_RENDERER_PRODUCER);
-	pdf.setTitle("x".repeat(maxFinalDocumentEmailAttachmentBytes + 1));
+	pdf.context.register(
+		pdf.context.stream(new Uint8Array(maxFinalDocumentEmailAttachmentBytes + 1)),
+	);
 	pdf.addPage();
 	const bytes = new Uint8Array(await pdf.save({ useObjectStreams: false }));
 	if (bytes.byteLength <= maxFinalDocumentEmailAttachmentBytes) {

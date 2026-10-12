@@ -4,10 +4,11 @@ import handler from "@tanstack/react-start/server-entry";
 import { withDatabase } from "@/db";
 import { apiHono } from "@/hono/api";
 import { publicAgentContractHono } from "@/hono/public-agent-contract";
+import { redirectRememberedLogin } from "@/hono/remembered-login";
 
 export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
-		return withDatabase(env.DB, () => {
+		return withDatabase(env.DB, async () => {
 			const url = new URL(request.url);
 
 			if (url.pathname.startsWith("/api/")) {
@@ -17,6 +18,8 @@ export default {
 				return publicAgentContractHono.fetch(request, env, ctx);
 			}
 
+			const remembered = await redirectRememberedLogin(request);
+			if (remembered) return remembered;
 			return handler.fetch(request, {
 				context: {
 					fromFetch: true,
