@@ -1,5 +1,5 @@
+import { IconFilePlus as FilePlus2, IconFileUpload as FileUp } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { FilePlus2, FileUp } from "lucide-react";
 import { useState } from "react";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { LoadingText } from "@/components/patterns/loading-text";

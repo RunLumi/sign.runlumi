@@ -1,6 +1,11 @@
+import {
+	IconArrowRight as ArrowRight,
+	IconPencil as Pencil,
+	IconTrash as Trash2,
+	IconUserPlus as UserPlus,
+} from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Pencil, Trash2, UserPlus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { LoadingText } from "@/components/patterns/loading-text";
 import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";

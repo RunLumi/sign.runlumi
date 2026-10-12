@@ -1,47 +1,48 @@
-# Lumi Sign design system
+# Lumi Sign design implementation
 
-The UI goal: outstanding but simple — one layout system, one surface style, one link style, restrained color. Deep ink-navy brand (`#030b22` heritage from `manifest.json`) over cool neutrals, Inter Variable (self-hosted in `public/fonts/`), dark mode is navy-tinted, never flat gray.
+`DESIGN.md` at the repository root is an unchanged copy of the RunLumi brand contract,
+from `RunLumi/brand.runlumi` commit `7a158f6e31227b9a5b76a5d2648bce4459c802d1`.
+This document adapts its shared identity to the signing application. Landing-specific
+product positioning and composition do not replace Lumi Sign's existing task flows.
 
-## Building blocks
+## Shared identity
 
-Always reach for these before hand-rolling markup:
+- Light only: Paper White `#f4f0e8`, opaque Surface White `#ffffff`, Civic Navy `#102a43`, Ink `#172033`.
+- Lumi Blue `#006093` is the primary action color; hover `#004f80`, pressed `#003e6a`.
+- Self-hosted variable Geist Latin and Latin Extended fonts cover English and Vietnamese. The SIL OFL is in `public/fonts/Geist-OFL.txt`.
+- The official folded-L SVG and email PNG are copied without modification into `public/brand/`. Preserve their ownership notice.
+- Functional application icons use intact Tabler Outline glyphs. Its MIT notice is in `public/brand/Tabler-LICENSE.txt`. Generated Shadcn primitives retain their supplied internal icons; do not edit generated files manually.
+- Opaque white sheets hold document content. Glass is confined to the header and product navigation, with opaque, reduced-transparency, contrast, and reduced-motion treatments.
 
-| Component | Import | Use for |
-| --- | --- | --- |
-| `PageShell` | `@/components/layout/page-shell` | Outermost wrapper of every page. `width`: `narrow` (max-w-xl, confirmations/verifications), `content` (max-w-3xl, default), `wide` (max-w-5xl, editors/PDF previews). `center` for vertically centered pages. |
-| `PageHeader` | `@/components/layout/page-shell` | Wordmark eyebrow + `h1` (text-3xl) + optional lead paragraph. `align="center"` for centered pages. |
-| `Wordmark` | `@/components/layout/wordmark` | Brand mark (Signature icon tile + "Lumi Sign"). Links to `/` by default. |
-| `Panel`, `PanelTitle`, `PanelDescription` | `@/components/patterns/panel` | Every card-like surface (forms, summaries, lists). `as="form"` etc. for other elements. |
-| `StatusBadge` | `@/components/patterns/status-badge` | All status pills. Tones: `neutral`, `info`, `success`, `warning`, `destructive`. Never hand-roll emerald/amber spans. |
-| `TextLink` / `textLinkClass` | `@/components/patterns/text-link` | All inline links. `textLinkClass` for router `<Link>`s. |
-| `BackLink` | `@/components/patterns/text-link` | All back navigation (renders `<a>` with `href`, `<button>` otherwise). |
-| `NativeSelect` | `@/components/patterns/native-select` | All `<select>` elements. Matches `Input` height (h-9). |
-| `EmptyState` | `@/components/patterns/empty-state` | Empty lists/queues. Must offer one clear next action when one exists. |
-| `LoadingText` | `@/components/patterns/loading-text` | Inline loading/status lines (`aria-live` `<output>`). `boxed` for standalone page-level loading. |
-| shadcn `src/components/ui/*` | `@/components/ui/*` | Buttons, inputs, dialogs, alerts, tables, badges. Generated files — never edit manually. |
+## Components
 
-## Layout rules
+| Component | Responsibility |
+| --- | --- |
+| `PageShell` | Shared brand header, My documents entry, skip link, main landmark, footer; narrow/content/wide widths. Wide stops at 1200px. |
+| `PageHeader` | One page heading and optional lead; the shell owns the logo. |
+| `Wordmark` | Official folded-L asset plus Lumi Sign; accessible home link. |
+| `Panel` / `PanelTitle` / `PanelDescription` | Opaque work sheet, navy heading, readable body copy. |
+| `StatusBadge` | Label plus dot, using canonical info/success/warning/risk colors. |
+| `TextLink` / `BackLink` | Consistent prose and back navigation. |
+| `NativeSelect`, generated Shadcn primitives | Existing inputs and controls; shared CSS sets 44px minimum control height and visible focus without editing generated source. |
+| `EmptyState` / `LoadingText` | Existing empty/loading behavior with shared typography and surfaces. |
 
-- Page skeleton: `PageShell` → optional `AuthenticatedProductNavigation`/`ProductModeNavigation` → `PageHeader` → content blocks. Vertical rhythm between blocks comes from PageShell's `space-y-8`; inside panels use `space-y-4`/`space-y-5`.
-- Never `min-h-screen`; `PageShell` owns `min-h-dvh` and background.
-- Headings: `h1` only via `PageHeader` (text-3xl); section `h2` outside panels `text-xl font-semibold`; `PanelTitle` inside panels (text-lg). Landing hero is the single exception (text-4xl/5xl).
-- `text-balance` on headings, `text-pretty` on paragraphs, `tabular-nums` on dates/counts/data.
+Keep the four signing tasks, verified-email authority, PDF placement geometry,
+creator controls, and Agentic review behavior intact. PDF previews remain white paper.
+Do not introduce decorative motion, false security claims, fake usage statistics,
+or new legal policies as part of a visual update.
 
-## Color rules
+## Transactional email
 
-- One accent per view: navy `primary`. Status color only via `StatusBadge` and `Alert`.
-- No gradients, no glows, no raw hex/slate/zinc classes in components. Every color must render correctly in dark mode (`dark:` variant or token).
-- Exception: PDF page previews are always paper — `bg-white text-slate-950` is correct there and must not get dark variants; field overlay palettes on top of the paper likewise stay light.
+`src/lib/email-template.ts` owns the responsive table layout shared by sender and
+signer verification, signing links, signature notifications, revision requests,
+human review, My documents access, Agentic access, and signed PDF backups.
 
-## Interaction & states
-
-- Destructive/irreversible actions: `ui/dialog` (or AlertDialog pattern) confirm — never a hand-rolled fixed overlay.
-- Links inside prose are underlined (`TextLink`); actions look like buttons (`Button`, or `Button asChild` around `<a>`) — never hand-rolled anchor-buttons.
-- Errors render next to the action via `<Alert variant="destructive">`; field-level hints may be small `text-destructive` text under the field.
-- Loading: `LoadingText`. Empty: `EmptyState`. Don't invent per-page variants.
-
-## Copy rules
-
-- Sentence case everywhere ("Try again", not "Try Again").
-- Ellipsis is the single character `…`, never three dots ("Saving…").
-- Buttons name the action ("Start envelope", "Send for signing"); loading labels are the verb + `…`.
+- HTML escapes all names, comments, details, and URLs; action links accept HTTP(S) only.
+- Inline canonical colors, a 600px sheet, mobile padding, Outlook table fallback,
+  hidden non-sensitive preview text, and a readable fallback link.
+- The logo is hosted at the app's public asset URL; the product name remains visible
+  if a mail client blocks images. System fonts fall back when Geist is unavailable.
+- Preserve plain-text bodies, recipient authority, expiry semantics, and PDF attachments.
+- Rendering a template does not prove inbox-client rendering or provider delivery.
+- Generate local samples with `pnpm email:preview`; no mail is sent by that command.

@@ -43,6 +43,12 @@ jobs:
         env:
           LUMI_E2E_BROWSER: chromium
         run: pnpm e2e:placement
+      - name: Check branded site and email layouts
+        env:
+          LUMI_E2E_BROWSER: chromium
+        run: |
+          pnpm email:preview
+          pnpm e2e:brand
       - name: Retain E2E evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,6 +57,7 @@ jobs:
           path: |
             .wrangler/e2e/multipage-placement/
             .wrangler/e2e-worker.log
+            output/playwright/brand-surfaces/
           include-hidden-files: true
       - name: Stop local Worker
         if: always()

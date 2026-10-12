@@ -6,6 +6,7 @@ import {
 	toAbsoluteDeliveryUrl,
 } from "@/db/envelope/email-delivery";
 import { getDb } from "@/db/setup";
+import { renderBrandedEmail } from "@/lib/email-template";
 import { appendAgenticSecurityEvent } from "./security-audit";
 import { agenticAccessLinks, agenticAccessRequests, agenticEmailRecords } from "./table";
 
@@ -129,18 +130,16 @@ function buildAgenticAccessEmail(input: { email: string; accessUrl: string }) {
 		to: input.email,
 		subject: "Verify your email for Lumi Sign Agentic access",
 		text: `Open your secure Agentic access link:\n${input.accessUrl}\n\nThis link expires in 30 minutes and can be used once. If you did not request it, ignore this email.`,
-		html: `<p>Open your secure Agentic access link.</p><p><a href="${escapeHtml(input.accessUrl)}">Manage Agentic access</a></p><p>This link expires in 30 minutes and can be used once.</p><p>If you did not request it, ignore this email.</p>`,
+		html: renderBrandedEmail({
+			title: "Manage your agent access",
+			preview: "Verify your email to manage Lumi Sign API tokens.",
+			paragraphs: ["Open your secure Agentic access link to create or manage personal API tokens."],
+			action: { label: "Manage Agentic access", url: input.accessUrl },
+			note: "This link expires in 30 minutes and can be used once. If you did not request it, ignore this email.",
+		}),
 	};
 }
 
 function acceptedWithoutCredential(): AgenticAccessRequestResult {
 	return { status: "accepted", accessUrl: null };
-}
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
 }

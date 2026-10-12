@@ -1,5 +1,10 @@
+import {
+	IconCheck as Check,
+	IconWritingSign as PenLine,
+	IconRotate2 as RotateCcw,
+	IconTypography as Type,
+} from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
-import { Check, PenLine, RotateCcw, Type } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { NativeSelect } from "@/components/patterns/native-select";

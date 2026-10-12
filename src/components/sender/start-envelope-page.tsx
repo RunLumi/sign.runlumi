@@ -1,18 +1,17 @@
-import { useForm } from "@tanstack/react-form";
 import {
-	ArrowRight,
-	Bot,
-	FileSignature,
-	Files,
-	type LucideIcon,
-	Send,
-	UsersRound,
-} from "lucide-react";
+	IconArrowRight as ArrowRight,
+	IconRobot as Bot,
+	IconFilePencil as FileSignature,
+	IconFiles as Files,
+	type Icon as LucideIcon,
+	IconSend as Send,
+	IconUsers as UsersRound,
+} from "@tabler/icons-react";
+import { useForm } from "@tanstack/react-form";
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AgenticAccessRequestForm } from "@/components/agentic/agentic-access-request-form";
 import { HistoryRequestForm } from "@/components/history/history-request-form";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
-import { Wordmark } from "@/components/layout/wordmark";
 import {
 	type ProductMode,
 	ProductModeNavigation,
@@ -234,8 +233,8 @@ export function StartEnvelopePage({
 		return (
 			<PageShell width="content" center>
 				<div className="mx-auto max-w-2xl text-center">
-					<Wordmark linked={false} />
-					<h1 className="mt-6 text-balance font-semibold text-4xl text-foreground sm:text-5xl">
+					<p className="font-medium text-primary text-sm">PDF signatures · No password needed</p>
+					<h1 className="mt-4 text-balance font-semibold text-[clamp(40px,6vw,64px)] leading-[1.14] tracking-[-0.045em]">
 						{taskChooserHeroContent.heading}
 					</h1>
 					<p className="mx-auto mt-5 max-w-xl text-pretty text-muted-foreground leading-7">
@@ -432,11 +431,11 @@ function LandingTaskChooser({ onChoose }: { onChoose: (task: LandingTask) => voi
 					type="button"
 					aria-label={label}
 					onClick={() => onChoose(task)}
-					className="group flex min-h-28 items-center justify-between gap-3 rounded-xl border bg-card p-5 text-left shadow-xs outline-none transition-colors hover:border-ring/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+					className="lumi-task group flex min-h-32 items-center justify-between gap-3 rounded-xl border bg-card p-5 text-left outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 sm:p-6"
 				>
 					<span className="flex min-w-0 items-start gap-4">
-						<span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-							<Icon aria-hidden="true" className="size-5" />
+						<span className="lumi-task-icon flex size-12 shrink-0 items-center justify-center rounded-lg">
+							<Icon aria-hidden="true" className="size-6" />
 						</span>
 						<span className="min-w-0">
 							<span className="block font-semibold text-base text-foreground">{label}</span>

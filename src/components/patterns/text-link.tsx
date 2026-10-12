@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { IconArrowLeft as ArrowLeft } from "@tabler/icons-react";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 

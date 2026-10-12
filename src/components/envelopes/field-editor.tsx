@@ -1,6 +1,6 @@
+import { IconFileText as FileText } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText } from "lucide-react";
 import type { MouseEvent, PointerEvent } from "react";
 import { useRef } from "react";
 import { LoadingText } from "@/components/patterns/loading-text";

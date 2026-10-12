@@ -120,9 +120,10 @@ All requests enter `src/server.ts`.
 - `src/components/ui/*` contains generated Shadcn primitives.
 - `src/components/layout/*` owns the page skeleton (`PageShell`, `PageHeader`, `Wordmark`).
 - `src/components/patterns/*` owns shared app patterns (`Panel`, `StatusBadge`, `TextLink`/`BackLink`, `NativeSelect`, `EmptyState`, `LoadingText`).
-- `src/styles.css` contains Tailwind CSS v4 setup, Shadcn CSS variables, brand theme tokens, and the self-hosted Inter Variable font faces (`public/fonts/`).
+- `src/styles.css` contains Tailwind CSS v4 setup, Shadcn CSS variables, brand theme tokens, and the self-hosted Geist Variable font faces (`public/fonts/`).
 - `src/lib/utils.ts` contains shared class-name utility behavior.
-- `src/components/theme/*` owns the app theme provider.
+- `DESIGN.md` is the copied RunLumi brand contract; the application follows its light-only material model.
+- `src/lib/email-template.ts` renders the shared branded transactional email layout.
 
 ### Tests
 

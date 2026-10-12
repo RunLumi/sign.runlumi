@@ -1,5 +1,10 @@
+import {
+	IconPencil as Pencil,
+	IconPlus as Plus,
+	IconTrash as Trash2,
+	IconUsers as Users,
+} from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { EmptyState } from "@/components/patterns/empty-state";

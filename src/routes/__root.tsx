@@ -7,7 +7,6 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type * as React from "react";
 import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
 import { NotFound } from "@/components/not-found";
-import { ThemeProvider } from "@/components/theme";
 import appCss from "@/styles.css?url";
 import { seo } from "@/utils/seo";
 
@@ -26,40 +25,24 @@ export const Route = createRootRouteWithContext<{
 			{
 				name: "theme-color",
 				media: "(prefers-color-scheme: light)",
-				content: "#fafbfd",
+				content: "#f4f0e8",
 			},
 			{
 				name: "theme-color",
 				media: "(prefers-color-scheme: dark)",
-				content: "#14161f",
+				content: "#f4f0e8",
 			},
 			...seo({
 				title: "Lumi Sign | No-Account PDF Signatures",
 				description: "Start a no-account PDF signature envelope and verify by email.",
-				image: "/signmos-og.png",
+				image: "https://sign.runlumi.app/brand/lumi-email-logo.png",
 			}),
 		],
 		links: [
 			{ rel: "stylesheet", href: appCss },
-			{
-				rel: "apple-touch-icon",
-				sizes: "180x180",
-				href: "/apple-touch-icon.png",
-			},
-			{
-				rel: "icon",
-				type: "image/png",
-				sizes: "32x32",
-				href: "/favicon-32x32.png",
-			},
-			{
-				rel: "icon",
-				type: "image/png",
-				sizes: "16x16",
-				href: "/favicon-16x16.png",
-			},
+			{ rel: "icon", type: "image/svg+xml", href: "/brand/lumi-logo.svg" },
+			{ rel: "apple-touch-icon", href: "/brand/lumi-email-logo.png" },
 			{ rel: "manifest", href: "/manifest.json" },
-			{ rel: "icon", href: "/favicon.ico" },
 		],
 	}),
 	errorComponent: (props) => {
@@ -76,14 +59,7 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
 	return (
 		<RootDocument>
-			<ThemeProvider
-				attribute="class"
-				defaultTheme="system"
-				enableSystem
-				disableTransitionOnChange={false}
-			>
-				<Outlet />
-			</ThemeProvider>
+			<Outlet />
 		</RootDocument>
 	);
 }
@@ -96,8 +72,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<TanStackRouterDevtools position="bottom-right" />
-				<ReactQueryDevtools buttonPosition="bottom-left" />
+				{import.meta.env.DEV ? <TanStackRouterDevtools position="bottom-right" /> : null}
+				{import.meta.env.DEV ? <ReactQueryDevtools buttonPosition="bottom-left" /> : null}
 				<Scripts />
 			</body>
 		</html>

@@ -7,6 +7,7 @@ import {
 	toAbsoluteDeliveryUrl,
 } from "@/db/envelope/email-delivery";
 import { getDb } from "@/db/setup";
+import { renderBrandedEmail } from "@/lib/email-template";
 import { assertHistoryRequestRateLimits } from "./request-abuse";
 import { appendHistorySecurityEvent } from "./security-audit";
 import { historyAccessLinks, historyAccessRequests, historyEmailRecords } from "./table";
@@ -158,7 +159,13 @@ export function buildHistoryAccessEmail(input: { email: string; accessUrl: strin
 		to: input.email,
 		subject: "Access your Lumi Sign documents",
 		text: `Open your secure My documents link:\n${input.accessUrl}\n\nThis link expires in 30 minutes and can be used once. If you did not request it, ignore this email.`,
-		html: `<p>Open your secure My documents link.</p><p><a href="${escapeHtml(input.accessUrl)}">View My documents</a></p><p>This link expires in 30 minutes and can be used once.</p><p>If you did not request it, ignore this email.</p>`,
+		html: renderBrandedEmail({
+			title: "Your documents, in one place",
+			preview: "Use this one-time link to open My documents.",
+			paragraphs: ["Open your secure My documents link to view and manage your PDFs."],
+			action: { label: "View My documents", url: input.accessUrl },
+			note: "This link expires in 30 minutes and can be used once. If you did not request it, ignore this email.",
+		}),
 	};
 }
 
@@ -211,12 +218,4 @@ async function hasMatchingRetainedEnvelope(email: string): Promise<boolean> {
 
 function acceptedWithoutCredential(): HistoryAccessRequestResult {
 	return { status: "accepted", accessUrl: null };
-}
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
 }

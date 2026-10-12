@@ -1,5 +1,5 @@
+import { IconArrowLeft as ArrowLeft, IconHome as Home } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Home } from "lucide-react";
 import type React from "react";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { Panel } from "@/components/patterns/panel";

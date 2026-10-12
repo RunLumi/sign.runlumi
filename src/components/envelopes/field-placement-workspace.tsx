@@ -1,4 +1,8 @@
-import { CheckCircle2, Circle, Save } from "lucide-react";
+import {
+	IconCircleCheck as CheckCircle2,
+	IconCircle as Circle,
+	IconDeviceFloppy as Save,
+} from "@tabler/icons-react";
 import type { MouseEvent, PointerEvent, RefObject } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

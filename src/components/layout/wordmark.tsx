@@ -1,32 +1,31 @@
-import { Signature } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function WordmarkContent() {
 	return (
 		<>
-			<span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-				<Signature aria-hidden="true" className="size-4" />
+			<img src="/brand/lumi-logo.svg" width={40} height={40} alt="" aria-hidden="true" />
+			<span className="font-semibold text-civic-navy text-lg tracking-tight sm:text-xl">
+				Lumi Sign
 			</span>
-			<span className="font-semibold text-foreground text-sm">Lumi Sign</span>
 		</>
 	);
 }
 
 export function Wordmark({ linked = true, className }: { linked?: boolean; className?: string }) {
-	if (!linked) {
+	const classes = cn("inline-flex shrink-0 items-center gap-1 rounded-sm", className);
+	if (!linked)
 		return (
-			<span className={cn("inline-flex items-center gap-2", className)}>
+			<span className={classes}>
 				<WordmarkContent />
 			</span>
 		);
-	}
 	return (
 		<a
 			href="/"
 			aria-label="Lumi Sign home"
 			className={cn(
-				"inline-flex items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2",
-				className,
+				classes,
+				"focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-4",
 			)}
 		>
 			<WordmarkContent />

@@ -5,13 +5,10 @@ export type StatusTone = "neutral" | "info" | "success" | "warning" | "destructi
 
 const statusTones: Record<StatusTone, string> = {
 	neutral: "border-border bg-muted/60 text-muted-foreground",
-	info: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300",
-	success:
-		"border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
-	warning:
-		"border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
-	destructive:
-		"border-red-200 bg-red-50 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300",
+	info: "border-primary/20 bg-accent text-primary",
+	success: "border-success/20 bg-success-soft text-success",
+	warning: "border-warning/40 bg-warning-soft text-civic-navy",
+	destructive: "border-destructive/20 bg-risk-soft text-destructive",
 };
 
 export function StatusBadge({

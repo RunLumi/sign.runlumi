@@ -1,4 +1,9 @@
-import { Download, FileText, MessageSquare, X } from "lucide-react";
+import {
+	IconDownload as Download,
+	IconFileText as FileText,
+	IconMessage as MessageSquare,
+	IconX as X,
+} from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { pdfPage } from "@/components/envelopes/field-placement-workspace";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
