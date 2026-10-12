@@ -34,7 +34,7 @@ export const Route = createRootRouteWithContext<{
 				content: "#14161f",
 			},
 			...seo({
-				title: "Signmos | No-Account PDF Signatures",
+				title: "Lumi Sign | No-Account PDF Signatures",
 				description: "Start a no-account PDF signature envelope and verify by email.",
 				image: "/signmos-og.png",
 			}),

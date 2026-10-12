@@ -78,7 +78,7 @@ historyAccessEndpoint.post("/access-links/:credential/redeem", async (c) => {
 	const parsed = HistoryAccessRedemptionSchema.safeParse(await c.req.json().catch(() => ({})));
 	if (!parsed.success) {
 		return c.json(
-			{ error: { code: "INVALID_RETURN_PATH", message: "Use a Signmos review path" } },
+			{ error: { code: "INVALID_RETURN_PATH", message: "Use a Lumi Sign review path" } },
 			400,
 		);
 	}

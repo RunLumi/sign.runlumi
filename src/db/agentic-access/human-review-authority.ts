@@ -92,7 +92,7 @@ export async function claimHumanReviewCommand(input: {
 				decisionAt: null,
 				terminalReason: null,
 				notificationStatus: "fallback",
-				notificationProviderMessage: "Review link available through authenticated Signmos",
+				notificationProviderMessage: "Review link available through authenticated Lumi Sign",
 				decidedByEmail: null,
 				decidedBySessionId: null,
 				responseStatus: 202,

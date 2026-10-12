@@ -65,9 +65,9 @@ function buildAgentOpenApiDocument() {
 	return {
 		openapi: "3.1.0",
 		info: {
-			title: "Signmos Agent API",
+			title: "Lumi Sign Agent API",
 			version: "1.0.0",
-			description: "Bearer-authenticated personal document automation for Signmos.",
+			description: "Bearer-authenticated personal document automation for Lumi Sign.",
 		},
 		paths: {
 			[agentHumanReviewOperations.commandStatus.publicPath]: {

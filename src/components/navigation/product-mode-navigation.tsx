@@ -81,7 +81,7 @@ export function AuthenticatedProductNavigation({
 
 export function ProductModeNavigation({ activeMode }: { activeMode: ProductMode }) {
 	return (
-		<nav aria-label="Signmos options" className="w-full">
+		<nav aria-label="Lumi Sign options" className="w-full">
 			<ul className="grid grid-cols-2 gap-1 rounded-xl border bg-card p-1 shadow-xs sm:grid-cols-4">
 				{productModes.map(({ mode, label }) => {
 					const active = mode === activeMode;

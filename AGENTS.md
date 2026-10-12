@@ -1,6 +1,6 @@
 # signmos Agent Map
 
-Signmos is a lightweight e-signature workflow on TanStack Start, Hono, Cloudflare Workers, D1 SQLite, Drizzle, and Cloudflare R2.
+Lumi Sign is a lightweight e-signature workflow on TanStack Start, Hono, Cloudflare Workers, D1 SQLite, Drizzle, and Cloudflare R2.
 
 Use this file as the always-loaded map. Load deeper docs only when the task touches that area.
 

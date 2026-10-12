@@ -256,7 +256,7 @@ export async function runAgentCalibration(
 		],
 		heartbeats,
 		cleanup:
-			"calibration documents retained under normal Signmos controls; supplied token retained for explicit owner revocation",
+			"calibration documents retained under normal Lumi Sign controls; supplied token retained for explicit owner revocation",
 	};
 }
 
@@ -395,7 +395,7 @@ async function calibrationPdf(): Promise<Uint8Array> {
 	const pdf = await PDFDocument.create();
 	const page = pdf.addPage([612, 792]);
 	const font = await pdf.embedFont(StandardFonts.Helvetica);
-	page.drawText("Signmos Agentic calibration fixture", { x: 72, y: 720, size: 16, font });
+	page.drawText("Lumi Sign Agentic calibration fixture", { x: 72, y: 720, size: 16, font });
 	return pdf.save({ useObjectStreams: false });
 }
 

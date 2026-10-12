@@ -48,7 +48,7 @@ describe("HistoryDocumentsPage", () => {
 		);
 
 		expect(await screen.findByRole("heading", { name: "My documents" })).toBeTruthy();
-		expect(screen.getByRole("navigation", { name: "Signmos options" })).toBeTruthy();
+		expect(screen.getByRole("navigation", { name: "Lumi Sign options" })).toBeTruthy();
 		expect(screen.getByRole("link", { name: "My documents" }).getAttribute("aria-current")).toBe(
 			"page",
 		);

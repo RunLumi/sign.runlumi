@@ -59,7 +59,7 @@ const landingTaskChoices = [
 	{
 		task: "agentic",
 		label: "Agentic mode",
-		description: "Connect Signmos to an agent",
+		description: "Connect Lumi Sign to an agent",
 		icon: Bot,
 	},
 ] as const satisfies ReadonlyArray<{
@@ -85,7 +85,7 @@ const landingTaskHeroContent = {
 		description: "Enter your email to receive a secure link to view and manage your PDFs.",
 	},
 	agentic: {
-		heading: "Connect Signmos to an agent",
+		heading: "Connect Lumi Sign to an agent",
 		description: "Verify your email to create and manage personal API tokens for your agent.",
 	},
 } as const satisfies Record<LandingTask, { heading: string; description: string }>;

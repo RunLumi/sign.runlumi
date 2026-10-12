@@ -14,7 +14,7 @@ describe("agent release smoke", () => {
 				url: request.url,
 				authorization: request.headers.get("authorization"),
 			});
-			if (request.url.endsWith("/agent.md")) return new Response("# Signmos Agent API");
+			if (request.url.endsWith("/agent.md")) return new Response("# Lumi Sign Agent API");
 			if (request.url.endsWith("/openapi.json")) {
 				return Response.json({ openapi: "3.1.0", paths: { "/api/v1/me": {} } });
 			}

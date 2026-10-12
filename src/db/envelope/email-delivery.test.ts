@@ -34,7 +34,7 @@ describe("Cloudflare transactional email", () => {
 		const send = vi.fn().mockResolvedValue({ messageId: "cloudflare-message" });
 		const env = {
 			EMAIL: { send },
-			EMAIL_FROM: "Signmos <sign@runlumi.app>",
+			EMAIL_FROM: "Lumi Sign <sign@runlumi.app>",
 			EMAIL_REPLY_TO: "sign@runlumi.app",
 		};
 		const email = {

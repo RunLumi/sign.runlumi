@@ -127,7 +127,7 @@ export async function hashAgenticCredential(credential: string): Promise<string>
 function buildAgenticAccessEmail(input: { email: string; accessUrl: string }) {
 	return {
 		to: input.email,
-		subject: "Verify your email for Signmos Agentic access",
+		subject: "Verify your email for Lumi Sign Agentic access",
 		text: `Open your secure Agentic access link:\n${input.accessUrl}\n\nThis link expires in 30 minutes and can be used once. If you did not request it, ignore this email.`,
 		html: `<p>Open your secure Agentic access link.</p><p><a href="${escapeHtml(input.accessUrl)}">Manage Agentic access</a></p><p>This link expires in 30 minutes and can be used once.</p><p>If you did not request it, ignore this email.</p>`,
 	};

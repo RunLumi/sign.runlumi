@@ -1,4 +1,4 @@
-# Signmos design system
+# Lumi Sign design system
 
 The UI goal: outstanding but simple — one layout system, one surface style, one link style, restrained color. Deep ink-navy brand (`#030b22` heritage from `manifest.json`) over cool neutrals, Inter Variable (self-hosted in `public/fonts/`), dark mode is navy-tinted, never flat gray.
 
@@ -10,7 +10,7 @@ Always reach for these before hand-rolling markup:
 | --- | --- | --- |
 | `PageShell` | `@/components/layout/page-shell` | Outermost wrapper of every page. `width`: `narrow` (max-w-xl, confirmations/verifications), `content` (max-w-3xl, default), `wide` (max-w-5xl, editors/PDF previews). `center` for vertically centered pages. |
 | `PageHeader` | `@/components/layout/page-shell` | Wordmark eyebrow + `h1` (text-3xl) + optional lead paragraph. `align="center"` for centered pages. |
-| `Wordmark` | `@/components/layout/wordmark` | Brand mark (Signature icon tile + "Signmos"). Links to `/` by default. |
+| `Wordmark` | `@/components/layout/wordmark` | Brand mark (Signature icon tile + "Lumi Sign"). Links to `/` by default. |
 | `Panel`, `PanelTitle`, `PanelDescription` | `@/components/patterns/panel` | Every card-like surface (forms, summaries, lists). `as="form"` etc. for other elements. |
 | `StatusBadge` | `@/components/patterns/status-badge` | All status pills. Tones: `neutral`, `info`, `success`, `warning`, `destructive`. Never hand-roll emerald/amber spans. |
 | `TextLink` / `textLinkClass` | `@/components/patterns/text-link` | All inline links. `textLinkClass` for router `<Link>`s. |

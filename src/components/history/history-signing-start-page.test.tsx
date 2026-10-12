@@ -36,7 +36,7 @@ describe("HistorySigningStartPage", () => {
 		);
 
 		expect(await screen.findByRole("heading", { level: 1, name: heading })).toBeTruthy();
-		expect(screen.getByRole("navigation", { name: "Signmos options" })).toBeTruthy();
+		expect(screen.getByRole("navigation", { name: "Lumi Sign options" })).toBeTruthy();
 		expect(screen.getByRole("link", { name: option }).getAttribute("aria-current")).toBe("page");
 		expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
 		expect(await screen.findByRole("form", { name: "Start a new document" })).toBeTruthy();

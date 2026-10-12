@@ -194,7 +194,7 @@ describe("partner change requests", () => {
 			{
 				APP_BASE_URL: "https://signmos.example",
 				RESEND_API_KEY: "re_test",
-				RESEND_FROM_EMAIL: "Signmos <sign@signmos.example>",
+				RESEND_FROM_EMAIL: "Lumi Sign <sign@signmos.example>",
 				RESEND_REPLY_TO_EMAIL: "support@signmos.example",
 			},
 		);
