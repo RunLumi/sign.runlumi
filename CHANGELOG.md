@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/RunLumi/sign.runlumi/compare/v1.11.0...v1.12.0) (2026-10-12)
+
+
+### Features
+
+* deploy RunLumi Sign with D1 and Cloudflare Email ([#1](https://github.com/RunLumi/sign.runlumi/issues/1)) ([957e1b0](https://github.com/RunLumi/sign.runlumi/commit/957e1b04d4bde694e61c15c6987475c7babae5ae))
+
 # [1.11.0](https://github.com/auditmos/signmos/compare/v1.10.0...v1.11.0) (2026-08-04)
 
 
