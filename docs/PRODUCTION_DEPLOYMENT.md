@@ -33,11 +33,20 @@ applies committed D1 migrations, publishes that Git SHA, and checks `/`,
 `/agent.md`, and `/openapi.json`. The generated Vite configuration already
 contains the selected environment; do not add `--env production` to its deploy.
 
-`.github/workflows/deploy.yml` automatically runs on pushes to `main` and supports
-manual dispatch. It runs types, tests, lint, build, dry run, migrations, and deploy.
-Configure GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
-The token needs Worker deployment, D1 migration, R2 read, and zone permissions
-for the custom domain. No application credentials are stored in GitHub.
+Cloudflare Workers Builds connects `RunLumi/sign.runlumi` to `signmos-production`
+and deploys pushes to `main`. Preview builds are disabled. The approved managed
+`signmos-production build token` stays in Cloudflare; no deploy token is needed
+in GitHub. Build environment: `NODE_VERSION=24`, root directory `/`.
+
+Build command:
+`pnpm install --frozen-lockfile && pnpm types && pnpm test && pnpm lint && ./scripts/deploy-production.sh --dry-run`
+
+Deploy command: `./scripts/deploy-production.sh --deploy`.
+
+`.github/workflows/deploy.yml` validates pushes and pull requests with types,
+tests, lint, production build, and dry run. It does not publish a second release.
+Cloudflare skips commits marked `[skip ci]`, such as semantic-release changelog
+updates. Check the Cloudflare build result and active version after code updates.
 
 ## Verification and recovery
 
