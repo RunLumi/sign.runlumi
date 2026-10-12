@@ -1,3 +1,10 @@
+## [1.17.1](https://github.com/RunLumi/sign.runlumi/compare/v1.17.0...v1.17.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* persist signed PDFs separately and recover failed finalizations ([#9](https://github.com/RunLumi/sign.runlumi/issues/9)) ([c7d0c87](https://github.com/RunLumi/sign.runlumi/commit/c7d0c876769dce9ec8e7e28229f848ece420188a))
+
 # [1.17.0](https://github.com/RunLumi/sign.runlumi/compare/v1.16.0...v1.17.0) (2026-10-12)
 
 
