@@ -46,6 +46,7 @@ export async function createSignatureProfile(input: {
 			kind: input.profile.kind,
 			label: input.profile.label,
 			svgPath: input.profile.kind === "drawn" ? input.profile.svgPath : null,
+			imageData: input.profile.kind === "uploaded" ? input.profile.imageData : null,
 			typedText: input.profile.kind === "typed" ? input.profile.typedText : null,
 			typedFont: input.profile.kind === "typed" ? input.profile.typedFont : null,
 			selected: input.profile.selected,

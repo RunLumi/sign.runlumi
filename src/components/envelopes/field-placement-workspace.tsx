@@ -3,6 +3,7 @@ import type { MouseEvent, PointerEvent, RefObject } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ScrollablePdfPlacement } from "./scrollable-pdf-placement";
 
 export interface FieldEditorRecipient {
 	id: string;
@@ -46,6 +47,7 @@ type FieldPlacementWorkspaceProps = {
 	isSaveError: boolean;
 	previewRef: RefObject<HTMLFieldSetElement | null>;
 	onSelectRecipient: (recipientId: string) => void;
+	onSelectPage: (page: number) => void;
 	onSubmit: () => void;
 	onStartDragging: (
 		event: PointerEvent<HTMLElement> | MouseEvent<HTMLElement>,
@@ -69,6 +71,7 @@ export function FieldPlacementWorkspace({
 	isSaveError,
 	previewRef,
 	onSelectRecipient,
+	onSelectPage,
 	onSubmit,
 	onStartDragging,
 	onContinueDragging,
@@ -81,14 +84,13 @@ export function FieldPlacementWorkspace({
 
 	return (
 		<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-			<PdfPlacementPreview
+			<ScrollablePdfPlacement
 				recipients={recipients}
 				placedFields={placedFields}
 				currentField={currentField}
 				sourcePdfPreviewUrl={sourcePdfPreviewUrl}
-				activeRecipientName={activeRecipient?.name ?? "Signer"}
-				allSignaturesPlaced={allSignaturesPlaced}
 				previewRef={previewRef}
+				onSelectPage={onSelectPage}
 				onStartDragging={onStartDragging}
 				onContinueDragging={onContinueDragging}
 				onStopDragging={onStopDragging}
@@ -103,85 +105,6 @@ export function FieldPlacementWorkspace({
 				onSelectRecipient={onSelectRecipient}
 				onSubmit={onSubmit}
 			/>
-		</div>
-	);
-}
-
-function PdfPlacementPreview({
-	recipients,
-	placedFields,
-	currentField,
-	sourcePdfPreviewUrl,
-	activeRecipientName,
-	allSignaturesPlaced,
-	previewRef,
-	onStartDragging,
-	onContinueDragging,
-	onStopDragging,
-}: {
-	recipients: FieldEditorRecipient[];
-	placedFields: EnvelopeFieldResponse[];
-	currentField: PlacedField | null;
-	sourcePdfPreviewUrl?: string;
-	activeRecipientName: string;
-	allSignaturesPlaced: boolean;
-	previewRef: RefObject<HTMLFieldSetElement | null>;
-	onStartDragging: (
-		event: PointerEvent<HTMLElement> | MouseEvent<HTMLElement>,
-		field: PlacedField,
-	) => void;
-	onContinueDragging: (
-		event: PointerEvent<HTMLElement> | MouseEvent<HTMLElement>,
-		field: PlacedField,
-	) => void;
-	onStopDragging: () => void;
-}) {
-	return (
-		<div>
-			<fieldset
-				ref={previewRef}
-				aria-label="PDF page preview"
-				className="relative aspect-[612/792] w-full overflow-hidden rounded-lg border bg-white text-slate-950 shadow-sm"
-				onPointerMove={(event) => currentField && onContinueDragging(event, currentField)}
-				onPointerUp={onStopDragging}
-				onPointerLeave={onStopDragging}
-				onMouseMove={(event) => currentField && onContinueDragging(event, currentField)}
-				onMouseUp={onStopDragging}
-				onMouseLeave={onStopDragging}
-			>
-				<legend className="sr-only">PDF page preview</legend>
-				{sourcePdfPreviewUrl ? (
-					<iframe
-						className="pointer-events-none absolute inset-0 z-0 h-full w-full border-0 bg-white"
-						src={sourcePdfPreviewUrl}
-						title="Uploaded source PDF preview"
-					/>
-				) : null}
-				{placedFields.map((field, index) => (
-					<FieldOverlay
-						key={field.id}
-						field={field}
-						recipientName={getRecipientName(recipients, field.recipientId)}
-						colorIndex={recipientColorIndex(recipients, field.recipientId, index)}
-						isCurrent={false}
-					/>
-				))}
-				{currentField ? (
-					<FieldOverlay
-						field={currentField}
-						recipientName={activeRecipientName}
-						colorIndex={recipientColorIndex(recipients, currentField.recipientId, 0)}
-						isCurrent={true}
-						onPointerDown={(event) => onStartDragging(event, currentField)}
-						onMouseDown={(event) => onStartDragging(event, currentField)}
-					/>
-				) : null}
-			</fieldset>
-			<p className="mt-3 text-muted-foreground text-pretty text-sm">
-				{allSignaturesPlaced
-					? "All signers have signature placeholders."
-					: "Drag the active signature box to the right spot, then save it for that signer."}
-			</p>
 		</div>
 	);
 }
@@ -214,17 +137,14 @@ function SignaturePlacementActions({
 			}}
 			className="space-y-4"
 		>
+			{allSignaturesPlaced ? <output>All signers have signature placeholders.</output> : null}
 			<RecipientPlacementList
 				recipients={recipients}
 				activeRecipientId={activeRecipient?.id ?? null}
 				signatureRecipientIds={signatureRecipientIds}
 				onSelect={onSelectRecipient}
 			/>
-			<Button
-				type="submit"
-				className="w-full"
-				disabled={isSaving || allSignaturesPlaced || !activeRecipient}
-			>
+			<Button type="submit" className="w-full" disabled={isSaving || !activeRecipient}>
 				<Save aria-hidden="true" className="size-4" />
 				{signatureButtonLabel(isSaving, activeRecipient)}
 			</Button>
@@ -254,7 +174,7 @@ function RecipientPlacementList({
 			<div>
 				<h3 className="font-medium text-sm">Signers</h3>
 				<p className="text-muted-foreground text-pretty text-sm">
-					Each signer needs exactly one signature placeholder.
+					Each signer needs at least one signature. You can place more on other pages.
 				</p>
 			</div>
 			<div className="space-y-2">
@@ -266,7 +186,6 @@ function RecipientPlacementList({
 							key={recipient.id}
 							type="button"
 							aria-label={`${recipient.name} signature status`}
-							disabled={isPlaced}
 							onClick={() => onSelect(recipient.id)}
 							className={cn(
 								"flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors",
@@ -300,7 +219,7 @@ function RecipientPlacementList({
 	);
 }
 
-function FieldOverlay({
+export function FieldOverlay({
 	field,
 	recipientName,
 	colorIndex,
@@ -390,7 +309,9 @@ function moveFromOccupiedCoordinates(
 	placedFields: EnvelopeFieldResponse[],
 ): PlacedField {
 	const occupiedCoordinates = new Set(
-		placedFields.map((placedField) => `${placedField.x}:${placedField.y}`),
+		placedFields
+			.filter((placedField) => placedField.page === field.page)
+			.map((placedField) => `${placedField.x}:${placedField.y}`),
 	);
 	if (!occupiedCoordinates.has(`${field.x}:${field.y}`)) return field;
 
@@ -433,16 +354,11 @@ function moveFromOccupiedCoordinates(
 
 function getActiveRecipient(
 	recipients: FieldEditorRecipient[],
-	signatureRecipientIds: Set<string>,
+	_signatureRecipientIds: Set<string>,
 	preferredRecipientId: string,
 ): FieldEditorRecipient | null {
 	return (
-		recipients.find(
-			(recipient) =>
-				recipient.id === preferredRecipientId && !signatureRecipientIds.has(recipient.id),
-		) ??
-		recipients.find((recipient) => !signatureRecipientIds.has(recipient.id)) ??
-		null
+		recipients.find((recipient) => recipient.id === preferredRecipientId) ?? recipients[0] ?? null
 	);
 }
 
@@ -452,15 +368,6 @@ function signatureButtonLabel(
 ): string {
 	if (isSaving) return "Saving…";
 	return activeRecipient ? `Place ${activeRecipient.name} signature` : "All signatures placed";
-}
-
-function recipientColorIndex(
-	recipients: FieldEditorRecipient[],
-	recipientId: string,
-	fallbackIndex: number,
-): number {
-	const index = recipients.findIndex((recipient) => recipient.id === recipientId);
-	return index >= 0 ? index : fallbackIndex;
 }
 
 function recipientOverlayPalette(index: number): string {
@@ -476,8 +383,4 @@ function recipientOverlayPalette(index: number): string {
 function recipientAccentText(index: number): string {
 	const colors = ["text-blue-600", "text-emerald-600", "text-amber-600", "text-rose-600"];
 	return colors[index % colors.length];
-}
-
-function getRecipientName(recipients: FieldEditorRecipient[], recipientId: string): string {
-	return recipients.find((recipient) => recipient.id === recipientId)?.name ?? "Signer";
 }

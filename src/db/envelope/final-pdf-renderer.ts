@@ -1,7 +1,7 @@
 import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf-lib";
 import type { SourceDocument } from "./schema";
 
-export const FINAL_PDF_RENDERER_PRODUCER = "signmos-final-pdf-renderer/3";
+export const FINAL_PDF_RENDERER_PRODUCER = "signmos-final-pdf-renderer/4";
 
 export type FinalPdfRows = {
 	fields: Array<Record<string, unknown>>;
@@ -21,7 +21,7 @@ export async function renderFinalPdf(input: {
 	const font = await pdf.embedFont(StandardFonts.Helvetica);
 	const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
 	const signatureFont = await pdf.embedFont(StandardFonts.HelveticaOblique);
-	drawFieldValues(pdf, input.rows, font, boldFont, signatureFont);
+	await drawFieldValues(pdf, input.rows, font, boldFont, signatureFont);
 	drawAuditCertificate(
 		pdf,
 		input.envelopeId,
@@ -68,13 +68,13 @@ async function loadSourcePdf(sourceBytes: Uint8Array): Promise<PDFDocument> {
 	}
 }
 
-function drawFieldValues(
+async function drawFieldValues(
 	pdf: PDFDocument,
 	rows: Pick<FinalPdfRows, "fields" | "values">,
 	font: PDFFont,
 	boldFont: PDFFont,
 	signatureFont: PDFFont,
-): void {
+): Promise<void> {
 	const valueByField = new Map(
 		rows.values.map((value) => [stringValue(value, "fieldId"), stringValue(value, "value")]),
 	);
@@ -84,7 +84,7 @@ function drawFieldValues(
 		const page = getOrAddPage(pdf, numberValue(field, "page", 1));
 		const box = fieldBoxOnPage(field, page);
 		if (stringValue(field, "type") === "signature") {
-			drawSignatureStamp(page, value, box, boldFont, signatureFont);
+			await drawSignatureStamp(pdf, page, value, box, boldFont, signatureFont);
 			continue;
 		}
 		page.drawRectangle({
@@ -107,13 +107,14 @@ function drawFieldValues(
 	}
 }
 
-function drawSignatureStamp(
+async function drawSignatureStamp(
+	pdf: PDFDocument,
 	page: PDFPage,
 	value: string,
 	box: { x: number; y: number; width: number; height: number },
 	boldFont: PDFFont,
 	signatureFont: PDFFont,
-): void {
+): Promise<void> {
 	const accent = rgb(0.08, 0.31, 0.55);
 	const ink = rgb(0.08, 0.14, 0.2);
 	const muted = rgb(0.38, 0.45, 0.52);
@@ -179,6 +180,18 @@ function drawSignatureStamp(
 		width: Math.max(1, box.width - insetX * 2),
 		height: Math.max(1, box.height - 18),
 	};
+	if (value.startsWith("data:image/png;base64,")) {
+		const image = await pdf.embedPng(value);
+		const size = image.scale(
+			Math.min(signatureBox.width / image.width, signatureBox.height / image.height),
+		);
+		page.drawImage(image, {
+			x: signatureBox.x + (signatureBox.width - size.width) / 2,
+			y: signatureBox.y + (signatureBox.height - size.height) / 2,
+			...size,
+		});
+		return;
+	}
 	if (looksLikeSvgPath(value)) {
 		drawSignaturePath(page, value, signatureBox);
 		return;
@@ -308,6 +321,9 @@ function fieldBoxOnPage(
 }
 
 function drawLines(page: PDFPage, lines: string[], x: number, startY: number, font: PDFFont): void {
+	lines = lines.map((line) =>
+		line.replace(/data:image\/png;base64,[A-Za-z0-9+/=]+/g, "[Uploaded signature image]"),
+	);
 	let y = startY;
 	for (const line of lines) {
 		page.drawText(line || " ", {

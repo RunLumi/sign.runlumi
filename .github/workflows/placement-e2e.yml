@@ -1,0 +1,58 @@
+name: Multipage placement E2E
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  placement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm db:migrate:dev
+      - name: Start local Worker
+        run: |
+          pnpm exec wrangler dev --config dist/server/wrangler.json --ip 127.0.0.1 --port 8795 --local --persist-to "$PWD/.wrangler/state" > .wrangler/e2e-worker.log 2>&1 &
+          echo $! > .wrangler/e2e-worker.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8795/api/health/ready; then exit 0; fi
+            echo "Waiting for local Worker ($attempt/60)"
+            sleep 2
+          done
+          cat .wrangler/e2e-worker.log
+          exit 1
+      - name: Scroll and place signatures on a real multipage PDF
+        env:
+          LUMI_E2E_BROWSER: chromium
+        run: pnpm e2e:placement
+      - name: Retain E2E evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multipage-placement-evidence
+          path: |
+            .wrangler/e2e/multipage-placement/
+            .wrangler/e2e-worker.log
+          include-hidden-files: true
+      - name: Stop local Worker
+        if: always()
+        run: |
+          if test -f .wrangler/e2e-worker.pid; then kill "$(cat .wrangler/e2e-worker.pid)" || true; fi

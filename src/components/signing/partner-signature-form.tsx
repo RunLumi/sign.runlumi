@@ -1,32 +1,34 @@
 import { useForm } from "@tanstack/react-form";
 import { Check, PenLine, RotateCcw, Type } from "lucide-react";
-import type { PointerEvent, ReactNode } from "react";
-import { useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { NativeSelect } from "@/components/patterns/native-select";
 import { Panel } from "@/components/patterns/panel";
+import { SignatureImageUpload } from "@/components/signatures/signature-image-upload";
+import { useSignatureDrawing } from "@/components/signatures/use-signature-drawing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-type SignatureMode = "typed" | "drawn";
+type SignatureMode = "typed" | "drawn" | "uploaded";
 type TypedSignatureFont = "cursive" | "serif" | "sans-serif";
-
-type DrawPoint = {
-	x: number;
-	y: number;
-};
 
 export type PartnerSignaturePreference = {
 	id: string;
 	kind: SignatureMode;
 	label: string;
 	svgPath: string | null;
+	imageData?: string | null;
 	typedText: string | null;
 	typedFont: string | null;
 };
 
 export type CompleteSigningPayload =
+	| {
+			signature: { kind: "uploaded"; label: string; imageData: string };
+			rememberSignature: boolean;
+	  }
 	| {
 			signature: {
 				kind: "typed";
@@ -74,20 +76,18 @@ export function PartnerSignatureForm({
 	disabled: boolean;
 	onSubmit: (payload: CompleteSigningPayload) => Promise<void>;
 }) {
-	const [drawPoints, setDrawPoints] = useState<DrawPoint[][]>([]);
-	const activePointer = useRef<number | null>(null);
-	const [savedDrawnPath, setSavedDrawnPath] = useState(
-		initialPreference?.kind === "drawn" ? (initialPreference.svgPath ?? "") : "",
+	const [imageData, setImageData] = useState(
+		initialPreference?.kind === "uploaded" ? (initialPreference.imageData ?? "") : "",
 	);
-	const [isDrawing, setIsDrawing] = useState(false);
+	const { drawnPath, startDrawing, continueDrawing, stopDrawing, clearDrawing } =
+		useSignatureDrawing(
+			initialPreference?.kind === "drawn" ? (initialPreference.svgPath ?? "") : "",
+		);
 	const [validationError, setValidationError] = useState<string | null>(null);
 	const form = useForm({
 		defaultValues: signatureFormDefaults(initialPreference),
 		onSubmit: async ({ value }) => {
-			const payload = buildCompleteSigningPayload(
-				value,
-				[savedDrawnPath, toSvgPath(drawPoints)].filter(Boolean).join(" "),
-			);
+			const payload = buildCompleteSigningPayload(value, drawnPath, imageData);
 			if (!payload.ok) {
 				setValidationError(payload.message);
 				return;
@@ -96,35 +96,6 @@ export function PartnerSignatureForm({
 			await onSubmit(payload.value);
 		},
 	});
-
-	function startDrawing(event: PointerEvent<SVGSVGElement>) {
-		if (activePointer.current !== null || event.button > 0) return;
-		activePointer.current = event.pointerId;
-		event.currentTarget.setPointerCapture?.(event.pointerId);
-		const point = pointFromEvent(event);
-		setDrawPoints((strokes) => [...strokes, [point]]);
-		setIsDrawing(true);
-	}
-
-	function continueDrawing(event: PointerEvent<SVGSVGElement>) {
-		if (!isDrawing || activePointer.current !== event.pointerId) return;
-		const point = pointFromEvent(event);
-		setDrawPoints((strokes) =>
-			strokes.map((stroke, index) => (index === strokes.length - 1 ? [...stroke, point] : stroke)),
-		);
-	}
-
-	function stopDrawing() {
-		activePointer.current = null;
-		setIsDrawing(false);
-	}
-
-	function clearDrawing() {
-		activePointer.current = null;
-		setIsDrawing(false);
-		setDrawPoints([]);
-		setSavedDrawnPath("");
-	}
 
 	return (
 		<Panel
@@ -138,13 +109,12 @@ export function PartnerSignatureForm({
 		>
 			<form.Subscribe selector={(state) => state.values}>
 				{(values) => {
-					const drawnPath = [savedDrawnPath, toSvgPath(drawPoints)].filter(Boolean).join(" ");
 					const fontStack =
 						typedSignatureFonts.find((font) => font.value === values.typedFont)?.stack ??
 						typedSignatureFonts[0].stack;
 					return (
 						<>
-							<fieldset className="grid gap-3 sm:grid-cols-2">
+							<fieldset className="grid gap-3 sm:grid-cols-3">
 								<legend className="sr-only">Signature method</legend>
 								<SignatureMethodButton
 									isActive={values.mode === "typed"}
@@ -163,6 +133,16 @@ export function PartnerSignatureForm({
 									description="Use a hand-drawn stroke for this signature."
 									onClick={() => {
 										form.setFieldValue("mode", "drawn");
+										setValidationError(null);
+									}}
+								/>
+								<SignatureMethodButton
+									isActive={values.mode === "uploaded"}
+									icon={<PenLine aria-hidden="true" className="size-4" />}
+									title="Uploaded"
+									description="Use an image of your signature."
+									onClick={() => {
+										form.setFieldValue("mode", "uploaded");
 										setValidationError(null);
 									}}
 								/>
@@ -216,6 +196,8 @@ export function PartnerSignatureForm({
 										</form.Field>
 									</div>
 								</div>
+							) : values.mode === "uploaded" ? (
+								<SignatureImageUpload value={imageData} onChange={setImageData} />
 							) : (
 								<div className="space-y-3">
 									<svg
@@ -312,6 +294,8 @@ function SignatureMethodButton({
 }
 
 function signatureFormDefaults(preference: PartnerSignaturePreference | null): SignatureFormValues {
+	if (preference?.kind === "uploaded")
+		return { mode: "uploaded", rememberSignature: true, typedText: "", typedFont: "cursive" };
 	if (preference?.kind === "typed") {
 		return {
 			mode: "typed",
@@ -339,7 +323,18 @@ function signatureFormDefaults(preference: PartnerSignaturePreference | null): S
 function buildCompleteSigningPayload(
 	values: SignatureFormValues,
 	drawnPath: string,
+	imageData: string,
 ): { ok: true; value: CompleteSigningPayload } | { ok: false; message: string } {
+	if (values.mode === "uploaded") {
+		if (!imageData) return { ok: false, message: "Upload a signature before completing." };
+		return {
+			ok: true,
+			value: {
+				signature: { kind: "uploaded", label: "Uploaded signature", imageData },
+				rememberSignature: values.rememberSignature,
+			},
+		};
+	}
 	if (values.mode === "typed") {
 		const typedText = values.typedText.trim();
 		if (!typedText) return { ok: false, message: "Type a signature before completing." };
@@ -373,24 +368,4 @@ function parseTypedFont(value: string | null): TypedSignatureFont {
 	return typedSignatureFonts.some((font) => font.value === value)
 		? (value as TypedSignatureFont)
 		: "cursive";
-}
-
-function pointFromEvent(event: PointerEvent<SVGSVGElement>): DrawPoint {
-	const bounds = event.currentTarget.getBoundingClientRect();
-	const relativeX = event.clientX - bounds.left;
-	const relativeY = event.clientY - bounds.top;
-	const x = bounds.width > 0 ? (relativeX / bounds.width) * 320 : relativeX;
-	const y = bounds.height > 0 ? (relativeY / bounds.height) * 128 : relativeY;
-	return {
-		x: Math.max(0, Math.min(320, Math.round(x))),
-		y: Math.max(0, Math.min(128, Math.round(y))),
-	};
-}
-
-function toSvgPath(strokes: DrawPoint[][]): string {
-	return strokes
-		.map((points) =>
-			points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" "),
-		)
-		.join(" ");
 }

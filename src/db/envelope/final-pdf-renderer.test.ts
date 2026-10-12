@@ -4,6 +4,36 @@ import { renderFinalPdf } from "./final-pdf-renderer";
 import type { SourceDocument } from "./schema";
 
 describe("renderFinalPdf", () => {
+	it("embeds an uploaded signature image in the completed PDF", async () => {
+		const value =
+			"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1sAAAAASUVORK5CYII=";
+		const bytes = await renderFinalPdf({
+			envelopeId: "00000000-0000-4000-8000-000000000001",
+			sourceDocument: await sourceDocumentFixture(),
+			sourceBytes: await sourcePdfBytes(),
+			certificateHash: "a".repeat(64),
+			rows: {
+				fields: [
+					{
+						id: "image-signature",
+						type: "signature",
+						page: 1,
+						x: 72,
+						y: 72,
+						width: 180,
+						height: 60,
+					},
+				],
+				values: [{ fieldId: "image-signature", value }],
+				events: [],
+			},
+		});
+		const pdf = await PDFDocument.load(bytes);
+		expect(pdf.getPageCount()).toBe(2);
+		expect(new TextDecoder().decode(bytes)).toContain("/Subtype /Image");
+		expect(new TextDecoder().decode(bytes)).not.toContain(value);
+	});
+
 	it("renders signature values in a restrained branded signing stamp", async () => {
 		// Stamp design assumptions:
 		// - Only signature fields receive the branded stamp; date fields remain compact values.

@@ -127,7 +127,7 @@ function normalizeSignature(input: CompleteSigningRequest): {
 				},
 			}
 		: {
-				value: signature.svgPath,
+				value: signature.kind === "uploaded" ? signature.imageData : signature.svgPath,
 				auditMessage: signature.label,
 				profile: { ...signature, selected: true },
 			};

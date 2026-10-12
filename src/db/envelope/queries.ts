@@ -240,18 +240,6 @@ export async function addFields(
 		throw new Error("Field recipient not found");
 	}
 
-	const existingFields = await listEnvelopeFields(envelopeId);
-	const signatureRecipientIds = new Set(
-		existingFields.filter((field) => field.type === "signature").map((field) => field.recipientId),
-	);
-	for (const field of input.fields) {
-		if (field.type !== "signature") continue;
-		if (signatureRecipientIds.has(field.recipientId)) {
-			throw new SignaturePlaceholderLimitError();
-		}
-		signatureRecipientIds.add(field.recipientId);
-	}
-
 	const rows = await db
 		.insert(envelopeFields)
 		.values(input.fields.map((field) => ({ ...field, envelopeId })))

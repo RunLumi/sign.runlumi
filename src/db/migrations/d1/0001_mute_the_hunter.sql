@@ -1,0 +1,1 @@
+ALTER TABLE `signature_profiles` ADD `image_data` text;

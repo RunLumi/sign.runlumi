@@ -36,7 +36,8 @@
 		"db:migrate:dev": "wrangler d1 migrations apply signmos-dev --local",
 		"db:migrate:staging": "wrangler d1 migrations apply signmos-staging --remote --env staging",
 		"db:migrate:production": "wrangler d1 migrations apply signmos-production --remote --env production",
-		"db:seed:dev": "tsx scripts/seed.ts"
+		"db:seed:dev": "tsx scripts/seed.ts",
+		"e2e:placement": "node scripts/e2e/multipage-placement.mjs"
 	},
 	"dependencies": {
 		"@radix-ui/react-collapsible": "^1.1.20",
@@ -54,6 +55,7 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.45.2",
+		"fflate": "0.8.2",
 		"hono": "^4.13.1",
 		"lucide-react": "^1.30.0",
 		"pdf-lib": "^1.17.1",
@@ -81,6 +83,7 @@
 		"drizzle-kit": "^0.31.10",
 		"jsdom": "^29.1.1",
 		"knip": "^6.32.0",
+		"playwright": "1.62.1",
 		"semantic-release": "^25.0.9",
 		"simple-git-hooks": "^2.13.1",
 		"taze": "^19.17.2",

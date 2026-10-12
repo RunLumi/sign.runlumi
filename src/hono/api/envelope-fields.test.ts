@@ -352,7 +352,7 @@ describe("envelope field API", () => {
 		});
 	});
 
-	it("rejects more than one signature placeholder for the same signer", async () => {
+	it("accepts additional signature placeholders for the same signer", async () => {
 		state.fields.push({
 			id: "50000000-0000-4000-8000-000000000001",
 			envelopeId: "00000000-0000-4000-8000-000000000001",
@@ -390,14 +390,7 @@ describe("envelope field API", () => {
 			},
 		);
 
-		expect(response.status).toBe(409);
-		await expect(response.json()).resolves.toEqual({
-			error: {
-				code: "SIGNATURE_PLACEHOLDER_LIMIT_REACHED",
-				message: "Each signer can have one signature placeholder",
-				allowedActions: ["add_fields"],
-			},
-		});
-		expect(state.fields).toHaveLength(1);
+		expect(response.status).toBe(201);
+		expect(state.fields).toHaveLength(2);
 	});
 });

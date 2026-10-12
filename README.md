@@ -1,3 +1,5 @@
+> Signature methods: typed, drawn, or uploaded PNG/JPEG (up to 2 MB). Uploads are normalized and previewed before saving or signing.
+
 > **RunLumi deployment:** The current deployment target is https://sign.runlumi.app.
 > It uses Cloudflare D1, R2, and Cloudflare Email Service; Turnstile is disabled
 > while IP/email rate limits and email verification remain enabled. Historical

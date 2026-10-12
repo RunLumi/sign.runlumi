@@ -11,6 +11,35 @@ beforeAll(() => {
 });
 
 describe("PartnerSignatureForm", () => {
+	it("previews and submits a saved uploaded signature with explicit reuse consent", async () => {
+		const imageData =
+			"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1sAAAAASUVORK5CYII=";
+		const onSubmit = vi.fn().mockResolvedValue(undefined);
+		render(
+			<PartnerSignatureForm
+				initialPreference={{
+					id: "uploaded",
+					kind: "uploaded",
+					label: "Uploaded signature",
+					imageData,
+					svgPath: null,
+					typedText: null,
+					typedFont: null,
+				}}
+				disabled={false}
+				onSubmit={onSubmit}
+			/>,
+		);
+		expect(screen.getByAltText("Uploaded signature preview").getAttribute("src")).toBe(imageData);
+		fireEvent.click(screen.getByRole("button", { name: "Complete signing" }));
+		await waitFor(() =>
+			expect(onSubmit).toHaveBeenCalledWith({
+				signature: { kind: "uploaded", label: "Uploaded signature", imageData },
+				rememberSignature: true,
+			}),
+		);
+	});
+
 	it("prefills a saved typed signature and keeps future updates selected", async () => {
 		const submissions: CompleteSigningPayload[] = [];
 

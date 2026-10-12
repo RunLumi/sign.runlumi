@@ -33,8 +33,8 @@ envelopePreparationEndpoint.post("/:id/signature-profiles", async (c) => {
 			{
 				error: {
 					code: "INVALID_SIGNATURE_PROFILE",
-					message: "Signature profile must be drawn or typed with a renderable value",
-					validKinds: ["drawn", "typed"],
+					message: "Signature profile must be typed, drawn, or uploaded with a renderable value",
+					validKinds: ["drawn", "typed", "uploaded"],
 				},
 			},
 			400,
