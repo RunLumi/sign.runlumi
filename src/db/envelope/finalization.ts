@@ -59,9 +59,20 @@ export async function finalizeCompletedEnvelope(
 	envelopeId: string,
 	options: FinalizeEnvelopeOptions = {},
 ) {
-	if (!options.documentsBucket) return null;
+	if (!options.documentsBucket) throw new Error("Document storage is required to finalize a PDF");
 
 	const db = getDb();
+	const existing = await db
+		.select()
+		.from(finalDocuments)
+		.where(eq(finalDocuments.envelopeId, envelopeId))
+		.limit(1);
+	const prior = existing.find((document) => document.envelopeId === envelopeId);
+	if (prior) {
+		const document = FinalDocumentSchema.parse(prior);
+		if (await options.documentsBucket.get(document.r2Key)) return document;
+		return (await regenerateFinalDocumentArtifact(document, options))?.document ?? null;
+	}
 	const artifact = await renderFinalDocumentArtifact(envelopeId, options.documentsBucket);
 	const r2Key = `envelopes/${envelopeId}/final.pdf`;
 	await options.documentsBucket.put(r2Key, artifact.bytes, {
@@ -77,9 +88,20 @@ export async function finalizeCompletedEnvelope(
 			byteSize: artifact.byteSize,
 			contentType: artifact.contentType,
 		})
+		.onConflictDoNothing()
 		.returning();
-	const finalDocument = document ? FinalDocumentSchema.parse(document) : null;
-	await recordCompletionNotifications(envelopeId, finalDocument?.id);
+	const persisted =
+		document ??
+		(
+			await db
+				.select()
+				.from(finalDocuments)
+				.where(eq(finalDocuments.envelopeId, envelopeId))
+				.limit(1)
+		)[0];
+	const finalDocument = persisted ? FinalDocumentSchema.parse(persisted) : null;
+	if (!finalDocument) throw new Error("Final PDF metadata could not be stored");
+	if (document) await recordCompletionNotifications(envelopeId, finalDocument.id);
 	return finalDocument;
 }
 

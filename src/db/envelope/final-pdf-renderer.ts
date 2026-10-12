@@ -1,7 +1,8 @@
+import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf-lib";
 import type { SourceDocument } from "./schema";
 
-export const FINAL_PDF_RENDERER_PRODUCER = "signmos-final-pdf-renderer/4";
+export const FINAL_PDF_RENDERER_PRODUCER = "signmos-final-pdf-renderer/5";
 
 export type FinalPdfRows = {
 	fields: Array<Record<string, unknown>>;
@@ -15,12 +16,39 @@ export async function renderFinalPdf(input: {
 	rows: FinalPdfRows;
 	certificateHash: string;
 	sourceBytes: Uint8Array;
+	fontBytes?: Uint8Array;
 }): Promise<Uint8Array> {
 	const pdf = await loadSourcePdf(input.sourceBytes);
 	pdf.setProducer(FINAL_PDF_RENDERER_PRODUCER);
-	const font = await pdf.embedFont(StandardFonts.Helvetica);
+	const completedTimes = input.rows.values
+		.map((row) => (row.completedAt instanceof Date ? row.completedAt.getTime() : Number.NaN))
+		.filter(Number.isFinite);
+	if (completedTimes.length) pdf.setModificationDate(new Date(Math.max(...completedTimes)));
+	let font = await pdf.embedFont(StandardFonts.Helvetica);
 	const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
-	const signatureFont = await pdf.embedFont(StandardFonts.HelveticaOblique);
+	let signatureFont = await pdf.embedFont(StandardFonts.HelveticaOblique);
+	const textValues = input.rows.values
+		.map((row) => stringValue(row, "value"))
+		.filter((value) => !value.startsWith("data:image/") && !looksLikeSvgPath(value));
+	if (
+		textValues.some((value) =>
+			[...value].some((char) => !font.getCharacterSet().includes(char.codePointAt(0) ?? 0)),
+		)
+	) {
+		pdf.registerFontkit(fontkit);
+		const bytes =
+			input.fontBytes ?? new Uint8Array((await import("./fonts/noto-sans-regular.bin")).default);
+		font = await pdf.embedFont(bytes, { subset: true });
+		signatureFont = font;
+		const supported = new Set(font.getCharacterSet());
+		if (
+			textValues.some((value) =>
+				[...value].some((char) => !supported.has(char.codePointAt(0) ?? 0)),
+			)
+		) {
+			throw new Error("The PDF font does not support a signing character");
+		}
+	}
 	await drawFieldValues(pdf, input.rows, font, boldFont, signatureFont);
 	drawAuditCertificate(
 		pdf,
@@ -163,7 +191,7 @@ async function drawSignatureStamp(
 		color: accent,
 	});
 
-	const caption = "by auditmos.com";
+	const caption = "Lumi Sign";
 	const captionSize = 5.5;
 	const captionWidth = boldFont.widthOfTextAtSize(caption, captionSize);
 	page.drawText(caption, {
@@ -196,7 +224,11 @@ async function drawSignatureStamp(
 		drawSignaturePath(page, value, signatureBox);
 		return;
 	}
-	const signatureSize = Math.min(16, signatureBox.height * 0.62);
+	const signatureSize = Math.min(
+		16,
+		signatureBox.height * 0.62,
+		signatureBox.width / Math.max(1, signatureFont.widthOfTextAtSize(value, 1)),
+	);
 	page.drawText(value, {
 		x: signatureBox.x,
 		y: signatureBox.y + Math.max(1, (signatureBox.height - signatureSize) / 2),

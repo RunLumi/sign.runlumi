@@ -1,5 +1,10 @@
 import { eq } from "drizzle-orm";
-import { FinalDocumentSchema, finalDocuments, getCompletedDocumentView } from "@/db/envelope";
+import {
+	FinalDocumentSchema,
+	finalDocuments,
+	getCompletedDocumentView,
+	recoverSignedFinalDocument,
+} from "@/db/envelope";
 import { getDb } from "@/db/setup";
 import { authorizeMinimalHistoryDocument } from "./catalog";
 import { recordHistoryEnvelopeSecurityEvent } from "./security-audit";
@@ -8,8 +13,9 @@ export async function getHistoryCompletedDocumentView(
 	email: string,
 	envelopeId: string,
 	now = new Date(),
+	bucket?: R2Bucket,
 ) {
-	const document = await getHistoryFinalDocument(email, envelopeId);
+	const document = await getHistoryFinalDocument(email, envelopeId, bucket);
 	if (!document?.id) return null;
 	const view = await getCompletedDocumentView(document.id, { now });
 	if (!view) return null;
@@ -23,7 +29,11 @@ export async function getHistoryCompletedDocumentView(
 	};
 }
 
-export async function getHistoryFinalDocument(email: string, envelopeId: string) {
+export async function getHistoryFinalDocument(
+	email: string,
+	envelopeId: string,
+	bucket?: R2Bucket,
+) {
 	const authorized = await authorizeMinimalHistoryDocument(email, envelopeId);
 	if (!authorized) return null;
 	const rows = await getDb()
@@ -32,6 +42,8 @@ export async function getHistoryFinalDocument(email: string, envelopeId: string)
 		.where(eq(finalDocuments.envelopeId, envelopeId))
 		.limit(1);
 	const document = rows.find((candidate) => candidate.envelopeId === envelopeId);
+	if (bucket && (!document || !(await bucket.get(document.r2Key))))
+		return recoverSignedFinalDocument(envelopeId, bucket);
 	return document ? FinalDocumentSchema.parse(document) : null;
 }
 

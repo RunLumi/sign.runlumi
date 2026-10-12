@@ -149,6 +149,9 @@ vi.mock("@/db/setup", () => ({
 		}),
 		insert: (table: unknown) => ({
 			values: (rows: Array<Record<string, unknown>> | Record<string, unknown>) => ({
+				onConflictDoNothing: () => ({
+					returning: async () => insertRows(table, Array.isArray(rows) ? rows : [rows]),
+				}),
 				returning: async () => insertRows(table, Array.isArray(rows) ? rows : [rows]),
 			}),
 		}),

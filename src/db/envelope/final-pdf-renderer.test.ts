@@ -4,6 +4,28 @@ import { renderFinalPdf } from "./final-pdf-renderer";
 import type { SourceDocument } from "./schema";
 
 describe("renderFinalPdf", () => {
+	it("renders Vietnamese typed signatures without losing the original pages", async () => {
+		const sourceBytes = await sourcePdfBytes();
+		const original = await PDFDocument.load(sourceBytes);
+		const bytes = await renderFinalPdf({
+			envelopeId: "00000000-0000-4000-8000-000000000001",
+			sourceDocument: await sourceDocumentFixture(),
+			sourceBytes,
+			certificateHash: "a".repeat(64),
+			rows: {
+				fields: [
+					{ id: "signature", type: "signature", page: 1, x: 72, y: 72, width: 220, height: 64 },
+				],
+				values: [{ fieldId: "signature", value: "LÊ VIỆT HỒNG" }],
+				events: [],
+			},
+		});
+		const final = await PDFDocument.load(bytes, { updateMetadata: false });
+		expect(final.getPageCount()).toBe(original.getPageCount() + 1);
+		expect(final.getProducer()).toBe("signmos-final-pdf-renderer/5");
+		expect(new TextDecoder().decode(bytes)).toContain("/FontFile2");
+		expect(bytes.byteLength).toBeGreaterThan(sourceBytes.byteLength);
+	});
 	it("embeds an uploaded signature image in the completed PDF", async () => {
 		const value =
 			"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1sAAAAASUVORK5CYII=";
@@ -37,7 +59,7 @@ describe("renderFinalPdf", () => {
 	it("renders signature values in a restrained branded signing stamp", async () => {
 		// Stamp design assumptions:
 		// - Only signature fields receive the branded stamp; date fields remain compact values.
-		// - The public artifact visibly identifies the field as signed and credits auditmos.com.
+		// - The public artifact visibly identifies the field as signed and credits Lumi Sign.
 		// - Typed and drawn signatures use the same stamp frame; this tracer test covers typed text.
 		// - Exact colors and drawing operators are visual-QA concerns, not part of this text contract.
 		const bytes = await renderFinalPdf({
@@ -65,7 +87,7 @@ describe("renderFinalPdf", () => {
 		const visibleText = extractVisibleText(bytes).join("\n");
 		expect(visibleText).toContain("SIGNED");
 		expect(visibleText).toContain("Ada Lovelace");
-		expect(visibleText).toContain("by auditmos.com");
+		expect(visibleText).toContain("Lumi Sign");
 	});
 
 	it("keeps raw field values and audit events out of the visible audit certificate", async () => {
@@ -139,7 +161,7 @@ describe("renderFinalPdf", () => {
 
 		const visibleText = extractVisibleText(bytes).join("\n");
 		expect(visibleText).toContain("SIGNED");
-		expect(visibleText).toContain("by auditmos.com");
+		expect(visibleText).toContain("Lumi Sign");
 
 		const signatureTransform = extractSignatureTransform(bytes, "64 24 m");
 		expect(signatureTransform).toEqual({

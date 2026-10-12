@@ -1,222 +1,20 @@
 import { PDFDocument } from "pdf-lib";
-import {
-	auditEvents,
-	emailSendRecords,
-	envelopeFields,
-	envelopeRecipients,
-	envelopes,
-	fieldValues,
-	finalDocuments,
-	senderVerificationEmailRecords,
-	senderVerificationTokens,
-	signerTokens,
-	sourceDocuments,
-} from "@/db/envelope";
 import { FINAL_PDF_RENDERER_PRODUCER } from "@/db/envelope/final-pdf-renderer";
 import { apiHono } from "@/hono/api";
+import {
+	createSourcePdfBytes,
+	resetPdfFinalizationFixture,
+	pdfFinalizationState as state,
+	toArrayBuffer,
+} from "./pdf-finalization-test-fixture";
 
-const state = vi.hoisted(() => ({
-	envelopesTable: null as unknown,
-	recipientsTable: null as unknown,
-	fieldsTable: null as unknown,
-	tokensTable: null as unknown,
-	fieldValuesTable: null as unknown,
-	auditEventsTable: null as unknown,
-	sourceDocumentsTable: null as unknown,
-	finalDocumentsTable: null as unknown,
-	emailSendRecordsTable: null as unknown,
-	senderVerificationTokensTable: null as unknown,
-	senderVerificationEmailRecordsTable: null as unknown,
-	envelopes: [
-		{
-			id: "00000000-0000-4000-8000-000000000001",
-			status: "sent",
-			createdBy: "sender@example.com",
-			createdAt: new Date("2026-05-20T07:00:00.000Z"),
-			sentBy: "sender@example.com",
-			sentAt: new Date("2026-05-20T07:04:00.000Z"),
-		},
-	],
-	recipients: [
-		{
-			id: "20000000-0000-4000-8000-000000000001",
-			envelopeId: "00000000-0000-4000-8000-000000000001",
-			name: "Ada Lovelace",
-			email: "ada@example.com",
-			status: "sent",
-			createdAt: new Date("2026-05-20T07:02:00.000Z"),
-		},
-	],
-	fields: [
-		{
-			id: "50000000-0000-4000-8000-000000000001",
-			envelopeId: "00000000-0000-4000-8000-000000000001",
-			recipientId: "20000000-0000-4000-8000-000000000001",
-			type: "signature",
-			page: 1,
-			x: 72,
-			y: 144,
-			width: 180,
-			height: 48,
-			createdAt: new Date("2026-05-20T07:05:00.000Z"),
-		},
-		{
-			id: "50000000-0000-4000-8000-000000000002",
-			envelopeId: "00000000-0000-4000-8000-000000000001",
-			recipientId: "20000000-0000-4000-8000-000000000001",
-			type: "date",
-			page: 1,
-			x: 300,
-			y: 144,
-			width: 120,
-			height: 32,
-			createdAt: new Date("2026-05-20T07:05:00.000Z"),
-		},
-	],
-	tokens: [
-		{
-			id: "30000000-0000-4000-8000-000000000001",
-			envelopeId: "00000000-0000-4000-8000-000000000001",
-			recipientId: "20000000-0000-4000-8000-000000000001",
-			token: "valid-token",
-			status: "active",
-			expiresAt: new Date("2026-05-27T07:03:00.000Z"),
-			verifiedAt: new Date("2026-05-20T07:04:00.000Z"),
-			createdAt: new Date("2026-05-20T07:03:00.000Z"),
-		},
-	] as Array<Record<string, unknown>>,
-	sourceDocuments: [
-		{
-			id: "10000000-0000-4000-8000-000000000001",
-			envelopeId: "00000000-0000-4000-8000-000000000001",
-			r2Key: "envelopes/00000000-0000-4000-8000-000000000001/source.pdf",
-			sha256: "a".repeat(64),
-			byteSize: 10,
-			contentType: "application/pdf",
-			uploadedBy: "user_123",
-			uploadedAt: new Date("2026-05-20T07:01:00.000Z"),
-		},
-	],
-	senderVerificationTokens: [
-		{
-			id: "70000000-0000-4000-8000-000000000001",
-			envelopeId: "00000000-0000-4000-8000-000000000001",
-			name: "Sender Example",
-			email: "sender@example.com",
-			token: "sender-token",
-			status: "verified",
-			expiresAt: new Date("2026-05-20T08:30:00.000Z"),
-			verifiedAt: new Date("2026-05-20T07:00:00.000Z"),
-			createdAt: new Date("2026-05-20T06:59:00.000Z"),
-		},
-	],
-	fieldValues: [] as Array<Record<string, unknown>>,
-	auditEvents: [] as Array<Record<string, unknown>>,
-	finalDocuments: [] as Array<Record<string, unknown>>,
-	emailSendRecords: [] as Array<Record<string, unknown>>,
-	senderVerificationEmailRecords: [] as Array<Record<string, unknown>>,
-	r2Objects: new Map<string, Uint8Array>(),
-}));
-
-function selectRows(table: unknown) {
-	if (table === state.tokensTable) return state.tokens;
-	if (table === state.envelopesTable) return state.envelopes;
-	if (table === state.recipientsTable) return state.recipients;
-	if (table === state.fieldsTable) return state.fields;
-	if (table === state.fieldValuesTable) return state.fieldValues;
-	if (table === state.auditEventsTable) return state.auditEvents;
-	if (table === state.sourceDocumentsTable) return state.sourceDocuments;
-	if (table === state.finalDocumentsTable) return state.finalDocuments;
-	if (table === state.emailSendRecordsTable) return state.emailSendRecords;
-	if (table === state.senderVerificationTokensTable) return state.senderVerificationTokens;
-	if (table === state.senderVerificationEmailRecordsTable) {
-		return state.senderVerificationEmailRecords;
-	}
-	return [];
-}
-
-function insertRows(table: unknown, rows: Array<Record<string, unknown>>) {
-	if (table === state.fieldValuesTable) state.fieldValues.push(...rows);
-	if (table === state.auditEventsTable) state.auditEvents.push(...rows);
-	if (table === state.finalDocumentsTable) return insertFinalDocuments(rows);
-	if (table === state.emailSendRecordsTable) state.emailSendRecords.push(...rows);
-	if (table === state.senderVerificationEmailRecordsTable) {
-		state.senderVerificationEmailRecords.push(...rows);
-	}
-	return rows;
-}
-
-function insertFinalDocuments(rows: Array<Record<string, unknown>>) {
-	const inserted = rows.map((row, index) => ({
-		id: `90000000-0000-4000-8000-${String(state.finalDocuments.length + index + 1).padStart(12, "0")}`,
-		...row,
-		createdAt: new Date("2026-05-20T08:01:00.000Z"),
-	}));
-	state.finalDocuments.push(...inserted);
-	return inserted;
-}
-
-vi.mock("@/db/setup", () => ({
-	getDb: () => ({
-		select: () => ({
-			from: (table: unknown) => ({
-				where: () => ({
-					limit: async () => selectRows(table),
-				}),
-			}),
-		}),
-		insert: (table: unknown) => ({
-			values: (rows: Array<Record<string, unknown>> | Record<string, unknown>) => ({
-				returning: async () => insertRows(table, Array.isArray(rows) ? rows : [rows]),
-			}),
-		}),
-		update: (table: unknown) => ({
-			set: (value: { status?: string }) => ({
-				where: async () => {
-					if (table === state.recipientsTable) {
-						state.recipients[0] = { ...state.recipients[0], status: value.status ?? "sent" };
-					}
-					if (table === state.envelopesTable) {
-						state.envelopes[0] = { ...state.envelopes[0], status: value.status ?? "sent" };
-					}
-					return [];
-				},
-			}),
-		}),
-	}),
-}));
+vi.mock("@/db/setup", async () => {
+	const { getPdfFinalizationTestDb } = await import("./pdf-finalization-test-fixture");
+	return { getDb: getPdfFinalizationTestDb };
+});
 
 describe("PDF finalization", () => {
-	beforeEach(async () => {
-		state.envelopesTable = envelopes;
-		state.recipientsTable = envelopeRecipients;
-		state.fieldsTable = envelopeFields;
-		state.tokensTable = signerTokens;
-		state.fieldValuesTable = fieldValues;
-		state.auditEventsTable = auditEvents;
-		state.sourceDocumentsTable = sourceDocuments;
-		state.finalDocumentsTable = finalDocuments;
-		state.emailSendRecordsTable = emailSendRecords;
-		state.senderVerificationTokensTable = senderVerificationTokens;
-		state.senderVerificationEmailRecordsTable = senderVerificationEmailRecords;
-		state.fieldValues.length = 0;
-		state.auditEvents.length = 0;
-		state.finalDocuments.length = 0;
-		state.emailSendRecords.length = 0;
-		state.senderVerificationEmailRecords.length = 0;
-		state.r2Objects.clear();
-		state.recipients.length = 1;
-		state.tokens.length = 1;
-		state.envelopes[0] = { ...state.envelopes[0], status: "sent" };
-		state.recipients[0] = { ...state.recipients[0], status: "sent" };
-		state.tokens[0] = {
-			...state.tokens[0],
-			expiresAt: new Date("2026-05-27T07:03:00.000Z"),
-			verifiedAt: new Date("2026-05-20T07:04:00.000Z"),
-		};
-		state.r2Objects.set(String(state.sourceDocuments[0]?.r2Key), await createSourcePdfBytes());
-	});
-
+	beforeEach(resetPdfFinalizationFixture);
 	it("keeps the envelope sent until every required recipient completes", async () => {
 		state.recipients.push({
 			id: "20000000-0000-4000-8000-000000000002",
@@ -483,13 +281,3 @@ describe("PDF finalization", () => {
 		expect(deleted.status).toBe(404);
 	});
 });
-
-async function createSourcePdfBytes(): Promise<Uint8Array> {
-	const pdf = await PDFDocument.create();
-	pdf.addPage([612, 792]);
-	return pdf.save({ useObjectStreams: false });
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-}

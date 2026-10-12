@@ -25,6 +25,7 @@ import {
 	updateSignerFieldPlacement,
 	verifyPartnerToken,
 } from "@/db/envelope";
+import { SignedPdfPreparationError } from "@/db/envelope/signing-finalization";
 import { createHono } from "@/hono/factory";
 
 const signingEndpoint = createHono();
@@ -215,6 +216,13 @@ signingEndpoint.post("/:token/complete", async (c) => {
 			}),
 		});
 	} catch (error) {
+		if (error instanceof SignedPdfPreparationError)
+			return c.json(
+				{
+					error: { code: "FINAL_PDF_PREPARATION_FAILED", message: error.message, retryable: true },
+				},
+				503,
+			);
 		if (error instanceof EmailDeliveryError) {
 			return c.json(emailDeliveryErrorBody(error, c.env as EmailDeliveryEnv | undefined), 502);
 		}
