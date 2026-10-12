@@ -1,5 +1,10 @@
+import {
+	IconArrowRight as ArrowRight,
+	IconFileText as FileText,
+	IconFileUpload as FileUp,
+	IconCloudUpload as UploadCloud,
+} from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, FileText, FileUp, UploadCloud } from "lucide-react";
 import { type DragEvent, type FormEvent, useMemo, useRef, useState } from "react";
 import { LoadingText } from "@/components/patterns/loading-text";
 import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";

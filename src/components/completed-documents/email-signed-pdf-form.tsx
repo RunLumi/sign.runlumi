@@ -1,6 +1,6 @@
+import { IconMail as Mail } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { maxFinalDocumentEmailAttachmentBytes } from "@/lib/document-email-limits";

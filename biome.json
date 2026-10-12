@@ -99,7 +99,8 @@
 			"!.claude/settings.json",
 			"!.claude/settings.local.json",
 			"!.claude/skills",
-			"!public/vendor/pdfjs"
+			"!public/vendor/pdfjs",
+			"!output/playwright"
 		]
 	},
 	"plugins": [

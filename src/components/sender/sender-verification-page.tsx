@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { IconCheck as Check } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { LoadingText } from "@/components/patterns/loading-text";

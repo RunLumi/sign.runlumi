@@ -1,5 +1,11 @@
+import {
+	IconArrowRight as ArrowRight,
+	IconBan as Ban,
+	IconDownload as Download,
+	IconHistory as History,
+	IconTrash as Trash2,
+} from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Ban, Download, History, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { LoadingText } from "@/components/patterns/loading-text";

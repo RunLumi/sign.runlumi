@@ -1,6 +1,14 @@
+import {
+	IconAlertTriangle as AlertTriangle,
+	IconArrowLeft as ArrowLeft,
+	IconBug as Bug,
+	IconChevronDown as ChevronDown,
+	IconHome as Home,
+	IconMail as Mail,
+	IconRefresh as RefreshCw,
+} from "@tabler/icons-react";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Link, rootRouteId, useMatch, useRouter } from "@tanstack/react-router";
-import { AlertTriangle, ArrowLeft, Bug, ChevronDown, Home, Mail, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { Panel } from "@/components/patterns/panel";
@@ -32,7 +40,7 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 		const body = encodeURIComponent(
 			`An error occurred in the application:\n\nError: ${errorMessage}\n\nStack trace:\n${errorStack}\n\nPlease describe what you were doing when this error occurred:`,
 		);
-		window.location.href = `mailto:support@example.com?subject=${subject}&body=${body}`;
+		window.location.href = `mailto:sign@runlumi.app?subject=${subject}&body=${body}`;
 	};
 
 	return (

@@ -1,4 +1,9 @@
-import { Download, FileText, History, Users } from "lucide-react";
+import {
+	IconDownload as Download,
+	IconFileText as FileText,
+	IconHistory as History,
+	IconUsers as Users,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/layout/page-shell";
 import { Wordmark } from "@/components/layout/wordmark";

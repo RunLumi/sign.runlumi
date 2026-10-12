@@ -1,4 +1,10 @@
-import { Check, FileText, Play, Send, ShieldCheck } from "lucide-react";
+import {
+	IconCheck as Check,
+	IconFileText as FileText,
+	IconPlayerPlay as Play,
+	IconSend as Send,
+	IconShieldCheck as ShieldCheck,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import { Panel } from "@/components/patterns/panel";

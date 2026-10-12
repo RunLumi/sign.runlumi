@@ -1,6 +1,12 @@
+import {
+	IconCircleCheck as CheckCircle2,
+	IconWritingSign as PenLine,
+	IconRotate2 as RotateCcw,
+	IconDeviceFloppy as Save,
+	IconTypography as Type,
+} from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckCircle2, PenLine, RotateCcw, Save, Type } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { LoadingText } from "@/components/patterns/loading-text";

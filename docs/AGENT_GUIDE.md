@@ -105,7 +105,7 @@ A deep module has a small public interface hiding a larger implementation.
 - Use TanStack Query `queryOptions` and query-key factories for reusable queries.
 - Use TanStack Form plus React Query mutations for non-trivial forms. Avoid raw `useState` form models for complex forms.
 - When `validateSearch` uses defaults, provide fallback defaults inside `navigate({ search: prev => ... })` callbacks.
-- Use lucide icons for icon buttons when available.
+- Use intact Tabler Outline icons for application controls; preserve generated Shadcn primitives.
 - Use Tailwind CSS v4 with theme variables. Do not hardcode palette colors such as `text-gray-*`, `bg-white`, or `text-black`.
 - Use semantic variants such as `text-destructive`, `bg-success/10`, and Shadcn variants.
 - Preserve accessibility: labels, keyboard navigation, focus states, and contrast.

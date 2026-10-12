@@ -1,5 +1,5 @@
+import { IconLogout as LogOut } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
-import { LogOut } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ export function AuthenticatedProductNavigation({
 export function ProductModeNavigation({ activeMode }: { activeMode: ProductMode }) {
 	return (
 		<nav aria-label="Lumi Sign options" className="w-full">
-			<ul className="grid grid-cols-2 gap-1 rounded-xl border bg-card p-1 shadow-xs sm:grid-cols-4">
+			<ul className="lumi-glass grid grid-cols-2 gap-1 rounded-xl p-1.5 sm:grid-cols-4">
 				{productModes.map(({ mode, label }) => {
 					const active = mode === activeMode;
 					return (
@@ -91,9 +91,9 @@ export function ProductModeNavigation({ activeMode }: { activeMode: ProductMode 
 								href={`/api/navigate/${mode}`}
 								aria-current={active ? "page" : undefined}
 								className={cn(
-									"flex min-h-10 items-center justify-center rounded-lg px-3 py-2 text-center font-medium text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50",
+									"flex min-h-11 items-center justify-center rounded-lg px-3 py-2 text-center font-medium text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50",
 									active
-										? "bg-primary text-primary-foreground shadow-xs"
+										? "bg-accent text-primary shadow-xs"
 										: "text-muted-foreground hover:bg-muted hover:text-foreground",
 								)}
 							>

@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { IconFileText as FileText } from "@tabler/icons-react";
 import { pdfPage } from "@/components/envelopes/field-placement-workspace";
 import { TextLink } from "@/components/patterns/text-link";
 import { cn } from "@/lib/utils";
