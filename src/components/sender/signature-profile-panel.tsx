@@ -1,8 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, PenLine, RotateCcw, Save, Type } from "lucide-react";
-import type { MouseEvent, ReactNode } from "react";
-import { useState } from "react";
+import type { PointerEvent, ReactNode } from "react";
+import { useRef, useState } from "react";
 import { LoadingText } from "@/components/patterns/loading-text";
 import { NativeSelect } from "@/components/patterns/native-select";
 import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
@@ -128,7 +128,8 @@ function SignaturePreferenceEditor({
 	historyAccess: boolean;
 	initialProfile: SignatureProfile | null;
 }) {
-	const [drawPoints, setDrawPoints] = useState<DrawPoint[]>([]);
+	const [drawPoints, setDrawPoints] = useState<DrawPoint[][]>([]);
+	const activePointer = useRef<number | null>(null);
 	const [savedDrawnPath, setSavedDrawnPath] = useState(
 		initialProfile?.kind === "drawn" ? (initialProfile.svgPath ?? "") : "",
 	);
@@ -144,7 +145,7 @@ function SignaturePreferenceEditor({
 		onSubmit: async ({ value }) => {
 			const request = buildSignaturePreferenceRequest(
 				value,
-				toSvgPath(drawPoints) || savedDrawnPath,
+				[savedDrawnPath, toSvgPath(drawPoints)].filter(Boolean).join(" "),
 			);
 			if (!request.ok) {
 				setValidationError(request.message);
@@ -157,23 +158,31 @@ function SignaturePreferenceEditor({
 	const savedMessage = initialProfile ? `Previous ${initialProfile.kind} signature loaded` : null;
 	const selectedLabel = saveMutation.data;
 
-	function startDrawing(event: MouseEvent<SVGSVGElement>) {
-		setSavedDrawnPath("");
-		setDrawPoints([pointFromEvent(event)]);
+	function startDrawing(event: PointerEvent<SVGSVGElement>) {
+		if (activePointer.current !== null || event.button > 0) return;
+		activePointer.current = event.pointerId;
+		event.currentTarget.setPointerCapture?.(event.pointerId);
+		const point = pointFromEvent(event);
+		setDrawPoints((strokes) => [...strokes, [point]]);
 		setIsDrawing(true);
 	}
 
-	function continueDrawing(event: MouseEvent<SVGSVGElement>) {
-		if (!isDrawing) return;
+	function continueDrawing(event: PointerEvent<SVGSVGElement>) {
+		if (!isDrawing || activePointer.current !== event.pointerId) return;
 		const point = pointFromEvent(event);
-		setDrawPoints((points) => [...points, point]);
+		setDrawPoints((strokes) =>
+			strokes.map((stroke, index) => (index === strokes.length - 1 ? [...stroke, point] : stroke)),
+		);
 	}
 
 	function stopDrawing() {
+		activePointer.current = null;
 		setIsDrawing(false);
 	}
 
 	function clearDrawing() {
+		activePointer.current = null;
+		setIsDrawing(false);
 		setDrawPoints([]);
 		setSavedDrawnPath("");
 	}
@@ -189,7 +198,7 @@ function SignaturePreferenceEditor({
 		>
 			<form.Subscribe selector={(state) => state.values}>
 				{(values) => {
-					const drawnPath = toSvgPath(drawPoints) || savedDrawnPath;
+					const drawnPath = [savedDrawnPath, toSvgPath(drawPoints)].filter(Boolean).join(" ");
 					const fontStack =
 						typedSignatureFonts.find((font) => font.value === values.typedFont)?.stack ??
 						typedSignatureFonts[0].stack;
@@ -275,11 +284,13 @@ function SignaturePreferenceEditor({
 										aria-label="Draw signature pad"
 										role="img"
 										viewBox="0 0 320 128"
-										className="h-32 w-full touch-none rounded-lg border bg-background"
-										onMouseDown={startDrawing}
-										onMouseMove={continueDrawing}
-										onMouseUp={stopDrawing}
-										onMouseLeave={stopDrawing}
+										className="h-60 w-full touch-none select-none rounded-lg border bg-background sm:h-72"
+										preserveAspectRatio="none"
+										onPointerDown={startDrawing}
+										onPointerMove={continueDrawing}
+										onPointerUp={stopDrawing}
+										onPointerCancel={stopDrawing}
+										onLostPointerCapture={stopDrawing}
 									>
 										<path
 											d={drawnPath}
@@ -485,7 +496,7 @@ function parseTypedFont(value: string | null): TypedSignatureFont {
 		: "cursive";
 }
 
-function pointFromEvent(event: MouseEvent<SVGSVGElement>): DrawPoint {
+function pointFromEvent(event: PointerEvent<SVGSVGElement>): DrawPoint {
 	const bounds = event.currentTarget.getBoundingClientRect();
 	const relativeX = event.clientX - bounds.left;
 	const relativeY = event.clientY - bounds.top;
@@ -497,8 +508,12 @@ function pointFromEvent(event: MouseEvent<SVGSVGElement>): DrawPoint {
 	};
 }
 
-function toSvgPath(points: DrawPoint[]): string {
-	return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+function toSvgPath(strokes: DrawPoint[][]): string {
+	return strokes
+		.map((points) =>
+			points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" "),
+		)
+		.join(" ");
 }
 
 function authHeaders(
