@@ -1,3 +1,4 @@
+import { PDFDocument } from "pdf-lib";
 import {
 	auditEvents,
 	envelopeFields,
@@ -5,10 +6,13 @@ import {
 	envelopes,
 	fieldValues,
 	finalDocuments,
+	rateLimitRecords,
 	signerTokens,
 } from "@/db/envelope";
+import { FINAL_PDF_RENDERER_PRODUCER } from "@/db/envelope/final-pdf-renderer";
 import { historySecurityEventTypes } from "@/db/history-access/security-audit";
 import { apiHono } from "@/hono/api";
+import { maxFinalDocumentEmailAttachmentBytes } from "@/lib/document-email-limits";
 
 const envelopeId = "00000000-0000-4000-8000-000000000001";
 const senderRecipientId = "20000000-0000-4000-8000-000000000001";
@@ -24,6 +28,7 @@ const state = vi.hoisted(() => ({
 	auditEventsTable: null as unknown,
 	finalDocumentsTable: null as unknown,
 	tokensTable: null as unknown,
+	rateLimitTable: null as unknown,
 	envelopes: [] as Array<Record<string, unknown>>,
 	recipients: [] as Array<Record<string, unknown>>,
 	fields: [] as Array<Record<string, unknown>>,
@@ -31,6 +36,7 @@ const state = vi.hoisted(() => ({
 	auditEvents: [] as Array<Record<string, unknown>>,
 	finalDocuments: [] as Array<Record<string, unknown>>,
 	tokens: [] as Array<Record<string, unknown>>,
+	rateLimits: [] as Array<Record<string, unknown>>,
 	r2Objects: new Map<string, Uint8Array>(),
 }));
 
@@ -42,6 +48,7 @@ function selectRows(table: unknown) {
 	if (table === state.auditEventsTable) return state.auditEvents;
 	if (table === state.finalDocumentsTable) return state.finalDocuments;
 	if (table === state.tokensTable) return state.tokens;
+	if (table === state.rateLimitTable) return state.rateLimits;
 	return [];
 }
 
@@ -52,6 +59,25 @@ vi.mock("@/db/setup", () => ({
 				where: () => ({
 					limit: async () => selectRows(table),
 				}),
+			}),
+		}),
+		insert: (table: unknown) => ({
+			values: (value: Record<string, unknown>) => ({
+				returning: async () => {
+					if (table !== state.rateLimitTable) return [];
+					const record = { id: `rate-${state.rateLimits.length + 1}`, ...value };
+					state.rateLimits.push(record);
+					return [record];
+				},
+			}),
+		}),
+		update: (table: unknown) => ({
+			set: (value: Record<string, unknown>) => ({
+				where: async () => {
+					if (table === state.rateLimitTable && state.rateLimits[0]) {
+						Object.assign(state.rateLimits[0], value);
+					}
+				},
 			}),
 		}),
 	}),
@@ -66,6 +92,7 @@ describe("completed document access", () => {
 		state.auditEventsTable = auditEvents;
 		state.finalDocumentsTable = finalDocuments;
 		state.tokensTable = signerTokens;
+		state.rateLimitTable = rateLimitRecords;
 		state.envelopes = [
 			{
 				id: envelopeId,
@@ -212,6 +239,7 @@ describe("completed document access", () => {
 				createdAt: new Date("2026-05-20T07:03:00.000Z"),
 			},
 		];
+		state.rateLimits.length = 0;
 		state.r2Objects.clear();
 		state.r2Objects.set(finalR2Key, finalPdf);
 	});
@@ -291,7 +319,147 @@ describe("completed document access", () => {
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toBe("application/pdf");
+		expect(response.headers.get("content-disposition")).toBe(
+			`attachment; filename="lumi-sign-${envelopeId}.pdf"`,
+		);
 		expect(new TextDecoder().decode(await response.arrayBuffer())).toContain("completed artifact");
+	});
+
+	it("sends a validated signed PDF as a Cloudflare Email Service attachment", async () => {
+		const pdf = await createCurrentFinalPdf();
+		state.r2Objects.set(finalR2Key, pdf);
+		const send = vi.fn().mockResolvedValue({ messageId: "email-message-1" });
+		const bucket = createBucket();
+		const response = await apiHono.request(
+			`/api/final-documents/${finalDocumentToken}/email`,
+			{
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ email: "backup@example.com" }),
+			},
+			{
+				DOCUMENTS_BUCKET: bucket,
+				EMAIL: { send },
+				EMAIL_FROM: "Lumi Sign <sign@runlumi.app>",
+				EMAIL_REPLY_TO: "sign@runlumi.app",
+			},
+		);
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ data: { sent: true } });
+		expect(send).toHaveBeenCalledWith(
+			expect.objectContaining({
+				to: "backup@example.com",
+				from: "Lumi Sign <sign@runlumi.app>",
+				replyTo: "sign@runlumi.app",
+				subject: "Your signed document from Lumi Sign",
+				attachments: [
+					expect.objectContaining({
+						filename: `lumi-sign-${envelopeId}.pdf`,
+						type: "application/pdf",
+						disposition: "attachment",
+						content: expect.any(Uint8Array),
+					}),
+				],
+			}),
+		);
+		expect(state.rateLimits).toHaveLength(1);
+		expect(state.rateLimits[0]?.key).not.toBe(finalDocumentToken);
+	});
+
+	it("rejects an invalid destination email before resolving the document", async () => {
+		const response = await apiHono.request(`/api/final-documents/${finalDocumentToken}/email`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ email: "not-an-email" }),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual({
+			error: { code: "INVALID_EMAIL", message: "Enter a valid email address" },
+		});
+		expect(state.rateLimits).toHaveLength(0);
+	});
+
+	it("returns a recoverable delivery error when Cloudflare Email Service rejects the send", async () => {
+		state.r2Objects.set(finalR2Key, await createCurrentFinalPdf());
+		const send = vi.fn().mockRejectedValue(new Error("synthetic provider failure"));
+		const response = await apiHono.request(
+			`/api/final-documents/${finalDocumentToken}/email`,
+			{
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ email: "backup@example.com" }),
+			},
+			{
+				DOCUMENTS_BUCKET: createBucket(),
+				EMAIL: { send },
+				EMAIL_FROM: "Lumi Sign <sign@runlumi.app>",
+			},
+		);
+
+		expect(response.status).toBe(502);
+		await expect(response.json()).resolves.toEqual({
+			error: {
+				code: "EMAIL_DELIVERY_FAILED",
+				message: "The email could not be sent. You can still download the signed PDF.",
+			},
+		});
+	});
+
+	it("limits signed PDF email sends to five per document token per hour", async () => {
+		state.r2Objects.set(finalR2Key, await createCurrentFinalPdf());
+		const send = vi.fn().mockResolvedValue({ messageId: "email-message-1" });
+		const bucket = createBucket();
+		const environment = {
+			DOCUMENTS_BUCKET: bucket,
+			EMAIL: { send },
+			EMAIL_FROM: "Lumi Sign <sign@runlumi.app>",
+		};
+		const request = () =>
+			apiHono.request(
+				`/api/final-documents/${finalDocumentToken}/email`,
+				{
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ email: "backup@example.com" }),
+				},
+				environment,
+			);
+
+		for (let attempt = 0; attempt < 5; attempt += 1) {
+			expect((await request()).status).toBe(200);
+		}
+		expect((await request()).status).toBe(429);
+		expect(send).toHaveBeenCalledTimes(5);
+	});
+
+	it("rejects an attachment above the safe email size before sending", async () => {
+		state.r2Objects.set(finalR2Key, await createLargeCurrentFinalPdf());
+		const send = vi.fn().mockResolvedValue({ messageId: "email-message-1" });
+		const response = await apiHono.request(
+			`/api/final-documents/${finalDocumentToken}/email`,
+			{
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ email: "backup@example.com" }),
+			},
+			{
+				DOCUMENTS_BUCKET: createBucket(),
+				EMAIL: { send },
+				EMAIL_FROM: "Lumi Sign <sign@runlumi.app>",
+			},
+		);
+
+		expect(response.status).toBe(413);
+		await expect(response.json()).resolves.toEqual({
+			error: {
+				code: "EMAIL_ATTACHMENT_TOO_LARGE",
+				message: "This PDF is too large to email as an attachment. Download it instead.",
+				maxBytes: maxFinalDocumentEmailAttachmentBytes,
+			},
+		});
+		expect(send).not.toHaveBeenCalled();
 	});
 
 	it("routes a completed signing link to the completed-document view without signer verification", async () => {
@@ -310,3 +478,31 @@ describe("completed document access", () => {
 		});
 	});
 });
+
+async function createCurrentFinalPdf(): Promise<Uint8Array> {
+	const pdf = await PDFDocument.create();
+	pdf.setProducer(FINAL_PDF_RENDERER_PRODUCER);
+	pdf.addPage();
+	return new Uint8Array(await pdf.save({ useObjectStreams: false }));
+}
+
+async function createLargeCurrentFinalPdf(): Promise<Uint8Array> {
+	const pdf = await PDFDocument.create();
+	pdf.setProducer(FINAL_PDF_RENDERER_PRODUCER);
+	pdf.setTitle("x".repeat(maxFinalDocumentEmailAttachmentBytes + 1));
+	pdf.addPage();
+	const bytes = new Uint8Array(await pdf.save({ useObjectStreams: false }));
+	if (bytes.byteLength <= maxFinalDocumentEmailAttachmentBytes) {
+		throw new Error("Generated test PDF must exceed the attachment limit");
+	}
+	return bytes;
+}
+
+function createBucket() {
+	return {
+		get: async (key: string) => {
+			const bytes = state.r2Objects.get(key);
+			return bytes ? { arrayBuffer: async () => bytes.slice().buffer as ArrayBuffer } : null;
+		},
+	};
+}

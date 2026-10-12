@@ -80,6 +80,15 @@ vi.mock("@/db/setup", () => ({
 				},
 			}),
 		}),
+		delete: (table: unknown) => ({
+			where: () => ({
+				returning: async () => {
+					if (table !== state.fieldsTable) return [];
+					const [removed] = state.fields.splice(0, 1);
+					return removed ? [{ id: removed.id }] : [];
+				},
+			}),
+		}),
 	}),
 }));
 
@@ -392,5 +401,53 @@ describe("envelope field API", () => {
 
 		expect(response.status).toBe(201);
 		expect(state.fields).toHaveLength(2);
+	});
+
+	it("clears a saved field while the envelope is draft", async () => {
+		state.fields.push({
+			id: "50000000-0000-4000-8000-000000000001",
+			envelopeId: "00000000-0000-4000-8000-000000000001",
+			recipientId: "20000000-0000-4000-8000-000000000001",
+			type: "signature",
+			page: 1,
+			x: 72,
+			y: 144,
+			width: 180,
+			height: 48,
+			createdAt: new Date("2026-05-20T07:05:00.000Z"),
+		});
+
+		const response = await apiHono.request(
+			"/api/envelopes/00000000-0000-4000-8000-000000000001/fields/50000000-0000-4000-8000-000000000001",
+			{ method: "DELETE", headers: { "x-internal-user-id": "user_123" } },
+		);
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ data: { deleted: true } });
+		expect(state.fields).toHaveLength(0);
+	});
+
+	it("does not clear a field after the envelope is sent", async () => {
+		state.envelopes[0] = { ...state.envelopes[0], status: "sent", sentBy: "user_123" };
+		state.fields.push({
+			id: "50000000-0000-4000-8000-000000000001",
+			envelopeId: "00000000-0000-4000-8000-000000000001",
+			recipientId: "20000000-0000-4000-8000-000000000001",
+			type: "signature",
+			page: 1,
+			x: 72,
+			y: 144,
+			width: 180,
+			height: 48,
+			createdAt: new Date("2026-05-20T07:05:00.000Z"),
+		});
+
+		const response = await apiHono.request(
+			"/api/envelopes/00000000-0000-4000-8000-000000000001/fields/50000000-0000-4000-8000-000000000001",
+			{ method: "DELETE", headers: { "x-internal-user-id": "user_123" } },
+		);
+
+		expect(response.status).toBe(409);
+		expect(state.fields).toHaveLength(1);
 	});
 });

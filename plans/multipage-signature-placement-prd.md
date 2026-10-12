@@ -10,13 +10,17 @@ browser distribution. Scroll inside the PDF container to select the visible page
 a page selector also jumps to a specific page. Place overlays only on their saved
 page and preserve their positions after reload. Keep draft placement editable
 after the initial field is saved, and avoid treating fields on another page as
-occupied coordinates on the selected page.
+occupied coordinates on the selected page. Show each saved placement in the
+placement panel with a clear action. Clearing removes only that field, works only
+while the envelope is a draft, and immediately makes the signer eligible for a
+replacement placement.
 
 Verification: pnpm types, pnpm test, pnpm lint, pnpm build, and
 pnpm e2e:placement. The E2E uses real local Worker/D1/R2 boundaries and a synthetic
 two-page PDF. It scrolls with the mouse wheel, verifies page selection updates,
 drags/saves signatures for one signer on pages 1 and 2, adds another signer on
-page 2, reads persisted fields through HTTP, and checks placements after reload.
+page 2, clears only the first signer's page 1 field, places it again, reads
+persisted fields through HTTP, and checks placements after reload.
 
 Local setup: install dependencies, run pnpm build and pnpm db:migrate:dev, then
 start wrangler dev from dist/server/wrangler.json on 127.0.0.1:8795 with

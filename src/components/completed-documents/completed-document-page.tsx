@@ -6,6 +6,7 @@ import { LoadingText } from "@/components/patterns/loading-text";
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { EmailSignedPdfForm } from "./email-signed-pdf-form";
 
 interface CompletedDocumentView {
 	token: string;
@@ -125,6 +126,7 @@ export function CompletedDocumentPage({ token }: CompletedDocumentPageProps) {
 							<p className="break-all font-mono text-xs tabular-nums">{view.finalPdf.sha256}</p>
 						</div>
 					</section>
+					<EmailSignedPdfForm token={token} byteSize={view.finalPdf.byteSize} />
 
 					<section className="space-y-4">
 						<div className="flex items-center gap-2">

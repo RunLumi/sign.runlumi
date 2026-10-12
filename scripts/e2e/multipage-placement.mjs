@@ -128,6 +128,28 @@ try {
 		fields.filter((field) => field.recipientId === partner.id && field.page === 2).length,
 		1,
 	);
+	await page
+		.getByRole("button", { name: "Clear E2E Sender signature on page 1", exact: true })
+		.click();
+	await page
+		.getByRole("button", { name: "Clear E2E Sender signature on page 1", exact: true })
+		.waitFor({ state: "detached" });
+	const afterClear = (await json(`/api/envelopes/${id}/fields`)).data;
+	assert.deepEqual(
+		afterClear
+			.filter((field) => field.recipientId === sender.id)
+			.map((field) => field.page)
+			.sort(),
+		[2],
+		"Clearing one placed signature must preserve the other page's signature",
+	);
+	await page.getByRole("button", { name: "E2E Sender signature status", exact: true }).click();
+	await page.getByRole("combobox", { name: "PDF page", exact: true }).selectOption("1");
+	await dragCurrent();
+	await page.getByRole("button", { name: "Place E2E Sender signature", exact: true }).click();
+	await firstPage
+		.getByRole("img", { name: "E2E Sender signature placeholder", exact: true })
+		.waitFor();
 	await page.reload();
 	await page.getByTestId("pdf-page-2").locator('canvas[data-rendered="true"]').waitFor();
 	await page.getByRole("combobox", { name: "PDF page", exact: true }).selectOption("2");
@@ -157,6 +179,7 @@ try {
 				pages: 2,
 				senderSignaturePages: [1, 2],
 				partnerSignaturePage: 2,
+				clearedAndReplaced: true,
 				persistedAfterReload: true,
 			},
 			null,

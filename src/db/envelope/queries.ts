@@ -247,6 +247,16 @@ export async function addFields(
 	return rows.map((field) => EnvelopeFieldSchema.parse(field));
 }
 
+export async function deleteEnvelopeField(envelopeId: string, fieldId: string): Promise<boolean> {
+	const db = getDb();
+	await assertDraftEnvelope(envelopeId);
+	const deleted = await db
+		.delete(envelopeFields)
+		.where(and(eq(envelopeFields.envelopeId, envelopeId), eq(envelopeFields.id, fieldId)))
+		.returning({ id: envelopeFields.id });
+	return deleted.length > 0;
+}
+
 export async function listEnvelopeFields(envelopeId: string): Promise<EnvelopeField[]> {
 	const db = getDb();
 	return (

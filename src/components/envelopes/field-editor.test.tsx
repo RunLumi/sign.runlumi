@@ -288,6 +288,63 @@ describe("EnvelopeFieldEditor", () => {
 			false,
 		);
 	});
+
+	it("clears a placed signature and makes the signer ready for a new placement", async () => {
+		const field = {
+			id: "50000000-0000-4000-8000-000000000001",
+			envelopeId: "00000000-0000-4000-8000-000000000001",
+			recipientId: "20000000-0000-4000-8000-000000000001",
+			type: "signature",
+			page: 2,
+			x: 72,
+			y: 144,
+			width: 180,
+			height: 48,
+			createdAt: "2026-05-20T07:05:00.000Z",
+		};
+		const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+			if (String(url).includes("source-pdf/content")) {
+				const pdf = await PDFDocument.create();
+				pdf.addPage();
+				pdf.addPage();
+				return new Response(new Uint8Array(await pdf.save()));
+			}
+			if (init?.method === "DELETE")
+				return new Response(JSON.stringify({ data: { deleted: true } }));
+			return new Response(JSON.stringify({ data: [field] }), { status: 200 });
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		renderWithQueryClient(
+			<EnvelopeFieldEditor
+				envelopeId="00000000-0000-4000-8000-000000000001"
+				recipients={[
+					{
+						id: "20000000-0000-4000-8000-000000000001",
+						name: "Ada Lovelace",
+						email: "ada@example.com",
+					},
+				]}
+			/>,
+		);
+
+		await screen.findByText("signature · page 2");
+		fireEvent.click(screen.getByRole("button", { name: "Clear Ada Lovelace signature on page 2" }));
+
+		await waitFor(() =>
+			expect(fetchMock).toHaveBeenCalledWith(
+				"/api/envelopes/00000000-0000-4000-8000-000000000001/fields/50000000-0000-4000-8000-000000000001",
+				expect.objectContaining({ method: "DELETE" }),
+			),
+		);
+		await waitFor(() =>
+			expect(screen.getByLabelText("Ada Lovelace signature status").textContent).toContain(
+				"Needs placement",
+			),
+		);
+		expect(screen.queryByText("signature · page 2")).toBeNull();
+		expect(screen.getByRole("button", { name: "Place Ada Lovelace signature" })).toBeTruthy();
+	});
 });
 
 function renderWithQueryClient(ui: ReactElement) {
