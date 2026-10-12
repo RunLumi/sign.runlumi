@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/RunLumi/sign.runlumi/compare/v1.13.0...v1.13.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* enlarge drawing pads and retain multiple signature strokes ([#4](https://github.com/RunLumi/sign.runlumi/issues/4)) ([5fb537b](https://github.com/RunLumi/sign.runlumi/commit/5fb537b867c1575eb2a4b61068b3b293b8e7071d))
+
 # [1.13.0](https://github.com/RunLumi/sign.runlumi/compare/v1.12.0...v1.13.0) (2026-10-12)
 
 
