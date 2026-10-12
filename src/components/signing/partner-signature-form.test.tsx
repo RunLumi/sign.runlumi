@@ -6,6 +6,10 @@ import {
 	type PartnerSignaturePreference,
 } from "./partner-signature-form";
 
+beforeAll(() => {
+	vi.stubGlobal("PointerEvent", MouseEvent);
+});
+
 describe("PartnerSignatureForm", () => {
 	it("prefills a saved typed signature and keeps future updates selected", async () => {
 		const submissions: CompleteSigningPayload[] = [];
@@ -111,9 +115,9 @@ describe("PartnerSignatureForm", () => {
 			}),
 		});
 
-		fireEvent.mouseDown(signaturePad, { clientX: 12, clientY: 36 });
-		fireEvent.mouseMove(signaturePad, { clientX: 48, clientY: 20 });
-		fireEvent.mouseUp(signaturePad);
+		fireEvent.pointerDown(signaturePad, { clientX: 12, clientY: 36 });
+		fireEvent.pointerMove(signaturePad, { clientX: 48, clientY: 20 });
+		fireEvent.pointerUp(signaturePad);
 		fireEvent.click(screen.getByRole("button", { name: "Complete signing" }));
 
 		await waitFor(() => expect(submissions).toHaveLength(1));

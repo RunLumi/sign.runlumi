@@ -4,6 +4,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { SignatureProfilePanel } from "./signature-profile-panel";
 
+beforeAll(() => {
+	vi.stubGlobal("PointerEvent", MouseEvent);
+});
+
 describe("SignatureProfilePanel", () => {
 	it("captures a drawn signature and persists it as the selected profile", async () => {
 		const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
@@ -31,19 +35,22 @@ describe("SignatureProfilePanel", () => {
 			toJSON: () => ({}),
 		});
 
-		fireEvent.mouseDown(drawingPad, {
+		fireEvent.pointerDown(drawingPad, {
 			clientX: 420,
 			clientY: 178,
 		});
-		fireEvent.mouseMove(drawingPad, {
+		fireEvent.pointerMove(drawingPad, {
 			clientX: 484,
 			clientY: 146,
 		});
-		fireEvent.mouseMove(drawingPad, {
+		fireEvent.pointerMove(drawingPad, {
 			clientX: 580,
 			clientY: 190,
 		});
-		fireEvent.mouseUp(drawingPad);
+		fireEvent.pointerUp(drawingPad);
+		fireEvent.pointerDown(drawingPad, { clientX: 500, clientY: 210 });
+		fireEvent.pointerMove(drawingPad, { clientX: 540, clientY: 230 });
+		fireEvent.pointerUp(drawingPad);
 		fireEvent.change(screen.getByLabelText("Preference name"), {
 			target: { value: "Ada drawn" },
 		});
@@ -62,7 +69,7 @@ describe("SignatureProfilePanel", () => {
 				body: JSON.stringify({
 					kind: "drawn",
 					label: "Ada drawn",
-					svgPath: "M 160 64 L 192 48 L 240 70",
+					svgPath: "M 160 64 L 192 48 L 240 70 M 200 80 L 220 90",
 					selected: true,
 				}),
 			}),
