@@ -5,6 +5,7 @@ import {
 	envelopeRecipients,
 	envelopes,
 	fieldValues,
+	finalDocuments,
 	signatureProfiles,
 	signerTokens,
 	sourceDocuments,
@@ -17,6 +18,8 @@ const state = vi.hoisted(() => ({
 	fieldsTable: null as unknown,
 	tokensTable: null as unknown,
 	sourceDocumentsTable: null as unknown,
+	finalDocumentsTable: null as unknown,
+	finalDocuments: [] as Array<Record<string, unknown>>,
 	fieldValuesTable: null as unknown,
 	auditEventsTable: null as unknown,
 	emailSendRecordsTable: null as unknown,
@@ -108,6 +111,7 @@ const state = vi.hoisted(() => ({
 }));
 
 function selectRows(table: unknown) {
+	if (table === state.finalDocumentsTable) return state.finalDocuments;
 	if (table === state.tokensTable) return state.tokens;
 	if (table === state.envelopesTable) return state.envelopes;
 	if (table === state.recipientsTable) return state.recipients;
@@ -120,6 +124,15 @@ function selectRows(table: unknown) {
 }
 
 function insertRows(table: unknown, rows: unknown[]) {
+	if (table === state.finalDocumentsTable) {
+		const records = (rows as Array<Record<string, unknown>>).map((row) => ({
+			...row,
+			id: crypto.randomUUID(),
+			createdAt: new Date(),
+		}));
+		state.finalDocuments.push(...records);
+		return records;
+	}
 	if (table === state.fieldValuesTable) {
 		state.fieldValues.push(...rows);
 		return rows;
@@ -169,6 +182,9 @@ vi.mock("@/db/setup", () => ({
 		}),
 		insert: (table: unknown) => ({
 			values: (rows: unknown[] | unknown) => ({
+				onConflictDoNothing: () => ({
+					returning: async () => insertRows(table, Array.isArray(rows) ? rows : [rows]),
+				}),
 				returning: async () => insertRows(table, Array.isArray(rows) ? rows : [rows]),
 			}),
 		}),
@@ -190,6 +206,8 @@ describe("signing flow API", () => {
 		state.fieldsTable = envelopeFields;
 		state.tokensTable = signerTokens;
 		state.sourceDocumentsTable = sourceDocuments;
+		state.finalDocumentsTable = finalDocuments;
+		state.finalDocuments = [];
 		state.fieldValuesTable = fieldValues;
 		state.auditEventsTable = auditEvents;
 		state.emailSendRecordsTable = emailSendRecords;
@@ -792,17 +810,28 @@ describe("signing flow API", () => {
 			},
 		];
 
-		const response = await apiHono.request("/api/signing/valid-token/complete", {
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-				"x-now": "2026-05-20T08:00:00.000Z",
+		const response = await apiHono.request(
+			"/api/signing/valid-token/complete",
+			{
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					"x-now": "2026-05-20T08:00:00.000Z",
+				},
+				body: JSON.stringify({
+					signatureName: "Grace Hopper",
+					date: "2026-05-20",
+				}),
 			},
-			body: JSON.stringify({
-				signatureName: "Grace Hopper",
-				date: "2026-05-20",
-			}),
-		});
+			{
+				DOCUMENTS_BUCKET: {
+					get: async () => ({
+						arrayBuffer: async () => new TextEncoder().encode("%PDF fixture").buffer,
+					}),
+					put: async () => null,
+				},
+			},
+		);
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({
@@ -813,7 +842,7 @@ describe("signing flow API", () => {
 				envelopeStatus: "completed",
 			},
 		});
-		expect(state.emailSends).toEqual([
+		expect(state.emailSends.filter((record) => record.kind === "partner_signed")).toEqual([
 			expect.objectContaining({
 				envelopeId: "00000000-0000-4000-8000-000000000001",
 				recipientId: "20000000-0000-4000-8000-000000000002",

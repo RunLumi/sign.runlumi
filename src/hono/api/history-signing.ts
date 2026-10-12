@@ -20,6 +20,7 @@ import {
 	SigningNoAssignedFieldsError,
 	updateSignerFieldPlacement,
 } from "@/db/envelope";
+import { SignedPdfPreparationError } from "@/db/envelope/signing-finalization";
 import {
 	authorizeHistorySigner,
 	getHistoryCompletedDocumentView,
@@ -44,7 +45,12 @@ historySigningEndpoint.get("/documents/:envelopeId/signing", async (c) => {
 	const envelopeId = c.req.param("envelopeId");
 	const authorization = await authorizeHistorySigner(session.email, envelopeId, requestNow(c));
 	if (authorization.state === "completed") {
-		const view = await getHistoryCompletedDocumentView(session.email, envelopeId, requestNow(c));
+		const view = await getHistoryCompletedDocumentView(
+			session.email,
+			envelopeId,
+			requestNow(c),
+			(c.env as Env | undefined)?.DOCUMENTS_BUCKET,
+		);
 		if (!view) return historySigningError(authorization);
 		return c.json({
 			data: {
@@ -167,6 +173,13 @@ historySigningEndpoint.post("/documents/:envelopeId/signing/complete", async (c)
 		});
 		return c.json({ data: result });
 	} catch (error) {
+		if (error instanceof SignedPdfPreparationError)
+			return c.json(
+				{
+					error: { code: "FINAL_PDF_PREPARATION_FAILED", message: error.message, retryable: true },
+				},
+				503,
+			);
 		if (error instanceof EmailDeliveryError) return historyEmailDeliveryError(c, error);
 		if (error instanceof SigningCompletionBlockedError) {
 			return c.json(

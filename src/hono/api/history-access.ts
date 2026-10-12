@@ -191,6 +191,7 @@ historyAccessEndpoint.get("/documents/:envelopeId", async (c) => {
 		session.email,
 		document.envelopeId,
 		nowHeader ? new Date(nowHeader) : new Date(),
+		(c.env as Env | undefined)?.DOCUMENTS_BUCKET,
 	);
 	if (!view) {
 		return c.json(historyError("HISTORY_DOCUMENT_NOT_FOUND"), 404);
@@ -220,8 +221,8 @@ historyAccessEndpoint.get("/documents/:envelopeId/pdf", async (c) => {
 		);
 	}
 	const session = sessionState.session;
-	const document = await getHistoryFinalDocument(session.email, c.req.param("envelopeId"));
 	const bucket = (c.env as (Env & { DOCUMENTS_BUCKET?: R2Bucket }) | undefined)?.DOCUMENTS_BUCKET;
+	const document = await getHistoryFinalDocument(session.email, c.req.param("envelopeId"), bucket);
 	const object = document ? await bucket?.get(document.r2Key) : null;
 	if (!document || !bucket || !object) {
 		return c.json(historyError("HISTORY_DOCUMENT_NOT_FOUND"), 404);
@@ -233,7 +234,12 @@ historyAccessEndpoint.get("/documents/:envelopeId/pdf", async (c) => {
 		requestIp: getRequestIp(c.req.header("cf-connecting-ip"), c.req.header("x-forwarded-for")),
 	});
 	return new Response(await object.arrayBuffer(), {
-		headers: { "content-type": document.contentType },
+		headers: {
+			"content-type": document.contentType,
+			"content-disposition": `attachment; filename="lumi-sign-${document.envelopeId}.pdf"`,
+			"cache-control": "private, no-store",
+			"x-content-type-options": "nosniff",
+		},
 	});
 });
 

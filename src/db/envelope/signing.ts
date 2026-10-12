@@ -6,7 +6,6 @@ import {
 	type EmailDeliveryOptions,
 	toAbsoluteDeliveryUrl,
 } from "./email-delivery";
-import { finalizeCompletedEnvelope } from "./finalization";
 import {
 	type CompleteSigningRequest,
 	type CompleteSigningResult,
@@ -26,6 +25,7 @@ import {
 	SourceDocumentSchema,
 	toSignatureProfileResponse,
 } from "./schema";
+import { resumeRecordedSigning, storeFinalPdfThenComplete } from "./signing-finalization";
 import { type NormalizedSigningSignature, normalizeSigningSignature } from "./signing-signature";
 import {
 	auditEvents,
@@ -255,7 +255,7 @@ export async function completeSigning(
 		.limit(1);
 	const parsedEnvelope = envelope ? EnvelopeSchema.parse(envelope) : null;
 	if (!parsedEnvelope) throw new Error("Envelope not found");
-	if (parsedEnvelope.status !== "sent") {
+	if (!["sent", "completed"].includes(parsedEnvelope.status)) {
 		throw new SigningCompletionBlockedError(parsedEnvelope.status);
 	}
 
@@ -280,10 +280,14 @@ export async function completeSigning(
 			.limit(10)
 	).map((recipient) => RecipientSchema.parse(recipient));
 	const signingRecipient = recipients.find((recipient) => recipient.id === token.recipientId);
+	if (signingRecipient?.status === "completed")
+		return resumeRecordedSigning(token, recipients, options.documentsBucket);
+	if (parsedEnvelope.status === "completed")
+		throw new SigningCompletionBlockedError(parsedEnvelope.status);
 	const senderNotificationUrl = buildSenderSigningNotificationUrl(token.envelopeId);
-	const shouldNotifySender =
-		Boolean(signingRecipient) &&
-		!sameEmail(signingRecipient?.email ?? "", parsedEnvelope.createdBy);
+	const shouldNotifySender = signingRecipient
+		? !sameEmail(signingRecipient.email, parsedEnvelope.createdBy)
+		: false;
 	if (shouldNotifySender && signingRecipient && options.emailDelivery) {
 		await deliverTransactionalEmail(
 			buildSenderPartnerSignedEmail({
@@ -353,13 +357,8 @@ export async function completeSigning(
 			})
 			.returning();
 	}
-	if (envelopeStatus === "completed") {
-		await db
-			.update(envelopes)
-			.set({ status: "completed" })
-			.where(eq(envelopes.id, token.envelopeId));
-		await finalizeCompletedEnvelope(token.envelopeId, options);
-	}
+	if (envelopeStatus === "completed")
+		await storeFinalPdfThenComplete(token.envelopeId, options.documentsBucket);
 
 	return {
 		envelopeId: token.envelopeId,

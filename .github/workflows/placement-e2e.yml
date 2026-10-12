@@ -43,6 +43,10 @@ jobs:
         env:
           LUMI_E2E_BROWSER: chromium
         run: pnpm e2e:placement
+      - name: Verify signed PDFs are stored separately
+        env:
+          LUMI_E2E_BROWSER: chromium
+        run: pnpm e2e:storage
       - name: Check branded site and email layouts
         env:
           LUMI_E2E_BROWSER: chromium
@@ -56,6 +60,7 @@ jobs:
           name: multipage-placement-evidence
           path: |
             .wrangler/e2e/multipage-placement/
+            .wrangler/e2e/signed-pdf-storage/
             .wrangler/e2e-worker.log
             output/playwright/brand-surfaces/
           include-hidden-files: true

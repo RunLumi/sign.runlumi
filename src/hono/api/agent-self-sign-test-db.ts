@@ -130,6 +130,9 @@ export const getAgentSelfSignTestDb = () => ({
 	select: () => ({ from: (table: unknown) => selectQuery(table) }),
 	insert: (table: unknown) => ({
 		values: (value: AgentSelfSignStoredRow | AgentSelfSignStoredRow[]) => ({
+			onConflictDoNothing: () => ({
+				returning: async () => insertedRows(table, Array.isArray(value) ? value : [value]),
+			}),
 			returning: async () => insertedRows(table, Array.isArray(value) ? value : [value]),
 		}),
 	}),
