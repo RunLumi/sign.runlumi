@@ -103,9 +103,7 @@ async function drawFieldValues(
 	boldFont: PDFFont,
 	signatureFont: PDFFont,
 ): Promise<void> {
-	const valueByField = new Map(
-		rows.values.map((value) => [stringValue(value, "fieldId"), stringValue(value, "value")]),
-	);
+	const valueByField = new Map(latestFieldValues(rows.values));
 	for (const field of rows.fields) {
 		const value = valueByField.get(stringValue(field, "id"))?.trim();
 		if (!value) continue;
@@ -372,9 +370,7 @@ function drawLines(page: PDFPage, lines: string[], x: number, startY: number, fo
 }
 
 function buildFlattenedFieldLines(rows: Pick<FinalPdfRows, "fields" | "values">): string[] {
-	const valueByField = new Map(
-		rows.values.map((value) => [stringValue(value, "fieldId"), stringValue(value, "value")]),
-	);
+	const valueByField = new Map(latestFieldValues(rows.values));
 	return rows.fields.map((field) =>
 		[
 			stringValue(field, "type"),
@@ -386,6 +382,17 @@ function buildFlattenedFieldLines(rows: Pick<FinalPdfRows, "fields" | "values">)
 			`value=${valueByField.get(stringValue(field, "id")) ?? ""}`,
 		].join(" "),
 	);
+}
+
+function latestFieldValues(values: FinalPdfRows["values"]): Array<[string, string]> {
+	return [...values]
+		.sort((left, right) => completedTime(left) - completedTime(right))
+		.map((value) => [stringValue(value, "fieldId"), stringValue(value, "value")]);
+}
+
+function completedTime(value: Record<string, unknown>): number {
+	const time = value.completedAt;
+	return time instanceof Date ? time.getTime() : 0;
 }
 
 function buildEventSummaryLines(events: Array<Record<string, unknown>>): string[] {

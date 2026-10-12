@@ -3,7 +3,7 @@
 ## Observed failure
 
 The affected production envelope was completed with two completed recipients and
-four recorded signature fields. Its source object existed in production R2;
+two assigned signature fields and four saved value rows from prior attempts. Its source object existed in production R2;
 its final object and final_documents row did not. A Vietnamese typed name reproduced
 `WinAnsi cannot encode "Ệ" (0x1ec6)` in the old renderer.
 
