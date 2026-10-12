@@ -116,8 +116,7 @@ export function EnvelopeFieldEditor({
 				<div>
 					<PanelTitle>Signature placement</PanelTitle>
 					<PanelDescription>
-						Place one signature box for each signer. Completed signers are locked so duplicates
-						cannot be added.
+						Place signature boxes on any PDF page. Each signer can have multiple signatures.
 					</PanelDescription>
 				</div>
 			</div>
@@ -145,6 +144,10 @@ export function EnvelopeFieldEditor({
 						isSaveError={saveMutation.isError}
 						previewRef={previewRef}
 						onSelectRecipient={(recipientId) => form.setFieldValue("recipientId", recipientId)}
+						onSelectPage={(page) => {
+							stopDragging();
+							form.setFieldValue("page", page);
+						}}
 						onSubmit={() => void form.handleSubmit()}
 						onStartDragging={startDragging}
 						onContinueDragging={continueDragging}

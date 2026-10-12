@@ -1,10 +1,18 @@
+import {
+	type SignatureProfile,
+	type SignatureProfileResponse,
+	SignatureProfileResponseSchema,
+} from "./signature-profile-schema";
+
+export * from "./signature-profile-schema";
+
 import { z } from "zod";
+import { SignatureImageSchema } from "./signature-image";
 import {
 	envelopeStatuses,
 	fieldTypes,
 	recipientStatuses,
 	senderVerificationStatuses,
-	signatureProfileKinds,
 	signingModes,
 } from "./table";
 
@@ -33,9 +41,6 @@ export type SenderVerificationStatus = z.infer<typeof SenderVerificationStatusSc
 
 export const FieldTypeSchema = z.enum(fieldTypes);
 export type FieldType = z.infer<typeof FieldTypeSchema>;
-
-export const SignatureProfileKindSchema = z.enum(signatureProfileKinds);
-export type SignatureProfileKind = z.infer<typeof SignatureProfileKindSchema>;
 
 export const EnvelopeLifecycleActionSchema = z.enum(envelopeLifecycleActions);
 export type EnvelopeLifecycleAction = z.infer<typeof EnvelopeLifecycleActionSchema>;
@@ -202,45 +207,6 @@ export const RecipientResponseSchema = z.object({
 });
 export type RecipientResponse = z.infer<typeof RecipientResponseSchema>;
 
-export const SignatureProfileSchema = z.object({
-	id: z.string().uuid(),
-	envelopeId: z.string().uuid(),
-	createdBy: z.string().min(1),
-	kind: SignatureProfileKindSchema,
-	label: z.string().min(1),
-	svgPath: z.string().nullable().optional(),
-	typedText: z.string().nullable().optional(),
-	typedFont: z.string().nullable().optional(),
-	selected: z.boolean(),
-	createdAt: z.date(),
-});
-export type SignatureProfile = z.infer<typeof SignatureProfileSchema>;
-
-export const SignatureProfileCreateRequestSchema = z.discriminatedUnion("kind", [
-	z.object({
-		kind: z.literal("drawn"),
-		label: z.string().min(1).max(120),
-		svgPath: z.string().min(1),
-		selected: z.boolean().optional().default(true),
-	}),
-	z.object({
-		kind: z.literal("typed"),
-		label: z.string().min(1).max(120),
-		typedText: z.string().min(1).max(120),
-		typedFont: z.string().min(1).max(80).default("serif"),
-		selected: z.boolean().optional().default(true),
-	}),
-]);
-export type SignatureProfileCreateRequest = z.infer<typeof SignatureProfileCreateRequestSchema>;
-
-export const SignatureProfileResponseSchema = SignatureProfileSchema.extend({
-	svgPath: z.string().nullable(),
-	typedText: z.string().nullable(),
-	typedFont: z.string().nullable(),
-	createdAt: z.string(),
-});
-export type SignatureProfileResponse = z.infer<typeof SignatureProfileResponseSchema>;
-
 export const SendEnvelopeResultSchema = z.object({
 	envelopeId: z.string().uuid(),
 	status: z.literal("sent"),
@@ -313,6 +279,11 @@ export const SignerSessionSchema = z.object({
 export type SignerSession = z.infer<typeof SignerSessionSchema>;
 
 export const CompleteSigningSignatureSchema = z.discriminatedUnion("kind", [
+	z.object({
+		kind: z.literal("uploaded"),
+		label: z.string().trim().min(1).max(120).default("Uploaded signature"),
+		imageData: SignatureImageSchema,
+	}),
 	z.object({
 		kind: z.literal("typed"),
 		typedText: z.string().trim().min(1).max(120),
@@ -491,6 +462,7 @@ export function toSignatureProfileResponse(profile: SignatureProfile): Signature
 		kind: profile.kind,
 		label: profile.label,
 		svgPath: profile.svgPath ?? null,
+		...(profile.imageData ? { imageData: profile.imageData } : {}),
 		typedText: profile.typedText ?? null,
 		typedFont: profile.typedFont ?? null,
 		selected: profile.selected,

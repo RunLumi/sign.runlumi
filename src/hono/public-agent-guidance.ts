@@ -5,6 +5,8 @@ import { agentRateLimitGuidance } from "./public-agent-rate-limit-contract";
 export function buildAgentGuidance(): string {
 	return `# Lumi Sign Agent API
 
+Signature preferences support typed, drawn, and uploaded images. Uploaded signatures use kind uploaded and imageData as a PNG data URL, at most 256 KB decoded and 1024 pixels per side. Browser uploads accept PNG/JPEG up to 2 MB and normalize them before submission.
+
 Read this guide and [/openapi.json](/openapi.json) before acting. Lumi Sign Agentic tokens represent one verified email. Use only documented operations and stay within the user goal.
 
 ## Secret handling

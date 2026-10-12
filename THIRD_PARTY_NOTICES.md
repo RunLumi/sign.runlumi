@@ -88,3 +88,7 @@ owners; descriptive references do not imply endorsement.
 Cloudflare, Neon, and Resend are hosted-service integrations governed by their
 own service terms. Their software, marks, APIs, and infrastructure are not
 relicensed by the Signmos MIT License.
+
+## Mozilla PDF.js
+
+The unmodified browser distribution of pdfjs-dist 5.6.205 is vendored in public/vendor/pdfjs for self-hosted PDF page rendering. It is licensed under Apache-2.0; the full license is included there. Source: https://www.npmjs.com/package/pdfjs-dist/v/5.6.205.

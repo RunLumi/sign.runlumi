@@ -263,7 +263,7 @@ async function getSenderSignatureValue(sentBy: string): Promise<string> {
 	const selectedProfile = latestSelectedProfile(profiles, sentBy);
 	if (!selectedProfile) throw new Error("Sender signature profile required");
 	if (selectedProfile.kind === "typed") return selectedProfile.typedText ?? selectedProfile.label;
-	return selectedProfile.svgPath ?? selectedProfile.label;
+	return selectedProfile.imageData ?? selectedProfile.svgPath ?? selectedProfile.label;
 }
 
 function latestSelectedProfile(

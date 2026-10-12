@@ -169,6 +169,8 @@ function SigningPreviewFieldOverlay({
 }
 
 function PreviewFieldValue({ field, value }: { field: SignerPreviewField; value: string }) {
+	if (field.type === "signature" && value.startsWith("data:image/png;base64,"))
+		return <img src={value} alt="Uploaded signature" className="h-full w-full object-contain" />;
 	if (field.type === "signature" && looksLikeSvgPath(value)) {
 		return (
 			<svg aria-hidden="true" className="h-full w-full" viewBox="0 0 320 128">

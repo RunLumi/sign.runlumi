@@ -326,10 +326,12 @@ describe("agent two-party creator", () => {
 				],
 			}),
 		});
-		expect(duplicate.status).toBe(409);
-		await expect(duplicate.json()).resolves.toEqual({
-			error: expect.objectContaining({ code: "SIGNATURE_PLACEHOLDER_LIMIT" }),
-		});
+		expect(duplicate.status).toBe(201);
+		expect(
+			rows(envelopeFields).filter(
+				(field) => field.recipientId === partnerId && field.type === "signature",
+			),
+		).toHaveLength(2);
 	});
 
 	it("agent command idempotency rejects changed-key, outsider, locked, and non-draft intent", async () => {

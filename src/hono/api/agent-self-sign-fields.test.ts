@@ -50,7 +50,7 @@ describe("agent self-sign lifecycle explicit field preparation", () => {
 		await addToken("a0000000-0000-4000-8000-000000000001", "ada@example.com", ownerToken);
 	});
 
-	it("enforces one signature placeholder, persists explicit geometry, and denies outsiders", async () => {
+	it("supports multiple signature placeholders, persists explicit geometry, and denies outsiders", async () => {
 		const bucket = agentSelfSignBucket();
 		const created = await apiHono.request("/api/v1/documents", {
 			method: "POST",
@@ -86,28 +86,13 @@ describe("agent self-sign lifecycle explicit field preparation", () => {
 			]),
 		);
 
-		const duplicateSignature = await apiHono.request(`/api/v1/documents/${documentId}/fields`, {
-			method: "POST",
-			headers: headers("explicit-duplicate"),
-			body: JSON.stringify({
-				fields: [
-					{ type: "signature", page: 2, x: 40, y: 60, width: 180, height: 48 },
-					{ type: "signature", page: 2, x: 40, y: 140, width: 180, height: 48 },
-				],
-			}),
-		});
-		expect(duplicateSignature.status).toBe(409);
-		await expect(duplicateSignature.json()).resolves.toEqual({
-			error: expect.objectContaining({ code: "SIGNATURE_PLACEHOLDER_LIMIT" }),
-		});
-		expect(selfSignRows(envelopeFields)).toHaveLength(0);
-
 		const explicit = await apiHono.request(`/api/v1/documents/${documentId}/fields`, {
 			method: "POST",
 			headers: headers("explicit-valid"),
 			body: JSON.stringify({
 				fields: [
 					{ type: "signature", page: 2, x: 40, y: 60, width: 180, height: 48 },
+					{ type: "signature", page: 2, x: 40, y: 140, width: 180, height: 48 },
 					{ type: "date", page: 2, x: 260, y: 60, width: 120, height: 32 },
 				],
 			}),
@@ -115,6 +100,14 @@ describe("agent self-sign lifecycle explicit field preparation", () => {
 		expect(explicit.status).toBe(201);
 		expect(selfSignRows(envelopeFields)).toEqual([
 			expect.objectContaining({ type: "signature", page: 2, x: 40, y: 60, width: 180, height: 48 }),
+			expect.objectContaining({
+				type: "signature",
+				page: 2,
+				x: 40,
+				y: 140,
+				width: 180,
+				height: 48,
+			}),
 			expect.objectContaining({ type: "date", page: 2, x: 260, y: 60, width: 120, height: 32 }),
 		]);
 		const explicitReplay = await apiHono.request(`/api/v1/documents/${documentId}/fields`, {
@@ -123,12 +116,13 @@ describe("agent self-sign lifecycle explicit field preparation", () => {
 			body: JSON.stringify({
 				fields: [
 					{ type: "signature", page: 2, x: 40, y: 60, width: 180, height: 48 },
+					{ type: "signature", page: 2, x: 40, y: 140, width: 180, height: 48 },
 					{ type: "date", page: 2, x: 260, y: 60, width: 120, height: 32 },
 				],
 			}),
 		});
 		expect(explicitReplay.status).toBe(201);
-		expect(selfSignRows(envelopeFields)).toHaveLength(2);
+		expect(selfSignRows(envelopeFields)).toHaveLength(3);
 		const draftOnly = await apiHono.request(`/api/v1/documents/${documentId}/fields`, {
 			method: "POST",
 			headers: headers("explicit-after-prepared"),

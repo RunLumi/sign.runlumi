@@ -14,7 +14,7 @@ export const signingModes = ["only_me", "me_and_another_signer"] as const;
 export const recipientStatuses = ["pending", "sent", "completed", "declined"] as const;
 export const senderVerificationStatuses = ["pending", "verified", "expired"] as const;
 export const fieldTypes = ["signature", "date"] as const;
-export const signatureProfileKinds = ["drawn", "typed"] as const;
+export const signatureProfileKinds = ["drawn", "typed", "uploaded"] as const;
 
 export const envelopes = sqliteTable("envelopes", {
 	id: text("id")
@@ -175,6 +175,7 @@ export const signatureProfiles = sqliteTable("signature_profiles", {
 	kind: text("kind").notNull(),
 	label: text("label").notNull(),
 	svgPath: text("svg_path"),
+	imageData: text("image_data"),
 	typedText: text("typed_text"),
 	typedFont: text("typed_font"),
 	selected: integer("selected", { mode: "boolean" }).notNull().default(true),

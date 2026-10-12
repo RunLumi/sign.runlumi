@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { PDFDocument } from "pdf-lib";
 import type { ReactElement } from "react";
 import { buildSourcePdfPreviewUrl, EnvelopeFieldEditor } from "./field-editor";
 import { buildNextSignatureField, signatureDimensions } from "./field-placement-workspace";
+
+vi.mock("./pdf-page-canvas", () => ({
+	loadPlacementPdf: async () => ({}),
+	PdfPageCanvas: ({ page }: { page: number }) => <canvas aria-label={`Source PDF page ${page}`} />,
+}));
 
 describe("EnvelopeFieldEditor", () => {
 	it("builds a sender-authorized uploaded PDF preview URL", () => {
@@ -57,7 +63,7 @@ describe("EnvelopeFieldEditor", () => {
 		);
 
 		expect(nextField).toEqual({
-			recipientId: recipients[1]?.id,
+			recipientId: recipients[0]?.id,
 			type: "signature",
 			page: 1,
 			x: 72,
@@ -95,7 +101,14 @@ describe("EnvelopeFieldEditor", () => {
 			}
 			return new Response(JSON.stringify({ data: [] }), { status: 200 });
 		});
-		vi.stubGlobal("fetch", fetchMock);
+		vi.stubGlobal("fetch", async (url: string | URL | Request, init?: RequestInit) => {
+			if (String(url).includes("source-pdf/content")) {
+				const pdf = await PDFDocument.create();
+				pdf.addPage();
+				return new Response(new Uint8Array(await pdf.save()));
+			}
+			return fetchMock(url, init);
+		});
 
 		renderWithQueryClient(
 			<EnvelopeFieldEditor
@@ -128,9 +141,7 @@ describe("EnvelopeFieldEditor", () => {
 			toJSON: () => ({}),
 		});
 		expect(preview).toBeTruthy();
-		expect(screen.getByTitle("Uploaded source PDF preview").getAttribute("src")).toBe(
-			"/api/envelopes/00000000-0000-4000-8000-000000000001/source-pdf/content#toolbar=0&navpanes=0&scrollbar=0&page=1",
-		);
+
 		expect(screen.queryByLabelText("X")).toBeNull();
 		expect(screen.queryByLabelText("Y")).toBeNull();
 		expect(screen.queryByLabelText("Width")).toBeNull();
@@ -181,7 +192,7 @@ describe("EnvelopeFieldEditor", () => {
 		);
 	});
 
-	it("shows signer placement status and disables saving after every signer has a signature placeholder", async () => {
+	it("keeps signers selectable and permits additional signatures after initial placements", async () => {
 		const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
 			if (
 				url === "/api/envelopes/00000000-0000-4000-8000-000000000001/fields" &&
@@ -227,7 +238,14 @@ describe("EnvelopeFieldEditor", () => {
 				{ status: 200 },
 			);
 		});
-		vi.stubGlobal("fetch", fetchMock);
+		vi.stubGlobal("fetch", async (url: string | URL | Request, init?: RequestInit) => {
+			if (String(url).includes("source-pdf/content")) {
+				const pdf = await PDFDocument.create();
+				pdf.addPage();
+				return new Response(new Uint8Array(await pdf.save()));
+			}
+			return fetchMock(url, init);
+		});
 
 		renderWithQueryClient(
 			<EnvelopeFieldEditor
@@ -256,6 +274,7 @@ describe("EnvelopeFieldEditor", () => {
 		expect(screen.getByLabelText("Grace Hopper signature status").textContent).toContain(
 			"Needs placement",
 		);
+		fireEvent.click(screen.getByLabelText("Grace Hopper signature status"));
 		expect(screen.getByLabelText("Current signature placeholder").textContent).toContain(
 			"Grace Hopper",
 		);
@@ -263,8 +282,11 @@ describe("EnvelopeFieldEditor", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Place Grace Hopper signature" }));
 		await screen.findByText("All signers have signature placeholders.");
 
-		const disabledButton = screen.getByRole("button", { name: "All signatures placed" });
-		expect(disabledButton.hasAttribute("disabled")).toBe(true);
+		const repeatButton = screen.getByRole("button", { name: "Place Grace Hopper signature" });
+		expect(repeatButton.hasAttribute("disabled")).toBe(false);
+		expect(screen.getByLabelText("Ada Lovelace signature status").hasAttribute("disabled")).toBe(
+			false,
+		);
 	});
 });
 

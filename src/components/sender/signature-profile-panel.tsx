@@ -1,16 +1,19 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, PenLine, RotateCcw, Save, Type } from "lucide-react";
-import type { PointerEvent, ReactNode } from "react";
-import { useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { LoadingText } from "@/components/patterns/loading-text";
 import { NativeSelect } from "@/components/patterns/native-select";
 import { Panel, PanelDescription, PanelTitle } from "@/components/patterns/panel";
+import { SignatureImageUpload } from "@/components/signatures/signature-image-upload";
+import { useSignatureDrawing } from "@/components/signatures/use-signature-drawing";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { signatureProfileAuthHeaders } from "./signature-profile-auth";
 
 interface SignatureProfilePanelProps {
 	envelopeId: string;
@@ -18,13 +21,8 @@ interface SignatureProfilePanelProps {
 	historyAccess?: boolean;
 }
 
-type SignatureMode = "typed" | "drawn";
+type SignatureMode = "typed" | "drawn" | "uploaded";
 type TypedSignatureFont = "cursive" | "serif" | "sans-serif";
-
-type DrawPoint = {
-	x: number;
-	y: number;
-};
 
 type SignaturePreferenceValues = {
 	mode: SignatureMode;
@@ -34,6 +32,7 @@ type SignaturePreferenceValues = {
 };
 
 type SignatureProfileRequest =
+	| { kind: "uploaded"; label: string; imageData: string; selected: true }
 	| {
 			kind: "drawn";
 			label: string;
@@ -53,6 +52,7 @@ type SignatureProfile = {
 	kind: SignatureMode;
 	label: string;
 	svgPath: string | null;
+	imageData?: string | null;
 	typedText: string | null;
 	typedFont: string | null;
 };
@@ -128,12 +128,11 @@ function SignaturePreferenceEditor({
 	historyAccess: boolean;
 	initialProfile: SignatureProfile | null;
 }) {
-	const [drawPoints, setDrawPoints] = useState<DrawPoint[][]>([]);
-	const activePointer = useRef<number | null>(null);
-	const [savedDrawnPath, setSavedDrawnPath] = useState(
-		initialProfile?.kind === "drawn" ? (initialProfile.svgPath ?? "") : "",
+	const [imageData, setImageData] = useState(
+		initialProfile?.kind === "uploaded" ? (initialProfile.imageData ?? "") : "",
 	);
-	const [isDrawing, setIsDrawing] = useState(false);
+	const { drawnPath, startDrawing, continueDrawing, stopDrawing, clearDrawing } =
+		useSignatureDrawing(initialProfile?.kind === "drawn" ? (initialProfile.svgPath ?? "") : "");
 	const [validationError, setValidationError] = useState<string | null>(null);
 	const saveMutation = useMutation({
 		mutationFn: (request: SignatureProfileRequest) =>
@@ -143,10 +142,7 @@ function SignaturePreferenceEditor({
 	const form = useForm({
 		defaultValues: signaturePreferenceDefaults(initialProfile),
 		onSubmit: async ({ value }) => {
-			const request = buildSignaturePreferenceRequest(
-				value,
-				[savedDrawnPath, toSvgPath(drawPoints)].filter(Boolean).join(" "),
-			);
+			const request = buildSignaturePreferenceRequest(value, drawnPath, imageData);
 			if (!request.ok) {
 				setValidationError(request.message);
 				return;
@@ -157,35 +153,6 @@ function SignaturePreferenceEditor({
 
 	const savedMessage = initialProfile ? `Previous ${initialProfile.kind} signature loaded` : null;
 	const selectedLabel = saveMutation.data;
-
-	function startDrawing(event: PointerEvent<SVGSVGElement>) {
-		if (activePointer.current !== null || event.button > 0) return;
-		activePointer.current = event.pointerId;
-		event.currentTarget.setPointerCapture?.(event.pointerId);
-		const point = pointFromEvent(event);
-		setDrawPoints((strokes) => [...strokes, [point]]);
-		setIsDrawing(true);
-	}
-
-	function continueDrawing(event: PointerEvent<SVGSVGElement>) {
-		if (!isDrawing || activePointer.current !== event.pointerId) return;
-		const point = pointFromEvent(event);
-		setDrawPoints((strokes) =>
-			strokes.map((stroke, index) => (index === strokes.length - 1 ? [...stroke, point] : stroke)),
-		);
-	}
-
-	function stopDrawing() {
-		activePointer.current = null;
-		setIsDrawing(false);
-	}
-
-	function clearDrawing() {
-		activePointer.current = null;
-		setIsDrawing(false);
-		setDrawPoints([]);
-		setSavedDrawnPath("");
-	}
 
 	return (
 		<form
@@ -198,13 +165,12 @@ function SignaturePreferenceEditor({
 		>
 			<form.Subscribe selector={(state) => state.values}>
 				{(values) => {
-					const drawnPath = [savedDrawnPath, toSvgPath(drawPoints)].filter(Boolean).join(" ");
 					const fontStack =
 						typedSignatureFonts.find((font) => font.value === values.typedFont)?.stack ??
 						typedSignatureFonts[0].stack;
 					return (
 						<>
-							<fieldset className="grid gap-3 sm:grid-cols-2">
+							<fieldset className="grid gap-3 sm:grid-cols-3">
 								<legend className="sr-only">Signature method</legend>
 								<SignatureMethodButton
 									isActive={values.mode === "typed"}
@@ -223,6 +189,16 @@ function SignaturePreferenceEditor({
 									description="Best when you want a hand-drawn stroke."
 									onClick={() => {
 										form.setFieldValue("mode", "drawn");
+										setValidationError(null);
+									}}
+								/>
+								<SignatureMethodButton
+									isActive={values.mode === "uploaded"}
+									icon={<PenLine aria-hidden="true" className="size-4" />}
+									title="Uploaded"
+									description="Use an image of your signature."
+									onClick={() => {
+										form.setFieldValue("mode", "uploaded");
 										setValidationError(null);
 									}}
 								/>
@@ -278,6 +254,8 @@ function SignaturePreferenceEditor({
 										</form.Field>
 									</div>
 								</div>
+							) : values.mode === "uploaded" ? (
+								<SignatureImageUpload value={imageData} onChange={setImageData} />
 							) : (
 								<div className="space-y-3">
 									<svg
@@ -396,6 +374,8 @@ function SignatureMethodButton({
 }
 
 function signaturePreferenceDefaults(profile: SignatureProfile | null): SignaturePreferenceValues {
+	if (profile?.kind === "uploaded")
+		return { mode: "uploaded", label: profile.label, typedText: "", typedFont: "cursive" };
 	if (profile?.kind === "typed") {
 		return {
 			mode: "typed",
@@ -423,7 +403,20 @@ function signaturePreferenceDefaults(profile: SignatureProfile | null): Signatur
 function buildSignaturePreferenceRequest(
 	values: SignaturePreferenceValues,
 	drawnPath: string,
+	imageData: string,
 ): { ok: true; value: SignatureProfileRequest } | { ok: false; message: string } {
+	if (values.mode === "uploaded") {
+		if (!imageData) return { ok: false, message: "Upload a signature before saving." };
+		return {
+			ok: true,
+			value: {
+				kind: "uploaded",
+				label: values.label.trim() || "Uploaded signature",
+				imageData,
+				selected: true,
+			},
+		};
+	}
 	const label =
 		values.label.trim() || (values.mode === "typed" ? "Typed signature" : "Drawn signature");
 	if (values.mode === "typed") {
@@ -458,7 +451,7 @@ async function fetchSelectedSignatureProfile(
 	historyAccess = false,
 ): Promise<SignatureProfile | null> {
 	const response = await fetch(`/api/envelopes/${envelopeId}/signature-profiles/selected`, {
-		headers: authHeaders(senderSessionToken, historyAccess),
+		headers: signatureProfileAuthHeaders(senderSessionToken, historyAccess),
 	});
 	const payload: unknown = await response.json().catch(() => null);
 	if (!response.ok) throw new Error("Unable to load signature preference");
@@ -474,7 +467,7 @@ async function saveProfile(
 ): Promise<string> {
 	const response = await fetch(`/api/envelopes/${envelopeId}/signature-profiles`, {
 		method: "POST",
-		headers: authHeaders(senderSessionToken, historyAccess),
+		headers: signatureProfileAuthHeaders(senderSessionToken, historyAccess),
 		body: JSON.stringify(request),
 	});
 	const payload: unknown = await response.json().catch(() => null);
@@ -494,43 +487,4 @@ function parseTypedFont(value: string | null): TypedSignatureFont {
 	return typedSignatureFonts.some((font) => font.value === value)
 		? (value as TypedSignatureFont)
 		: "cursive";
-}
-
-function pointFromEvent(event: PointerEvent<SVGSVGElement>): DrawPoint {
-	const bounds = event.currentTarget.getBoundingClientRect();
-	const relativeX = event.clientX - bounds.left;
-	const relativeY = event.clientY - bounds.top;
-	const x = bounds.width > 0 ? (relativeX / bounds.width) * 320 : relativeX;
-	const y = bounds.height > 0 ? (relativeY / bounds.height) * 128 : relativeY;
-	return {
-		x: Math.max(0, Math.min(320, Math.round(x))),
-		y: Math.max(0, Math.min(128, Math.round(y))),
-	};
-}
-
-function toSvgPath(strokes: DrawPoint[][]): string {
-	return strokes
-		.map((points) =>
-			points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" "),
-		)
-		.join(" ");
-}
-
-function authHeaders(
-	senderSessionToken: string | undefined,
-	historyAccess = false,
-): Record<string, string> {
-	if (historyAccess) {
-		return { "Content-Type": "application/json", "x-history-session-access": "true" };
-	}
-	if (senderSessionToken) {
-		return {
-			"Content-Type": "application/json",
-			"x-sender-session-token": senderSessionToken,
-		};
-	}
-	return {
-		"Content-Type": "application/json",
-		"x-internal-user-id": "ui-user",
-	};
 }
