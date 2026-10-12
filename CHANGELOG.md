@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/RunLumi/sign.runlumi/compare/v1.14.0...v1.15.0) (2026-10-12)
+
+
+### Features
+
+* clear signature fields and email signed PDF backups ([#6](https://github.com/RunLumi/sign.runlumi/issues/6)) ([c652a37](https://github.com/RunLumi/sign.runlumi/commit/c652a3709b9294d5eb2b3d391398c465d72c5ea9))
+
 # [1.14.0](https://github.com/RunLumi/sign.runlumi/compare/v1.13.1...v1.14.0) (2026-10-12)
 
 
