@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/RunLumi/sign.runlumi/compare/v1.15.0...v1.16.0) (2026-10-12)
+
+
+### Features
+
+* retain documents until deletion and remember login for seven days ([#7](https://github.com/RunLumi/sign.runlumi/issues/7)) ([a09404a](https://github.com/RunLumi/sign.runlumi/commit/a09404ae69eb88da1807b0e0fb7f33208f1246ad))
+
 # [1.15.0](https://github.com/RunLumi/sign.runlumi/compare/v1.14.0...v1.15.0) (2026-10-12)
 
 
