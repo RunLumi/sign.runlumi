@@ -14,7 +14,7 @@ describe("ProductModeNavigation", () => {
 		// - The same navigation remains keyboard-accessible and labels the active mode.
 		render(<ProductModeNavigation activeMode="my_documents" />);
 
-		const navigation = screen.getByRole("navigation", { name: "Signmos options" });
+		const navigation = screen.getByRole("navigation", { name: "Lumi Sign options" });
 		expect(navigation).toBeTruthy();
 		expect(screen.getByRole("link", { name: "Sign by myself" }).getAttribute("href")).toBe(
 			"/api/navigate/only_me",

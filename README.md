@@ -4,11 +4,11 @@
 > Signmos/Neon/Resend submission evidence below describes the upstream project.
 > See the [production deployment runbook](./docs/PRODUCTION_DEPLOYMENT.md).
 
-# Signmos
+# Lumi Sign
 
 *AI agent index: [llms.txt](./llms.txt)*
 
-Signmos is a lightweight e-signature workflow built on TanStack Start, Hono, Cloudflare Workers, Neon Postgres, Drizzle, and R2. It supports self-sign and two-party envelopes, source PDF upload and field preparation, passwordless signing, completed PDF artifacts with audit summaries, verified-email recovery through My Documents, and personal automation through the Bearer-authenticated Agent API.
+Lumi Sign is a lightweight e-signature workflow built on TanStack Start, Hono, Cloudflare Workers, D1 SQLite, Drizzle, and R2. It supports self-sign and two-party envelopes, source PDF upload and field preparation, passwordless signing, completed PDF artifacts with audit summaries, verified-email recovery through My Documents, and personal automation through the Bearer-authenticated Agent API.
 
 The legal posture is basic e-signature intent. Signmos records signer intent, timestamps, document hashes, field values, and immutable audit events, but it is not a certified trust-service platform.
 

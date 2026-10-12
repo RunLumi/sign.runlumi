@@ -3,13 +3,13 @@ import { agentPartnerGuidance } from "./public-agent-partner-contract";
 import { agentRateLimitGuidance } from "./public-agent-rate-limit-contract";
 
 export function buildAgentGuidance(): string {
-	return `# Signmos Agent API
+	return `# Lumi Sign Agent API
 
-Read this guide and [/openapi.json](/openapi.json) before acting. Signmos Agentic tokens represent one verified email. Use only documented operations and stay within the user goal.
+Read this guide and [/openapi.json](/openapi.json) before acting. Lumi Sign Agentic tokens represent one verified email. Use only documented operations and stay within the user goal.
 
 ## Secret handling
 
-Prefer providing the token through the SIGNMOS_TOKEN environment variable. The authenticated Agentic console automatically selects a newly generated token for its private agent prompt. Because Signmos cannot recover an existing raw token, you may instead paste a full token from your saved copy into the browser-only prompt control. Never place it in URLs, issue bodies, source control, or logs. Send it only in the Authorization: Bearer $SIGNMOS_TOKEN header. Anyone holding the token can send and can request sign, decline, cancel, expire, or delete actions as the verified email; those protected actions require a matching human's approval before execution.
+Prefer providing the token through the SIGNMOS_TOKEN environment variable. The authenticated Agentic console automatically selects a newly generated token for its private agent prompt. Because Lumi Sign cannot recover an existing raw token, you may instead paste a full token from your saved copy into the browser-only prompt control. Never place it in URLs, issue bodies, source control, or logs. Send it only in the Authorization: Bearer $SIGNMOS_TOKEN header. Anyone holding the token can send and can request sign, decline, cancel, expire, or delete actions as the verified email; those protected actions require a matching human's approval before execution.
 
 ## Confirm identity
 
@@ -31,9 +31,9 @@ Use GET /api/v1/documents/{documentId}/status and follow machine fields such as 
 
 Sign/complete, decline, cancel, expire, and delete return HTTP 202 with pending_human_review, commandId, reviewUrl, statusUrl, expiresAt, and notificationStatus. They have no protected document side effect while pending. Tell the user that approval is required; do not claim success or attempt to bypass, automate, or impersonate the reviewer. Poll only the returned statusUrl with the exact personal token that created the command. An exact Idempotency-Key replay returns the same command and sends no duplicate notice.
 
-The server derives the reviewer from the authorized signer or creator role. The reviewer opens the current PDF and exact proposed payload in Signmos, then chooses Approve and execute, Reject request, or Not now. Review expires exactly 24 hours after creation and is invalidated if the source PDF, payload binding, personal token, or reviewer role changes. Handle HUMAN_REVIEW_REJECTED, HUMAN_REVIEW_EXPIRED, HUMAN_REVIEW_INVALIDATED, HUMAN_REVIEW_FORBIDDEN, HUMAN_REVIEW_ALREADY_DECIDED, and HUMAN_REVIEW_EXECUTION_FAILED as terminal or recovery states. notificationStatus failed leaves the command pending and available in My Documents; it never grants authority.
+The server derives the reviewer from the authorized signer or creator role. The reviewer opens the current PDF and exact proposed payload in Lumi Sign, then chooses Approve and execute, Reject request, or Not now. Review expires exactly 24 hours after creation and is invalidated if the source PDF, payload binding, personal token, or reviewer role changes. Handle HUMAN_REVIEW_REJECTED, HUMAN_REVIEW_EXPIRED, HUMAN_REVIEW_INVALIDATED, HUMAN_REVIEW_FORBIDDEN, HUMAN_REVIEW_ALREADY_DECIDED, and HUMAN_REVIEW_EXECUTION_FAILED as terminal or recovery states. notificationStatus failed leaves the command pending and available in My Documents; it never grants authority.
 
-Use Signmos only for authorized, lawful document workflows. Do not use agent actions for fraud, impersonation, deception, rights violations, prohibited high-stakes automated decisions, or to evade product safeguards.
+Use Lumi Sign only for authorized, lawful document workflows. Do not use agent actions for fraud, impersonation, deception, rights violations, prohibited high-stakes automated decisions, or to evade product safeguards.
 
 ## Inspect detail and history
 
@@ -89,7 +89,7 @@ Use the same completion command with a typed or drawn creator signature before d
 
 ## Send the partner invitation
 
-POST the send command only after source, partner recipients, all fields, and creator signing are ready. Signmos delivers only eligible partner invitations and never returns invitation or process credentials.
+POST the send command only after source, partner recipients, all fields, and creator signing are ready. Lumi Sign delivers only eligible partner invitations and never returns invitation or process credentials.
 
 ## Resend an eligible invitation
 

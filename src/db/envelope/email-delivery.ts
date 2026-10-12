@@ -149,8 +149,8 @@ export function buildSenderVerificationEmail(
 	return {
 		to: input.email,
 		subject: "Verify your email to start signing",
-		text: `Hi ${name},\n\nVerify your email to continue preparing your Signmos document:\n${input.verificationUrl}\n\nThis link expires in 30 minutes.`,
-		html: `<p>Hi ${escapeHtml(name)},</p><p>Verify your email to continue preparing your Signmos document.</p><p><a href="${escapeHtml(input.verificationUrl)}">Verify sender email</a></p><p>This link expires in 30 minutes.</p>`,
+		text: `Hi ${name},\n\nVerify your email to continue preparing your Lumi Sign document:\n${input.verificationUrl}\n\nThis link expires in 30 minutes.`,
+		html: `<p>Hi ${escapeHtml(name)},</p><p>Verify your email to continue preparing your Lumi Sign document.</p><p><a href="${escapeHtml(input.verificationUrl)}">Verify sender email</a></p><p>This link expires in 30 minutes.</p>`,
 	};
 }
 
@@ -193,8 +193,8 @@ export function buildHumanReviewEmail(input: HumanReviewEmailInput): Transaction
 	return {
 		to: input.email,
 		subject: `Review requested: ${documentName}`,
-		text: `${agentName} requested: ${input.actionLabel}\n\nDocument: ${documentName}\nConsequence: ${input.consequence}\nExpires: ${input.expiresAt}\n\nReview in Signmos:\n${input.reviewUrl}`,
-		html: `<p>${escapeHtml(agentName)} requested <strong>${escapeHtml(input.actionLabel)}</strong>.</p><p><strong>Document:</strong> ${escapeHtml(documentName)}</p><p><strong>Consequence:</strong> ${escapeHtml(input.consequence)}</p><p><strong>Expires:</strong> ${escapeHtml(input.expiresAt)}</p><p><a href="${escapeHtml(input.reviewUrl)}">Review in Signmos</a></p>`,
+		text: `${agentName} requested: ${input.actionLabel}\n\nDocument: ${documentName}\nConsequence: ${input.consequence}\nExpires: ${input.expiresAt}\n\nReview in Lumi Sign:\n${input.reviewUrl}`,
+		html: `<p>${escapeHtml(agentName)} requested <strong>${escapeHtml(input.actionLabel)}</strong>.</p><p><strong>Document:</strong> ${escapeHtml(documentName)}</p><p><strong>Consequence:</strong> ${escapeHtml(input.consequence)}</p><p><strong>Expires:</strong> ${escapeHtml(input.expiresAt)}</p><p><a href="${escapeHtml(input.reviewUrl)}">Review in Lumi Sign</a></p>`,
 	};
 }
 

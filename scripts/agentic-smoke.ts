@@ -26,7 +26,7 @@ export async function validateAgentSmokeEntry(input: {
 	const fetcher = input.fetcher ?? fetch;
 	const baseUrl = input.baseUrl.replace(/\/+$/, "");
 	const guide = await fetcher(`${baseUrl}/agent.md`);
-	if (!guide.ok || !(await guide.text()).includes("Signmos Agent API")) {
+	if (!guide.ok || !(await guide.text()).includes("Lumi Sign Agent API")) {
 		throw new Error("Public /agent.md is unavailable or incomplete");
 	}
 	const openapi = await fetcher(`${baseUrl}/openapi.json`);
@@ -161,7 +161,7 @@ async function main() {
 	});
 	process.stdout.write(`Live self-sign final PDF verified (${live.finalPdfBytes} bytes).\n`);
 	process.stdout.write(
-		"The completed smoke document remains subject to normal Signmos retention controls.\n",
+		"The completed smoke document remains subject to normal Lumi Sign retention controls.\n",
 	);
 	heartbeat("Bearer lifecycle integration files starting");
 	const exitCode = await runVitest();
@@ -283,7 +283,7 @@ async function smokePdf(): Promise<Uint8Array> {
 	const pdf = await PDFDocument.create();
 	const page = pdf.addPage([612, 792]);
 	const font = await pdf.embedFont(StandardFonts.Helvetica);
-	page.drawText("Signmos Agentic release smoke", { x: 72, y: 720, size: 16, font });
+	page.drawText("Lumi Sign Agentic release smoke", { x: 72, y: 720, size: 16, font });
 	return pdf.save({ useObjectStreams: false });
 }
 

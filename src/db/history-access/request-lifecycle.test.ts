@@ -128,7 +128,7 @@ function deliveryOptions(fetcher: typeof fetch) {
 		fetcher,
 		env: {
 			RESEND_API_KEY: "resend-key",
-			RESEND_FROM_EMAIL: "Signmos <sign@example.com>",
+			RESEND_FROM_EMAIL: "Lumi Sign <sign@example.com>",
 			RESEND_REPLY_TO_EMAIL: "help@example.com",
 		},
 	};

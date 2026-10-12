@@ -83,7 +83,7 @@ historyHumanReviewEndpoint.get("/human-reviews/:reviewId/source-pdf", async (c) 
 historyHumanReviewEndpoint.post("/human-reviews/:reviewId/decision", async (c) => {
 	if (c.req.header("origin") !== new URL(c.req.url).origin) {
 		return c.json(
-			{ error: { code: "INVALID_ORIGIN", message: "Use Signmos to review this request" } },
+			{ error: { code: "INVALID_ORIGIN", message: "Use Lumi Sign to review this request" } },
 			403,
 		);
 	}

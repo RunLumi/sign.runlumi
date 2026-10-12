@@ -733,7 +733,7 @@ describe("envelope recipient API", () => {
 			{
 				APP_BASE_URL: "https://signmos.example",
 				RESEND_API_KEY: "re_test",
-				RESEND_FROM_EMAIL: "Signmos <sign@signmos.example>",
+				RESEND_FROM_EMAIL: "Lumi Sign <sign@signmos.example>",
 				RESEND_REPLY_TO_EMAIL: "support@signmos.example",
 			},
 		);
@@ -788,7 +788,7 @@ describe("envelope recipient API", () => {
 			{
 				APP_BASE_URL: "https://signmos.example",
 				RESEND_API_KEY: "re_test",
-				RESEND_FROM_EMAIL: "Signmos <sign@signmos.example>",
+				RESEND_FROM_EMAIL: "Lumi Sign <sign@signmos.example>",
 				RESEND_REPLY_TO_EMAIL: "support@signmos.example",
 			},
 		);
@@ -808,7 +808,7 @@ describe("envelope recipient API", () => {
 		const requestBody = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
 		expect(requestBody).toEqual(
 			expect.objectContaining({
-				from: "Signmos <sign@signmos.example>",
+				from: "Lumi Sign <sign@signmos.example>",
 				reply_to: "support@signmos.example",
 				to: ["ada@example.com"],
 				subject: "Verify your email to sign this document",
@@ -852,7 +852,7 @@ describe("envelope recipient API", () => {
 			{
 				APP_BASE_URL: "https://signmos.example",
 				RESEND_API_KEY: "re_test",
-				RESEND_FROM_EMAIL: "Signmos <sign@signmos.example>",
+				RESEND_FROM_EMAIL: "Lumi Sign <sign@signmos.example>",
 				RESEND_REPLY_TO_EMAIL: "support@signmos.example",
 			},
 		);
@@ -953,7 +953,7 @@ describe("envelope recipient API", () => {
 			{
 				APP_BASE_URL: "https://signmos.example",
 				RESEND_API_KEY: "re_test",
-				RESEND_FROM_EMAIL: "Signmos <sign@signmos.example>",
+				RESEND_FROM_EMAIL: "Lumi Sign <sign@signmos.example>",
 				RESEND_REPLY_TO_EMAIL: "support@signmos.example",
 			},
 		);

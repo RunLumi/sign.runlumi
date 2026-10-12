@@ -55,7 +55,7 @@ GET the signing task, source PDF, and fields through the documented Agent API ro
 
 ## Complete partner signing
 
-POST a typed or drawn signature to the completion command. The server fixes the date, and reusable signature content is stored only when rememberSignature is true. The request remains pending without signing until the matching signer approves it in Signmos.
+POST a typed or drawn signature to the completion command. The server fixes the date, and reusable signature content is stored only when rememberSignature is true. The request remains pending without signing until the matching signer approves it in Lumi Sign.
 
 ## Request creator changes
 

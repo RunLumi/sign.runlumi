@@ -22,8 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const agentGuideUrl = "https://signmos.com/agent.md";
-const openApiUrl = "https://signmos.com/openapi.json";
+const agentGuideUrl = "https://sign.runlumi.app/agent.md";
+const openApiUrl = "https://sign.runlumi.app/openapi.json";
 const tokenQueryKey = ["agentic-tokens"] as const;
 type PromptTokenSource = "environment" | "generated" | "saved";
 
@@ -140,7 +140,7 @@ export function AgenticTokenConsole() {
 				<AuthenticatedProductNavigation activeMode="agentic" />
 				<PageHeader
 					title="Create an Agentic token"
-					lead="Anyone holding this token can send, sign, decline, cancel, and delete documents as your verified email. Sign, decline, cancel, expire, and delete requests still require the matching human to approve the exact action in Signmos before it runs."
+					lead="Anyone holding this token can send, sign, decline, cancel, and delete documents as your verified email. Sign, decline, cancel, expire, and delete requests still require the matching human to approve the exact action in Lumi Sign before it runs."
 				/>
 
 				<TokenListing listing={listing} onRevoke={setPendingRevoke} />
@@ -280,8 +280,8 @@ export function AgenticTokenConsole() {
 								}}
 							/>
 							<p className="text-muted-foreground text-sm">
-								Existing tokens cannot be recovered from Signmos. Paste the full token you saved, or
-								generate a new token above.
+								Existing tokens cannot be recovered from Lumi Sign. Paste the full token you saved,
+								or generate a new token above.
 							</p>
 						</div>
 					</fieldset>

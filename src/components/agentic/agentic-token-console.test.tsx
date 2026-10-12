@@ -52,7 +52,7 @@ describe("agent token console", () => {
 		});
 
 		const view = renderConsole();
-		expect(screen.getByRole("navigation", { name: "Signmos options" })).toBeTruthy();
+		expect(screen.getByRole("navigation", { name: "Lumi Sign options" })).toBeTruthy();
 		expect(screen.getByRole("link", { name: "Agentic mode" }).getAttribute("aria-current")).toBe(
 			"page",
 		);
@@ -88,7 +88,7 @@ describe("agent token console", () => {
 		const promptElement = screen.getByTestId("agent-prompt");
 		const prompt = promptElement.textContent ?? "";
 		expect(prompt).toContain(
-			"Read https://signmos.com/agent.md and https://signmos.com/openapi.json",
+			"Read https://sign.runlumi.app/agent.md and https://sign.runlumi.app/openapi.json",
 		);
 		expect(prompt).toContain(secret);
 		expect(prompt).not.toContain("$SIGNMOS_TOKEN");
@@ -97,10 +97,10 @@ describe("agent token console", () => {
 		).toBe(true);
 		expect(prompt).not.toMatch(/Codex|Claude/i);
 		expect(screen.getByRole("link", { name: "Open Agent guide" }).getAttribute("href")).toBe(
-			"https://signmos.com/agent.md",
+			"https://sign.runlumi.app/agent.md",
 		);
 		expect(screen.getByRole("link", { name: "OpenAPI schema" }).getAttribute("href")).toBe(
-			"https://signmos.com/openapi.json",
+			"https://sign.runlumi.app/openapi.json",
 		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Copy token setup" }));

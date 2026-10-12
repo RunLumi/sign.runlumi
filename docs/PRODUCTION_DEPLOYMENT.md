@@ -5,7 +5,7 @@ Cloudflare Worker. D1 stores metadata and access credentials, R2 stores PDFs,
 and Cloudflare Email Service sends transactional verification and signing mail.
 Turnstile is disabled by explicit product decision; IP/email rate limits and
 email verification remain required. This is a new deployment, not an import of
-any former Signmos database or documents.
+any former Lumi Sign database or documents.
 
 ## Infrastructure
 
@@ -14,7 +14,7 @@ any former Signmos database or documents.
 - D1: `signmos-production`, binding `DB`, migrations in `src/db/migrations/d1`.
 - R2: `signmos-documents-production`, binding `DOCUMENTS_BUCKET`.
 - Email: binding `EMAIL`, sending enabled for `runlumi.app`.
-- Sender: `Signmos <sign@runlumi.app>`; reply-to: `sign@runlumi.app`.
+- Sender: `Lumi Sign <sign@runlumi.app>`; reply-to: `sign@runlumi.app`.
   The reply-to address must be connected to an inbox to receive replies.
 
 Public routing and sender values are in `wrangler.jsonc`. Neon, Resend, and

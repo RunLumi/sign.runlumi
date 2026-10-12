@@ -99,7 +99,7 @@ export function HistoryAccessConfirmationPage({
 			{inspection.data?.state === "confirm" ? (
 				<>
 					<p className="text-pretty text-muted-foreground">
-						Continue only if you requested access to your Signmos documents.
+						Continue only if you requested access to your Lumi Sign documents.
 					</p>
 					<Button type="button" onClick={() => redemption.mutate()} disabled={redemption.isPending}>
 						{redemption.isPending ? "Confirming…" : "Continue to My documents"}

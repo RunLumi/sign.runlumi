@@ -34,7 +34,7 @@
 			"vars": {
 				"CLOUDFLARE_ENV": "dev",
 				"APP_BASE_URL": "https://signmos-staging.workers.dev",
-				"EMAIL_FROM": "Signmos <sign@runlumi.app>",
+				"EMAIL_FROM": "Lumi Sign <sign@runlumi.app>",
 				"EMAIL_REPLY_TO": "sign@runlumi.app",
 				"TURNSTILE_DISABLED": "true"
 			}
@@ -71,7 +71,7 @@
 			"vars": {
 				"CLOUDFLARE_ENV": "production",
 				"APP_BASE_URL": "https://sign.runlumi.app",
-				"EMAIL_FROM": "Signmos <sign@runlumi.app>",
+				"EMAIL_FROM": "Lumi Sign <sign@runlumi.app>",
 				"EMAIL_REPLY_TO": "sign@runlumi.app",
 				"TURNSTILE_DISABLED": "true"
 			}

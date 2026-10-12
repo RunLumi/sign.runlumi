@@ -107,7 +107,7 @@ describe("StartEnvelopePage", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: choiceLabel }));
 
-		expect(screen.getByRole("navigation", { name: "Signmos options" })).toBeTruthy();
+		expect(screen.getByRole("navigation", { name: "Lumi Sign options" })).toBeTruthy();
 		expect(screen.getByRole("link", { name: choiceLabel }).getAttribute("aria-current")).toBe(
 			"page",
 		);
@@ -136,19 +136,19 @@ describe("StartEnvelopePage", () => {
 		},
 		{
 			choiceLabel: "Agentic mode",
-			heading: "Connect Signmos to an agent",
+			heading: "Connect Lumi Sign to an agent",
 			description: "Verify your email to create and manage personal API tokens for your agent.",
 		},
 	])("shows task-specific hero copy for $choiceLabel", ({ choiceLabel, heading, description }) => {
 		// Assumptions for this content slice:
-		// - The Signmos brand label remains unchanged for every selected task.
+		// - The Lumi Sign brand label remains unchanged for every selected task.
 		// - The selected task controls both the main heading and its supporting sentence.
 		// - Returning to the chooser continues to restore the generic landing copy.
 		renderStartEnvelopePage({ testTurnstileToken: "test-pass" });
 
 		fireEvent.click(screen.getByRole("button", { name: choiceLabel }));
 
-		expect(screen.getByText("Signmos")).toBeTruthy();
+		expect(screen.getByText("Lumi Sign")).toBeTruthy();
 		expect(screen.getByRole("heading", { level: 1, name: heading })).toBeTruthy();
 		expect(screen.getByText(description)).toBeTruthy();
 	});

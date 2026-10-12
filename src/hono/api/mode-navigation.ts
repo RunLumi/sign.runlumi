@@ -38,7 +38,7 @@ const modeNavigationEndpoint = createHono();
 
 modeNavigationEndpoint.post("/sign-out", async (c) => {
 	if (c.req.header("origin") !== new URL(c.req.url).origin) {
-		return c.json({ error: { code: "INVALID_ORIGIN", message: "Use Signmos to sign out" } }, 403);
+		return c.json({ error: { code: "INVALID_ORIGIN", message: "Use Lumi Sign to sign out" } }, 403);
 	}
 	const now = new Date();
 	const requestIp = getRequestIp(c.req.header("cf-connecting-ip"), c.req.header("x-forwarded-for"));
@@ -66,7 +66,7 @@ modeNavigationEndpoint.get("/:mode", async (c) => {
 	const mode = c.req.param("mode");
 	if (!isProductMode(mode)) {
 		return c.json(
-			{ error: { code: "INVALID_PRODUCT_MODE", message: "Choose a supported Signmos option" } },
+			{ error: { code: "INVALID_PRODUCT_MODE", message: "Choose a supported Lumi Sign option" } },
 			400,
 		);
 	}
