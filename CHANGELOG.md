@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/RunLumi/sign.runlumi/compare/v1.16.0...v1.17.0) (2026-10-12)
+
+
+### Features
+
+* apply Lumi brand across the site and transactional emails ([#8](https://github.com/RunLumi/sign.runlumi/issues/8)) ([068ac43](https://github.com/RunLumi/sign.runlumi/commit/068ac4311d18b86a3acb7ea3b330983b2f6c9a53))
+
 # [1.16.0](https://github.com/RunLumi/sign.runlumi/compare/v1.15.0...v1.16.0) (2026-10-12)
 
 
