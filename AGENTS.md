@@ -1,93 +1,100 @@
-# signmos Agent Map
+# Lumi Sign — repository agent guide
 
-Lumi Sign is a lightweight e-signature workflow on TanStack Start, Hono, Cloudflare Workers, D1 SQLite, Drizzle, and Cloudflare R2.
+Lumi Sign runs on TanStack Start, React, Hono, Cloudflare Workers, D1 SQLite,
+Drizzle, R2, and Cloudflare Email Service. This file guides agents changing the
+repository. `/agent.md` and `/openapi.json` guide clients using the product API.
 
-Use this file as the always-loaded map. Load deeper docs only when the task touches that area.
+## Start with the task
 
-## Start Here
+1. Inspect `git status --short --branch` and relevant files. Preserve unrelated edits; do not reset, stash, clean, or switch away from someone else's work.
+2. Define the result and acceptance criteria. For an issue, fetch `gh issue view <number> --json number,title,body,state,labels,url`; local drafts are supporting context.
+3. Load relevant documents below and applicable nested `AGENTS.md` instructions. Code/config establish current behavior; PRDs establish intent. Investigate disagreements and distinguish historical evidence from the current deployment.
+4. Make a complete change through existing boundaries. Finish requested validation, PR, merge, and deployment steps; ask only for missing information or authority.
 
-| Need | Read |
+Latest user instructions and platform restrictions take precedence over this file.
+Do not assume a machine-local skill, absolute path, authenticated account, or
+production credential exists. Use available skills when they fit the task; their
+absence does not block ordinary repository work.
+
+## Load context by need
+
+| Task | Read |
 | --- | --- |
-| Product scope, lifecycle contract, validation checklist | `plans/simple-esignature-prd.md` plus the relevant `plans/*-prd.md` amendment |
-| Physical code map, boundaries, invariants | `ARCHITECTURE.md` |
-| Agent workflow and coding rules from `.claude/rules` | `docs/AGENT_GUIDE.md` |
-| Manual setup, API examples, smoke flow | `README.md` |
-| Implementation plans, issue drafts, and release evidence | `plans/`, `plans/issues/`, `plans/evidence/` |
-| Compact LLM index | `llms.txt` |
+| Product behavior / lifecycle | `plans/simple-esignature-prd.md` and the relevant `plans/*-prd.md` amendment |
+| Service boundaries / code navigation | `ARCHITECTURE.md` |
+| Implementation / review / local browser checks | `docs/AGENT_GUIDE.md` |
+| UI / transactional email | `DESIGN.md` and `docs/DESIGN.md` |
+| Cloudflare configuration / deployment / recovery | `docs/PRODUCTION_DEPLOYMENT.md`, `wrangler.jsonc`, `scripts/deploy-production.sh` |
+| Setup / API examples / historical context | `README.md`; `llms.txt` is a discovery index |
+| Prior release proof | The relevant file under `plans/evidence/`; recheck live state when needed |
 
-## Current Product Surface
+## Code map
 
-- Draft envelope creation, one source PDF upload under 10 MB, recipients, signature/date fields, send, signer links, signer completion/decline, final PDF status/download.
-- `/` is an unselected four-choice chooser for self-signing, signing with another person, passwordless My Documents access, or Agentic mode.
-- `/my-documents` is the verified-email worklist for retained creator/signer documents, including search, filters, paging, resume/sign/review, final PDF download, and creator controls.
-- An active My Documents session can start a new self-sign or two-party draft without repeating email verification.
-- `/agentic-console` uses a separate short email-verified management session to create/list/revoke up to five named personal tokens; raw secrets are displayed once and never persisted.
-- `/api/v1` is the stable role-authorized Bearer document API. `/agent.md` is its public operating guide and `/openapi.json` is its runtime-parity machine contract; every mutation requires `Idempotency-Key`.
-- `/manual-signing-smoke` is the local browser smoke path for create -> prepare -> send -> sign -> final PDF.
-- `/envelope-fields` is a field placement/review screen, not a full envelope dashboard.
-- Cloudflare Email Service delivers transactional email when configured; development/test flows may expose restricted fallback links.
+| Responsibility | Main boundary |
+| --- | --- |
+| Worker routing and request-scoped D1 | `src/server.ts`, `src/db/setup.ts` |
+| Envelope lifecycle, fields, signing, source/final PDFs | `src/db/envelope/` |
+| Verified-email sessions, catalog, role authorization | `src/db/history-access/` |
+| Personal tokens, idempotent commands, human review | `src/db/agentic-access/` |
+| HTTP adapters and Bearer API | `src/hono/api/`; `agent-v1*.ts` owns `/api/v1` |
+| Public Agent guide and OpenAPI publisher | `src/hono/public-agent-*.ts` |
+| Thin route adapters | `src/routes/` |
+| Preparation / signer / My Documents / Agentic UI | `src/components/envelopes/`, `src/components/signing/`, `src/components/history/`, `src/components/agentic/` |
+| Shared layouts / patterns / brand tokens | `src/components/layout/`, `src/components/patterns/`, `src/styles.css` |
+| Email renderer and provider boundary | `src/lib/email-template.ts`, `src/db/envelope/email-delivery.ts` |
+| Behavioral tests / release contracts / browser E2E | Adjacent `*.test.ts(x)`, `src/release/`, `scripts/e2e/` |
 
-## Issue Implementation Workflow
+## Product invariants
 
-1. Fetch the live issue before implementing: `gh issue view <number> --json number,title,body,state,labels,url`.
-2. Read `plans/simple-esignature-prd.md`, the relevant feature PRD/plan under `plans/`, and the matching local file in `plans/issues/` when present.
-3. Load the local TDD skill for the implementation process. Do not duplicate that workflow in repo docs.
-4. Final status must enumerate verified, failing, and unverified acceptance criteria with evidence.
+- Preserve self-sign/two-party flows, all three signature methods, multipage placement, and draft field clearing. `/envelope-fields` prepares fields; `/my-documents` is the worklist.
+- Store originals at `envelopes/<id>/source-v<version>.pdf` and signed PDFs at `envelopes/<id>/final.pdf`. Persist the final object and D1 key/hash/size before completed status. Preserve saved signatures on failure; retries reuse them and valid finals.
+- Recovery requires authorized access, completed recipients, and saved values for every field. Preserve source pages, Unicode names, and audit evidence. Status/metadata alone do not prove a usable PDF.
+- Documents remain until explicit creator deletion. Link/session expiry must not delete PDFs. Standard My Documents sessions last a fixed seven days; identity bridges cannot outlive their source authority. Agentic management sessions remain separate and short. Use the constants in the credential-authority modules.
+- Recheck role and lifecycle state on document access. Management cookies, process links, history cookies, and personal Bearer tokens are distinct authorities. Preserve same-origin checks and matching-human approval for protected actions.
+- Every `/api/v1` mutation requires `Idempotency-Key`; identical retries replay, changed reuse conflicts. Keep runtime schemas, `/openapi.json`, `/agent.md`, and contract tests in sync.
+- Production uses D1 and Cloudflare Email Service. PostgreSQL migrations and Neon/Resend submission records are historical. Turnstile is explicitly disabled; verified-email authority and IP/email limits remain active.
+- Distinguish email records, provider acceptance, inbox delivery, and valid attachments. Automatic completion records currently do not invoke a provider send; verify the actual path before claiming delivery.
+- Keep real document contents, signature images, magic links, cookies, API tokens, and credentials out of Git, logs, PRs, and shared screenshots/evidence. Use synthetic fixtures and redact access material.
 
-Open issue state changes, so do not hardcode issue status from memory.
+## Implementation rules
 
-## Where Work Usually Goes
+- Keep SQL in DB domains, HTTP adaptation in Hono, routes thin, and UI behavior in feature components. Prefer narrow public interfaces.
+- Derive boundary types from Zod; no `any`, narrow `unknown`. Keep source files under 500 lines; do not expand oversized files.
+- Use TanStack Form for fields and Query for server state; local state is for UI/browser primitives. Preserve accessibility and mobile reflow.
+- Use the light-only Lumi contract, shared components, Tabler icons, and official assets/licenses. Leave generated Shadcn internals generated.
+- Do not manually edit `src/routeTree.gen.ts`, `worker-configuration.d.ts`, generated migrations, or `src/components/ui/*`. Use the relevant generator. SQLite migrations belong in `src/db/migrations/d1/`.
+- Tests belong beside source and exercise public behavior. Mock external boundaries only: DB, R2, network, clock, randomness, and browser APIs. Routes are excluded from Vitest discovery; test their component or HTTP boundary.
+- Use the pinned pnpm version in `package.json` and the lockfile. CI uses Node 24. Do not bypass hooks or weaken checks to obtain a green PR.
 
-- API routes: `src/hono/api/*`
-- Envelope persistence and lifecycle behavior: `src/db/envelope/*`
-- Passwordless history identity, catalog, and authorization: `src/db/history-access/*`
-- Agentic credential authority and document adapters: `src/db/agentic-access/*`
-- Agentic browser/token routes and Bearer API: `src/hono/api/agentic.ts`, `src/hono/api/agent-v1*.ts`
-- Public Agent guidance/OpenAPI: `src/hono/public-agent-*.ts`
-- Agentic UI: `src/routes/agentic-*.tsx`, `src/components/agentic/*`
-- Worker entry and API/app routing: `src/server.ts`
-- Field placement UI: `src/routes/envelope-fields.tsx`, `src/components/envelopes/*`
-- Signer UI and manual smoke path: `src/routes/signing.$token.tsx`, `src/routes/manual-signing-smoke.tsx`, `src/components/signing/*`
-- My Documents UI: `src/routes/my-documents*.tsx`, `src/routes/history-access.$credential.tsx`, `src/components/history/*`
-- Styling primitives: `src/components/ui/*` are generated Shadcn files; do not edit manually.
+## Verification by change
 
-## Non-Negotiables
+| Change | Required evidence |
+| --- | --- |
+| Documentation only | `pnpm lint`, `git diff --check`, resolve changed paths/commands against the repository; run affected existing doc contracts when applicable |
+| Application / config / dependencies | `pnpm types`, `pnpm knip`, `pnpm test`, `pnpm lint`, `pnpm build` |
+| PDF / signing / storage | Application checks plus `pnpm e2e:storage`; confirm separate object keys, original-byte preservation, final checksum/pages, Unicode values, and retry behavior |
+| Placement | `pnpm e2e:placement` for real multipage scrolling, multiple fields, clearing/replacement, and reload persistence |
+| UI / email appearance | `pnpm email:preview` then `pnpm e2e:brand`; inspect screenshots. HTML preview does not prove inbox rendering or delivery |
+| Agent API / authority / contract | Relevant API and `src/release/` checks; use `pnpm agentic:smoke` only with a configured environment and scoped temporary token |
+| Production deployment | Guarded deploy dry run, hosted checks, deployed Git SHA/version, affected live workflow; follow the deployment runbook |
 
-- Prefer deep modules: narrow public interfaces, more private implementation behind them.
-- On TanStack UI surfaces, default to TanStack Form for field state and validation, and TanStack Query mutations/queries for async server state. Use React `useState` only for truly local UI toggles or browser-only primitives that do not belong in Form/Query state; do not wire every textbox manually with `useState`.
-- Tests live next to source as `*.test.ts` or `*.test.tsx` and verify behavior through public boundaries.
-- Mock only external boundaries: DB, R2, network, time, randomness, browser APIs.
-- Do not edit generated files: `src/routeTree.gen.ts`, generated migrations, `worker-configuration.d.ts`, or `src/components/ui/*`.
-- Keep source files under 500 lines.
-- Do not use `any`; use explicit types, `unknown` plus narrowing, or schema-derived types.
-- For long-running scripts, add visible heartbeat output with flushing before asking a user to run them.
-- Do not quote performance or resource estimates without measurement.
+Local commands and browser setup are in `docs/AGENT_GUIDE.md`. E2E storage/brand
+fixtures refuse non-local hosts; inspect the placement target too. Agentic smoke
+and calibration can touch a real environment: inspect their options and report,
+use an authorized target/token, and explicitly handle retained fixtures and token
+revocation. Do not run calibration without a measurement need.
 
-## Commands
+## PR, merge, and handoff
 
-```bash
-pnpm dev
-pnpm types
-pnpm test
-pnpm lint
-pnpm build
-pnpm agentic:smoke
-pnpm agentic:calibrate
-pnpm db:generate:dev
-pnpm db:migrate:dev
-```
+- Work on a focused `codex/<topic>` branch from current main when the checkout is clean; use an isolated worktree if needed to preserve unrelated work.
+- Review the diff, generated changes, credential exposure, and acceptance criteria. PRs explain the change, reason, checks, and limitations.
+- Create a PR when requested. Merge only with user authorization, after the applicable hosted checks pass on its exact current head. Recheck head/state immediately before merging; never merge an older passing revision.
+- After merge, fetch/read back remote main and synchronize the clean checkout. Report PR/merge state; confirm Cloudflare build/version separately for deployment tasks.
+- Retain substantial-work evidence under `plans/evidence/`: scope, commands, environment/commit, results, unresolved criteria. Keep changing SHAs/counts and private incident identifiers out of this guide.
+- Final status: verified, failing, and unverified criteria, with the relevant local/CI/runtime/provider proof. Never turn an attempted action into a success claim.
 
-`agentic:smoke` and `agentic:calibrate` require a running configured environment and a temporary personal token. Calibration creates and deletes real fixture documents; run it only when new measurement evidence is required, retain its heartbeat/report, and revoke the token afterward.
+## Code Review Rules
 
-## Verification
-
-Before declaring code changes ready, run:
-
-```bash
-pnpm types
-pnpm test
-pnpm lint
-pnpm build
-```
-
-If any check is not run or does not pass, say exactly which acceptance criteria remain unverified and why.
+- Flag authorization or idempotency regressions across the browser and Bearer APIs. Preserve role/state checks and the existing human-review boundary; a new route is not an exemption.
+- Flag completion before durable final-PDF storage, source/final key reuse, source loss, duplicate signing on retry, or recovery without recorded signing evidence. Follow the existing finalization/recovery boundaries.
+- Flag public API drift, exposed credential/document data, and production instructions that select historical PostgreSQL infrastructure. Use runtime schemas, D1 configuration, and sanitized fixtures as the safe path.
