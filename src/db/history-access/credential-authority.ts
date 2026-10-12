@@ -4,7 +4,8 @@ import { hashHistoryCredential, normalizeHistoryEmail } from "./request";
 import { appendHistorySecurityEvent } from "./security-audit";
 import { historyAccessLinks, historySessions } from "./table";
 
-const historySessionTtlMs = 8 * 60 * 60 * 1000;
+export const historySessionTtlSeconds = 7 * 24 * 60 * 60;
+const historySessionTtlMs = historySessionTtlSeconds * 1000;
 
 export async function createHistorySessionFromVerifiedIdentity(input: {
 	email: string;

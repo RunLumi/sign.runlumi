@@ -60,8 +60,8 @@ describe("full history catalog controls", () => {
 		renderCatalog();
 
 		expect(await screen.findByRole("heading", { name: "My documents" })).toBeTruthy();
-		const retention = screen.getByText(/retained for 90 days/i);
-		expect(retention.textContent).toMatch(/not permanent storage/i);
+		const retention = screen.getByText(/kept until you delete them/i);
+		expect(retention.textContent).toMatch(/seven days/i);
 		expect(await screen.findByRole("heading", { name: "Contract.pdf" })).toBeTruthy();
 		const article = screen.getByRole("article");
 		expect(article.textContent).toContain("Needs my action");

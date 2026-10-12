@@ -335,7 +335,7 @@ describe("agent read-only documents", () => {
 				}),
 				retention: {
 					status: "completed",
-					eligibleAt: "2026-10-14T11:00:00.000Z",
+					eligibleAt: null,
 					eligible: false,
 				},
 				history: [

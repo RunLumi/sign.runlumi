@@ -259,7 +259,7 @@ describe("envelope controls", () => {
 		});
 	});
 
-	it("reports retention eligibility ninety days after completed or expired terminal states", async () => {
+	it("keeps completed and expired documents indefinitely without time-based deletion eligibility", async () => {
 		state.envelopes[0] = { ...state.envelopes[0], status: "completed" };
 		state.finalDocuments.push({
 			id: "90000000-0000-4000-8000-000000000001",
@@ -276,7 +276,7 @@ describe("envelope controls", () => {
 			{
 				headers: {
 					"x-internal-user-id": "sender@example.com",
-					"x-now": "2026-08-18T08:00:01.000Z",
+					"x-now": "2046-08-18T08:00:01.000Z",
 				},
 			},
 		);
@@ -286,8 +286,8 @@ describe("envelope controls", () => {
 			data: {
 				envelopeId: "00000000-0000-4000-8000-000000000001",
 				status: "completed",
-				retentionEligibleAt: "2026-08-18T08:00:00.000Z",
-				retentionEligible: true,
+				retentionEligibleAt: null,
+				retentionEligible: false,
 			},
 		});
 
@@ -306,7 +306,7 @@ describe("envelope controls", () => {
 			{
 				headers: {
 					"x-internal-user-id": "sender@example.com",
-					"x-now": "2026-08-18T07:29:59.000Z",
+					"x-now": "2046-08-18T07:29:59.000Z",
 				},
 			},
 		);
@@ -316,7 +316,7 @@ describe("envelope controls", () => {
 			data: {
 				envelopeId: "00000000-0000-4000-8000-000000000001",
 				status: "expired",
-				retentionEligibleAt: "2026-08-18T07:30:00.000Z",
+				retentionEligibleAt: null,
 				retentionEligible: false,
 			},
 		});

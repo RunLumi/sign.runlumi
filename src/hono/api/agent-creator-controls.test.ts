@@ -85,7 +85,7 @@ describe("agent creator controls", () => {
 		await expectQueuedCreatorDeletion();
 	});
 
-	it("agent command idempotency enforces creator-only cancel/expire and exact retention boundary", async () => {
+	it("agent command idempotency enforces creator-only cancel/expire and indefinite retention", async () => {
 		const fetchMock = vi.spyOn(globalThis, "fetch");
 		const { documentId } = await createSentTwoPartyFixture({
 			keyPrefix: "control-cancel",
@@ -174,14 +174,14 @@ describe("agent creator controls", () => {
 		await expect(before.json()).resolves.toEqual({
 			data: expect.objectContaining({
 				status: "expired",
-				retentionEligibleAt: boundary.toISOString(),
+				retentionEligibleAt: null,
 				retentionEligible: false,
 			}),
 		});
 		const exact = await retention(creatorToken, boundary);
 		expect(exact.status).toBe(200);
 		await expect(exact.json()).resolves.toEqual({
-			data: expect.objectContaining({ retentionEligible: true }),
+			data: expect.objectContaining({ retentionEligible: false }),
 		});
 		expect((await retention(partnerToken, boundary)).status).toBe(404);
 		expect((await retention(outsiderToken, boundary)).status).toBe(404);
@@ -275,7 +275,7 @@ describe("agent creator controls", () => {
 			},
 		);
 		expect(completed.status).toBe(200);
-		const completedBoundary = new Date(state.now.getTime() + 90 * 24 * 60 * 60 * 1000);
+		const completedBoundary = new Date(state.now.getTime() + 1000);
 		const completedRetention = await apiHono.request(`/api/v1/documents/${documentId}/retention`, {
 			headers: {
 				...agentHeaders(creatorToken),
@@ -286,8 +286,8 @@ describe("agent creator controls", () => {
 		await expect(completedRetention.json()).resolves.toEqual({
 			data: expect.objectContaining({
 				status: "completed",
-				retentionEligibleAt: completedBoundary.toISOString(),
-				retentionEligible: true,
+				retentionEligibleAt: null,
+				retentionEligible: false,
 			}),
 		});
 		const sourceKey = String(rows(sourceDocuments)[0]?.r2Key);

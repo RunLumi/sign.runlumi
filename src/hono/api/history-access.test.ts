@@ -373,6 +373,7 @@ describe("history access tracer", () => {
 		expect(cookie).toContain("HttpOnly");
 		expect(cookie).toContain("Secure");
 		expect(cookie).toContain("SameSite=Lax");
+		expect(cookie).toContain("Max-Age=604800");
 		const rawSession = cookie.match(/signmos_history_session=([^;]+)/)?.[1] ?? "";
 		expect(rawSession.length).toBeGreaterThan(20);
 		expect(state.historyLinks[0]).toEqual(
@@ -386,7 +387,7 @@ describe("history access tracer", () => {
 				email: "owner@example.com",
 				sessionHash: expect.stringMatching(/^[a-f0-9]{64}$/),
 				status: "active",
-				expiresAt: new Date("2026-07-17T16:29:59.000Z"),
+				expiresAt: new Date("2026-07-24T08:29:59.000Z"),
 			}),
 		]);
 		expect(JSON.stringify(state.historySessions)).not.toContain(rawSession);

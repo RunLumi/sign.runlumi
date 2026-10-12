@@ -36,7 +36,7 @@ The legal posture is basic e-signature intent for general business documents tha
 16. As either party, I want to see clear status such as draft, awaiting verification, sent, changes requested, completed, declined, expired, or deleted, so that I understand what can happen next.
 17. As a sender, I want signing links to expire after 7 days, so that old links cannot be used indefinitely.
 18. As a sender, I want to manually cancel or expire an envelope, so that I can stop an in-flight signing process.
-19. As a sender, I want to delete an envelope and remove stored PDFs before retention expiry, so that I control sensitive uploaded documents.
+19. As a sender, I want to delete an envelope and remove stored PDFs whenever needed, so that I control sensitive uploaded documents.
 20. As a partner, I want a deleted-envelope message if the sender deletes the document, so that I know why my link no longer shows the PDF.
 21. As either party, I want the completed PDF to contain all signatures and dates, so that the signed artifact is self-contained.
 22. As either party, I want the completed PDF to include an audit/certificate page with a checksum/hash, so that the document has a simple tamper-evidence control.
@@ -45,7 +45,7 @@ The legal posture is basic e-signature intent for general business documents tha
 25. As an operator, I want audit events stored in the database for key lifecycle actions, so that I can answer who did what and when.
 26. As an operator, I want structured server logs/errors, so that pilot issues can be diagnosed without full observability tooling.
 27. As an operator, I want Cloudflare Turnstile and rate limits by IP and email, so that no-account flows are protected from basic abuse.
-28. As an operator, I want uploaded and completed documents retained for 90 days after completion or expiry unless manually deleted earlier, so that retention is predictable.
+28. As an operator, I want uploaded and completed documents retained indefinitely until explicitly deleted, so that retention is predictable.
 29. As an API client, I want stable JSON lifecycle endpoints, so that future agents can create, upload, prepare, send, and monitor envelopes.
 30. As an API client, I want a default field-placement mode, so that an agent can place common signature/date fields without brittle PDF coordinate manipulation.
 31. As an API client, I want mutating operations to be idempotent, so that retries do not duplicate envelopes, recipients, fields, sends, or revision actions.
@@ -64,7 +64,7 @@ The legal posture is basic e-signature intent for general business documents tha
 - **Change requests**: partner comments can move an envelope to changes requested. Revised PDF upload clears all existing fields and requires placement again.
 - **Status model**: user-facing states include draft, awaiting verification, sent, changes requested, completed, declined, expired, and deleted.
 - **Expiration**: signing links/envelopes expire after 7 days by default, with manual cancel/expire available to the sender.
-- **Retention**: PDFs and envelope data are retained for 90 days after completion or expiry unless manually deleted earlier by the sender.
+- **Retention**: PDFs and envelope data are retained indefinitely until explicitly deleted by the sender.
 - **Final artifact**: completed PDFs include flattened signatures/dates plus an appended audit/certificate page with checksum/hash and event summary.
 - **Audit model**: immutable audit events are persisted for upload, verification, send, view, sign, comment/change request, revision, cancel, expire, delete, and final PDF download.
 - **Abuse controls**: Cloudflare Turnstile protects public no-account initiation; rate limits apply by IP and email.
@@ -94,7 +94,7 @@ The legal posture is basic e-signature intent for general business documents tha
 - Requiring email verification for both parties is acceptable despite the extra click because signature attribution matters.
 - Resend is approved for transactional pilot email.
 - Cloudflare Turnstile is available for the public initiation surface.
-- A 7-day expiry and 90-day retention default are acceptable for pilot users.
+- Signing links expire after seven days; stored documents have no automatic expiry.
 - Sender-controlled deletion is enough for v1; partner deletion requests can be handled operationally outside the product.
 - Public API keys and a standalone agent CLI are future work, but v1 API choices must not conflict with them.
 - A moderate professional UI is sufficient for the pilot; a single polished guided flow is not required yet.
@@ -110,7 +110,7 @@ The legal posture is basic e-signature intent for general business documents tha
 - **Manual-only email sending** — rejected because verification and notifications are core to the pilot; fallback links remain for dev/recovery.
 - **Full public API keys in v1** — rejected because they expand the security surface before the human pilot workflow is ready.
 - **Single guided flow before pilot** — rejected because separate professional screens are acceptable if the workflow is understandable.
-- **Indefinite retention** — rejected because no-account PII workflows need predictable deletion boundaries.
+- **Age-based retention expiry** — removed by the October 12, 2026 user amendment; creator deletion controls the storage lifetime.
 - **Full observability platform** — rejected for v1 because audit events plus structured logs are sufficient for the first pilot.
 - **Billing** — rejected because payment would distract from validating the signing workflow.
 
@@ -143,7 +143,7 @@ The legal posture is basic e-signature intent for general business documents tha
 25. **Audit events**: database tests assert immutable audit rows for all required lifecycle events.
 26. **Structured logs/errors**: API tests assert known failures return structured error JSON; log tests or observability hooks cover server-side error metadata.
 27. **Turnstile/rate limits**: tests verify Turnstile validation hooks and IP/email rate-limit rejection paths on public initiation and email-triggering actions.
-28. **Retention eligibility**: time-controlled test marks completed/expired documents eligible for deletion 90 days after terminal state.
+28. **Retention eligibility**: time-controlled tests show completed/expired documents never become eligible for automatic age-based deletion. Explicit creator deletion remains available.
 29. **Stable lifecycle API**: contract tests cover create, upload, verify, prepare, send, status, change request, revise, complete, cancel, delete, and download flows.
 30. **Default field placement**: API test creates default bottom-right signature/date fields without explicit coordinates.
 31. **Idempotency**: retry tests confirm idempotency keys prevent duplicate side effects for mutating operations.
@@ -164,7 +164,7 @@ Success responses use `{ "data": ... }`. Known errors use `{ "error": { "code": 
 | `POST /api/envelopes/{id}/actions` | Send, cancel, expire, or delete an envelope with `{ "action": ... }`. | Rejects `INVALID_ACTION`; delete revokes stored PDF access. |
 | `POST /api/envelopes/{id}/recipients/{recipientId}/resend` | Create a new invitation send record and signing token. | Requires `x-internal-user-id`. |
 | `GET /api/envelopes/{id}/status` | Poll lifecycle status and final PDF availability. | Returns envelope status and `finalPdfAvailable`. |
-| `GET /api/envelopes/{id}/retention` | Check 90-day retention eligibility for completed or expired envelopes. | Requires `x-internal-user-id` and supports `x-now` for deterministic tests. |
+| `GET /api/envelopes/{id}/retention` | Inspect indefinite document retention; automatic deletion eligibility remains false. | Requires `x-internal-user-id` and supports `x-now` for deterministic tests. |
 | `GET /api/envelopes/{id}/final-pdf` | Download completed final PDF artifact through a verified sender session token. | Rejects unverified sender access and `FINAL_PDF_NOT_FOUND` until finalization is available. |
 | `GET /api/signing/{token}` | Resolve a signer magic-link session. | Rejects `TOKEN_NOT_FOUND` and `EXPIRED_TOKEN`. |
 | `GET /api/signing/{token}/final-pdf` | Download completed final PDF artifact through a verified signer token. | Rejects unverified, expired, deleted, or unavailable access. |

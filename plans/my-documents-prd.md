@@ -10,7 +10,7 @@ The product needs a privacy-safe recovery path from the landing page. A visitor 
 
 Turn the landing page into an unselected three-task chooser: "Sign by myself," "Sign with someone else," and "My documents." Selecting a task reveals only the form required for that task. "My documents" asks for an email address, requires Turnstile, applies the existing sender-start rate-limit policy, and always returns the same privacy-safe confirmation for valid accepted submissions.
 
-If the normalized email is involved in at least one retained, non-deleted envelope, Signmos emails a metadata-free, single-use history link. The link remains redeemable for 30 minutes. Opening it displays a confirmation page without consuming the credential; an intentional POST consumes it and creates a fixed eight-hour, revocable, email-scoped browser session in a secure HTTP-only cookie. The session gives direct access to matching envelopes without requiring another envelope-specific email link, while every action remains constrained by the user's role and the envelope lifecycle.
+If the normalized email is involved in at least one retained, non-deleted envelope, Signmos emails a metadata-free, single-use history link. The link remains redeemable for 30 minutes. Opening it displays a confirmation page without consuming the credential; an intentional POST consumes it and creates a fixed seven-day, revocable, email-scoped browser session in a secure HTTP-only cookie. The session gives direct access to matching envelopes without requiring another envelope-specific email link, while every action remains constrained by the user's role and the envelope lifecycle.
 
 The "My documents" page shows all currently retained matching envelopes, not a separate 30-day window. It prioritizes documents requiring the current user's action, supports server-side search, role/state filters, and numbered pagination, and exposes the existing permitted resume, sign, review, completed-document, cancel, and delete actions. History-based detail and PDF routes use the active history session and never expose reusable completed-document bearer tokens. Existing completion and process links continue to work independently.
 
@@ -28,7 +28,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 10. As an email owner, I want an unused history link to expire after 30 minutes, so that old recovery links do not remain valid.
 11. As an email owner, I want opening the email link to show a confirmation step before redemption, so that automated email scanners cannot consume my single-use credential.
 12. As an email owner, I want successful redemption to consume the link exactly once, so that replaying or forwarding it does not create another session.
-13. As a verified user, I want a fixed eight-hour history session, so that I can work across my documents without repeatedly checking email.
+13. As a verified user, I want a fixed seven-day history session, so that I can work across my documents without repeatedly checking email.
 14. As a verified user, I want to sign out explicitly, so that I can revoke the current browser session before it expires.
 15. As a user with an invalid, consumed, or expired link or session, I want a clear recovery page, so that I can request a new link without encountering a technical authorization error.
 16. As an email owner requesting a replacement link, I want earlier unused links revoked only after the new email is accepted for delivery, so that a delivery failure does not destroy my last usable link.
@@ -39,7 +39,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 21. As a user, I want history access to remain passwordless and account-free, so that recovery does not introduce profiles or permanent login.
 22. As a verified user, I want every non-deleted document still retained by Signmos in my history, so that recovery is not limited by an arbitrary 30-day query window.
 23. As a verified user, I want history to include documents where I am creator, signer, or both across all lifecycle states, so that drafts, active work, completed work, declined documents, and expired documents are discoverable.
-24. As a verified user, I want the history page to explain the existing 90-day terminal-document retention policy, so that I do not mistake the feature for permanent archival storage.
+24. As a verified user, I want the history page to explain the indefinite retention policy, so that I know documents remain available until explicitly deleted.
 25. As a verified user, I want an uploaded document identified by the latest active PDF revision's original filename, so that I can recognize it.
 26. As a verified creator, I want pre-upload drafts shown as "Untitled document" with distinguishing metadata, so that interrupted drafts remain recoverable before a filename exists.
 27. As an authorized party, I want participant names and email addresses shown in each row, so that I can distinguish similar documents and search by party.
@@ -49,7 +49,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 31. As a verified user, I want server-side search across filename and participant details, so that I can find a document without loading the entire history.
 32. As a verified user, I want server-side role and state filters, so that I can narrow history without losing authorization guarantees.
 33. As a verified user, I want numbered server-side pagination with accurate totals, so that large histories are navigable and never silently truncated.
-34. As a verified user, I want matching envelopes to open directly during my eight-hour session, so that I do not repeat email verification for each row.
+34. As a verified user, I want matching envelopes to open directly during my seven-day session, so that I do not repeat email verification for each row.
 35. As a verified creator, I want the history session to satisfy sender verification when resuming a matching awaiting-verification draft, so that the obsolete envelope link is not required.
 36. As a verified recipient, I want the history session to satisfy partner verification for a matching signing task, so that I can proceed directly to the permitted signing view.
 37. As an envelope participant, I want every row and action authorized by both my verified email role and current envelope state, so that appearing in history never grants broader control.
@@ -79,7 +79,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 - **Request idempotency**: transport retries using the same idempotency key return the original result and do not create, send, activate, consume, or revoke additional credentials. A deliberate new form submission uses a fresh key.
 - **Magic-link authority**: history links use high-entropy opaque credentials stored as one-way cryptographic hashes. They expire 30 minutes after issuance, can be redeemed once, and are scoped to one normalized email.
 - **Scanner-safe redemption**: a GET renders a no-sensitive-content confirmation page and does not mutate token state. An intentional, same-origin POST performs redemption. The confirmation response uses a no-referrer policy so the raw URL credential is not propagated.
-- **History session**: redemption creates a server-side session with a fixed eight-hour lifetime. The raw opaque session ID exists only in a production `Secure`, `HttpOnly`, `SameSite=Lax` cookie; only its hash is stored. Session expiry is not sliding.
+- **History session**: redemption creates a server-side session with a fixed seven-day lifetime. The raw opaque session ID exists only in a production `Secure`, `HttpOnly`, `SameSite=Lax` cookie; only its hash is stored. Session expiry is not sliding.
 - **Session mutations**: sign-out and envelope mutations require same-origin/CSRF protections in addition to the history cookie. Signing out revokes only the current history session.
 - **Recovery states**: unknown, expired, consumed, and revoked links and expired sessions render non-technical recovery states with a path to the landing page's preselected "My documents" form.
 - **History identity context**: the session exposes a narrow verified-email identity and never grants a global account or arbitrary envelope lookup.
@@ -127,7 +127,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 - Existing audit/lifecycle timestamps can define latest meaningful user-facing activity; if they cannot, implementation must add a canonical envelope activity timestamp without changing the user-facing rule.
 - The original uploaded filename is safe to reveal to authorized envelope participants and can be stored as document metadata.
 - Showing participant names and full email addresses to another authorized participant is consistent with the existing document-detail privacy posture.
-- Existing 90-day retention eligibility for completed or expired documents remains acceptable, and history is not a legal archive.
+- Documents remain retained indefinitely until explicitly deleted by the creator.
 - Documents may contain PII, so access control, audit, deletion, and retention remain necessary even without a new formal compliance regime.
 - Existing envelope-specific and completed-document bearer links remain acceptable for their current email/process flows; only history-originated access must avoid exposing them.
 - No password accounts, linked email identities, profile settings, teams, or organization boundaries are required for this feature.
@@ -145,7 +145,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 - **Per-document email reverification** — rejected because one active email-scoped session is sufficient when every envelope action still enforces role and lifecycle.
 - **Thirty-day history window** — rejected because centralized recovery should cover every document still retained under the actual retention policy.
 - **Including deleted envelopes** — rejected because deletion must revoke discovery and artifact access immediately.
-- **Permanent completed-document retention** — rejected because this feature is an access surface, not a change to the existing retention policy.
+- **Age-based document removal** — removed by the October 12, 2026 user amendment: documents stay retained until explicitly deleted.
 - **Reusing completed-document bearer tokens in history URLs** — rejected because session-only access should not mint or reveal a forwardable credential.
 - **Removing existing bearer links globally** — rejected because that would expand scope and break established completion/process flows.
 - **Exact-status-only navigation** — rejected because role-aware action groups are more useful while exact status remains visible per row.
@@ -156,7 +156,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 - **First-revision filename** — rejected because the latest active revision is the document currently being reviewed or signed.
 - **Provider-specific email alias normalization** — rejected because Signmos cannot safely infer mailbox equivalence across providers.
 - **Plaintext history credentials** — rejected because one-way hashes prevent a database read from becoming usable access.
-- **Fresh email verification for cancel/delete** — rejected because the active eight-hour session is sufficient when destructive actions have explicit confirmation and server authorization.
+- **Fresh email verification for cancel/delete** — rejected because the active seven-day session is sufficient when destructive actions have explicit confirmation and server authorization.
 - **Automatic delivery queue/outbox** — rejected because it adds infrastructure beyond the chosen pilot scope.
 - **Operator retry command or admin UI** — rejected because failed delivery recovery is a new user request, not an operational product surface.
 - **Product analytics funnel** — rejected because qualitative pilot feedback is sufficient; security audit and operational logs remain separate.
@@ -178,7 +178,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 | 10 | Time-controlled token test accepts redemption immediately before the 30-minute expiry boundary and rejects it at and after expiry. |
 | 11 | Route/API test asserts GET neither consumes nor verifies the token, repeated scanner-like GETs are harmless, and only same-origin POST attempts redemption. |
 | 12 | Concurrency/replay integration test asserts exactly one redemption creates a session and later or concurrent redemption attempts return the consumed recovery state. |
-| 13 | Time-controlled session test accepts access immediately before eight hours and rejects it at and after the fixed expiry without extending expiry on intermediate activity. |
+| 13 | Time-controlled session test accepts access immediately before seven days and rejects it at and after the fixed expiry without extending expiry on intermediate activity. |
 | 14 | API/browser test signs out, verifies server revocation/audit state, and proves the cookie can no longer read history or documents. |
 | 15 | Component/route tests cover unknown, consumed, expired, and revoked links plus expired sessions and assert a non-technical "request a new link" path. |
 | 16 | Email-provider integration test proves a provider-accepted replacement activates the fresh token and revokes older unused tokens, while a provider failure leaves the older unexpired token usable. |
@@ -189,7 +189,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 | 21 | End-to-end browser test requests, redeems, browses, and signs out without creating or requiring a password account/profile. |
 | 22 | History integration test includes matching retained envelopes older than 30 days and excludes only unrelated/deleted/not-retained rows; it asserts no creation-window filter exists. |
 | 23 | History tests cover creator, signer, and creator-and-signer roles across awaiting verification, draft, sent, changes requested, completed, declined, and expired states. |
-| 24 | UI test asserts the existing 90-day completed/expired retention explanation is visible; existing time-controlled retention tests remain green at the 90-day boundary. |
+| 24 | UI tests explain retention until deletion; time-controlled retention tests show no automatic deletion eligibility even for old completed or expired documents. |
 | 25 | Persistence/query test uploads multiple revisions with different original filenames and asserts the latest active revision names the history row. |
 | 26 | History UI/query test includes a pre-upload draft labeled "Untitled document" with created date and a non-secret short reference. |
 | 27 | Authorization/UI test proves participant names and emails appear only on envelopes involving the verified email and are searchable there. |
@@ -228,7 +228,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 
 - Password accounts, permanent login, account recovery, user profiles, linked email identities, teams, organizations, or role-based organization access.
 - Provider-specific alias merging, user-controlled email linking, or searching documents across multiple addresses in one session.
-- Changing the 90-day completed/expired retention policy, providing permanent archival guarantees, or restoring deleted documents.
+- Restoring deleted documents or providing legal archival guarantees.
 - Showing deleted envelopes in history or granting a partner creator-only cancel/delete authority.
 - Migrating, hashing, revoking, or replacing existing sender, signer, verification, and completed-document bearer credentials.
 - Removing existing completion/process bearer links from email flows.
@@ -244,3 +244,7 @@ The "My documents" page shows all currently retained matching envelopes, not a s
 This PRD amends the earlier single-signer/history requirements in three deliberate ways: the landing page no longer defaults to "Only me," history is no longer limited to 30 days, and history authentication is no longer borrowed from the sender session of a newly created envelope. The existing envelope lifecycle, signing workflows, completed-document bearer links, deletion behavior, and retention policy remain authoritative except where this PRD explicitly adds email-session equivalence for matching sender and recipient verification.
 
 The implementation plan should be split by the deep-module boundaries above. In particular, the public request/redemption/session authority should be independently testable before the history catalog is connected, and the authorization gateway should be verified with a full role/status matrix before any UI row action is trusted.
+
+## October 12, 2026 user amendment
+
+Documents remain stored until the creator explicitly deletes them. Automatic retention eligibility is always false with no scheduled deletion date. My Documents browser login lasts a fixed seven days, with a persistent Secure/HttpOnly cookie and revocation on sign-out. Successful sender email verification creates this remembered login; returning to the homepage bypasses repeated verification while the login is active. Existing sessions keep their original expiry and can be renewed through one fresh email login. Agentic management sessions remain short-lived and can reuse the remembered verified identity.

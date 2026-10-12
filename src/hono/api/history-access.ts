@@ -7,6 +7,7 @@ import {
 	HistoryRequestRateLimitError,
 	historyCatalogGroups,
 	historyCatalogRoles,
+	historySessionTtlSeconds,
 	inspectHistoryAccessLink,
 	listHistoryDocuments,
 	recordHistoryDocumentAudit,
@@ -104,7 +105,7 @@ historyAccessEndpoint.post("/access-links/:credential/redeem", async (c) => {
 		secure: true,
 		sameSite: "Lax",
 		expires: result.expiresAt,
-		maxAge: 8 * 60 * 60,
+		maxAge: historySessionTtlSeconds,
 	});
 	return c.json(
 		{ data: { status: result.status, redirectUrl: parsed.data.returnTo ?? "/my-documents" } },

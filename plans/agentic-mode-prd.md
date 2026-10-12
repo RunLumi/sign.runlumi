@@ -144,7 +144,7 @@ Publish unauthenticated `/agent.md` operating guidance and `/openapi.json` schem
   - send, resend, status, allowed actions, history, retention, cancel/expire, and delete;
   - signer task resolution, assigned source/fields, completion, change request, and decline;
   - completed detail and final-PDF download.
-- Existing domain limits and transitions remain authoritative, including one source PDF under 10 MB, recipient limits, seven-day signing-link behavior where process links remain in use, field clearing after revision, fixed signing dates, and 90-day terminal-document retention.
+- Existing domain limits and transitions remain authoritative, including one source PDF under 10 MB, recipient limits, seven-day signing-link behavior where process links remain in use, field clearing after revision, fixed signing dates, and indefinite document retention until explicit creator deletion.
 - Sign/complete, decline, cancel, expire, and delete persist a 24-hour exact intent and require server-derived matching-human approval. Other authorized operations retain their existing lifecycle and idempotency behavior.
 - Agents poll server state and follow returned allowed actions. Webhooks are not part of v1.
 
@@ -194,7 +194,7 @@ Publish unauthenticated `/agent.md` operating guidance and `/openapi.json` schem
 
 - **Retrofitting the existing mixed `/api` routes** — rejected because cookies, process tokens, internal headers, and browser compatibility would remain coupled to the public agent contract.
 - **Using `/api/agent` without versioning** — rejected because it is a weaker long-term compatibility boundary for a future CLI and other clients.
-- **Reusing the eight-hour My Documents session for token management** — rejected because long-lived credential issuance deserves a dedicated, freshly verified, narrowly scoped session.
+- **Reusing the seven-day My Documents session for token management** — rejected because long-lived credential issuance deserves a dedicated, freshly verified, narrowly scoped session.
 - **Allowing an active Bearer token to manage tokens** — rejected because a compromised document credential could mint persistence or disable other credentials.
 - **Signed JWT credentials** — rejected because immediate individual revocation and last-used/audit lookup would still require server state while adding claim/rotation complexity.
 - **Cloudflare-managed API credentials** — rejected because Signmos needs product-level personal identity, naming, revocation, and audit behavior.
@@ -253,7 +253,7 @@ Every numbered validation item maps directly to the user story with the same num
 30. **Change request:** Tests require a non-empty comment, transition to changes requested, notify the creator through existing delivery behavior, block completion, and attribute the agent token.
 31. **Decline:** Tests require a reason, accept an optional comment, transition signer/envelope state, prevent further signing, and attribute the agent token.
 32. **Revision loop:** Integration test requests changes, uploads a new source version, verifies all stale fields are cleared, places new fields, resends, and completes against only the revised content.
-33. **Creator controls and retention:** Authorization/time/storage tests cover cancel/expire/delete allowed states, immediate signer/source/final revocation after delete, R2 removal behavior, and the existing 90-day eligibility boundary.
+33. **Creator controls and retention:** Authorization/time/storage tests cover cancel/expire/delete allowed states, immediate signer/source/final revocation after delete, R2 removal behavior, indefinite storage with no age-based deletion eligibility, and immediate explicit deletion after matching-creator approval.
 34. **Completed recovery:** Creator and signer Bearer tests open completed detail/history and download the final PDF; outsider, revoked-token, deleted, and unavailable-artifact cases return stable errors.
 35. **Universal idempotency:** Parameterized tests cover every mutation. Exact key/request replays return the original status/body without duplicate rows, objects, emails, audit events, signatures, or deletion effects; changed payload reuse returns `IDEMPOTENCY_CONFLICT`.
 36. **Machine recovery contract:** OpenAPI/API tests assert stable error codes, HTTP statuses, allowed actions/valid values/field paths, retryability, and recovery URLs where applicable; agents never need to parse prose to choose a supported next action.

@@ -55,7 +55,9 @@ export function SenderVerificationPage({
 		let cancelled = false;
 
 		async function verify() {
-			const response = await fetch(apiUrl);
+			const response = await fetch(apiUrl, {
+				headers: { "x-remember-sign-in": "true" },
+			});
 			const json: unknown = await response.json().catch(() => null);
 			if (cancelled) return;
 			if (!response.ok || !isSenderVerificationSuccess(json)) {

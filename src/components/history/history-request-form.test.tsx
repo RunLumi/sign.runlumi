@@ -104,7 +104,7 @@ describe("history access request form", () => {
 		expect(accepted.textContent).toContain("Check the spelling");
 		expect(accepted.textContent).toContain("spam");
 		expect(accepted.textContent).toContain("another email address");
-		expect(accepted.textContent).toContain("90 days");
+		expect(accepted.textContent).toContain("kept until you delete them");
 		expect(accepted.textContent).not.toMatch(/found|matched|documents? exist/i);
 	});
 

@@ -47,7 +47,6 @@ export class EnvelopeControlError extends Error {
 }
 
 const activeControlStatuses = new Set<EnvelopeStatus>(["sent", "changes_requested"]);
-const retentionWindowMs = 90 * 24 * 60 * 60 * 1000;
 
 export async function controlEnvelope(
 	envelopeId: string,
@@ -87,18 +86,14 @@ export async function getEnvelopeCreatorEmail(envelopeId: string): Promise<strin
 
 export async function getEnvelopeRetentionStatus(
 	envelopeId: string,
-	now = new Date(),
+	_now = new Date(),
 ): Promise<EnvelopeRetentionStatus> {
 	const envelope = await getRequiredEnvelope(envelopeId);
-	const terminalAt = await getTerminalTimestamp(envelopeId, envelope.status);
-	const retentionEligibleAt = terminalAt
-		? new Date(terminalAt.getTime() + retentionWindowMs)
-		: null;
 	return {
 		envelopeId,
 		status: envelope.status,
-		retentionEligibleAt: retentionEligibleAt?.toISOString() ?? null,
-		retentionEligible: retentionEligibleAt ? retentionEligibleAt <= now : false,
+		retentionEligibleAt: null,
+		retentionEligible: false,
 	};
 }
 
@@ -243,45 +238,6 @@ async function getRequiredEnvelope(envelopeId: string): Promise<{
 	if (!envelope) throw new Error("Envelope not found");
 	const parsed = EnvelopeSchema.parse(envelope);
 	return { id: parsed.id, status: parsed.status };
-}
-
-async function getTerminalTimestamp(
-	envelopeId: string,
-	status: EnvelopeStatus,
-): Promise<Date | null> {
-	const db = getDb();
-	if (status === "completed") {
-		const documents = (
-			await db
-				.select()
-				.from(finalDocuments)
-				.where(eq(finalDocuments.envelopeId, envelopeId))
-				.limit(100)
-		).map((document) => FinalDocumentSchema.parse(document));
-		return (
-			[...documents]
-				.map((document) => document.createdAt)
-				.filter((createdAt): createdAt is Date => createdAt instanceof Date)
-				.sort((left, right) => left.getTime() - right.getTime())[0] ?? null
-		);
-	}
-	if (status === "expired") {
-		const events = await db
-			.select()
-			.from(auditEvents)
-			.where(eq(auditEvents.envelopeId, envelopeId))
-			.limit(100);
-		return (
-			events
-				.filter((event) =>
-					["envelope.expired", "envelope.canceled"].includes(String(event.eventType)),
-				)
-				.map((event) => event.createdAt)
-				.filter((createdAt): createdAt is Date => createdAt instanceof Date)
-				.sort((left, right) => left.getTime() - right.getTime())[0] ?? null
-		);
-	}
-	return null;
 }
 
 function latestSignerToken(

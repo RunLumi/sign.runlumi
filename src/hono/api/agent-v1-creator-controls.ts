@@ -53,10 +53,6 @@ agentCreatorControlsEndpoint.post(agentCreatorControlOperations.action.relativeP
 	) {
 		return c.json(controlBlockedError(documentId, envelope.status), 409);
 	}
-	if (parsed.data.action === "delete") {
-		const retention = await getEnvelopeRetentionStatus(documentId, requestNow(c));
-		if (!retention.retentionEligible) return c.json(deleteRetentionBlockedError(documentId), 409);
-	}
 	const source = await getLatestSourcePdfDocument(documentId);
 	if (!source) return c.json(documentNotFoundError(), 404);
 	const reviewClaim = await claimHumanReviewCommand({
@@ -124,16 +120,6 @@ function controlBlockedError(
 		retryable: false,
 		allowedActions: getEnvelopeAllowedActions(status),
 		recoveryUrl: `/api/v1/documents/${documentId}/status`,
-	});
-}
-
-function deleteRetentionBlockedError(documentId: string) {
-	return agentError({
-		code: "ENVELOPE_ACTION_BLOCKED",
-		message: "The document is not yet eligible for deletion",
-		retryable: false,
-		allowedActions: ["get_retention"],
-		recoveryUrl: `/api/v1/documents/${documentId}/retention`,
 	});
 }
 
