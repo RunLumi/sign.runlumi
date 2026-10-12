@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/RunLumi/sign.runlumi/compare/v1.13.1...v1.14.0) (2026-10-12)
+
+
+### Features
+
+* upload signatures and place them across PDF pages ([#5](https://github.com/RunLumi/sign.runlumi/issues/5)) ([c6f6337](https://github.com/RunLumi/sign.runlumi/commit/c6f6337ce2b6dcf83a283b4829c954a857e93bbc))
+
 ## [1.13.1](https://github.com/RunLumi/sign.runlumi/compare/v1.13.0...v1.13.1) (2026-10-12)
 
 
