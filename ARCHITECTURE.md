@@ -14,13 +14,13 @@ This is the stable physical map for signmos. It names important files and module
 
 Signmos implements a lightweight no-account e-signature pilot. A sender creates a self-sign or two-party envelope, uploads one PDF, prepares signature/date fields, and completes signing through verified email links. When all recipients complete, the system stores a final PDF artifact with flattened values and an audit summary. Returning participants can use a temporary verified-email My Documents session to recover retained work without exposing envelope process credentials. Agentic mode adds email-verified personal Bearer tokens and a role-equivalent `/api/v1` document surface without turning those tokens into password accounts or credential-management authority.
 
-The production shape is Cloudflare Workers plus R2 for document artifacts, Neon Postgres plus Drizzle for relational state, Hono for JSON APIs, and TanStack Start for routes and SSR.
+The production shape is Cloudflare Workers plus R2 for document artifacts, D1 SQLite plus Drizzle for relational state, Hono for JSON APIs, and TanStack Start for routes and SSR.
 
 ## Request Flow
 
 All requests enter `src/server.ts`.
 
-1. `src/server.ts` initializes the database with `initDatabase`.
+1. `src/server.ts` wraps each request in `withDatabase(env.DB, ...)` for request-scoped Drizzle/D1 access.
 2. Paths under `/api/` are delegated to `apiHono`.
 3. `/agent.md` and `/openapi.json` are delegated to the public Agent contract publisher.
 4. Other paths are delegated to the TanStack Start server handler.
@@ -85,11 +85,11 @@ All requests enter `src/server.ts`.
 
 ### Other DB Domains
 
-- `src/db/setup.ts` owns Neon/Drizzle initialization and the `getDb` access point.
+- `src/db/setup.ts` owns request-scoped Drizzle/D1 access through `withDatabase` and `getDb`.
 - `src/db/schema.ts` re-exports tables for migrations.
 - `src/db/client/*` is a starter client demo domain.
 - `src/db/health/*` supports health checks.
-- `src/db/migrations/dev/*` contains generated development migrations.
+- `src/db/migrations/d1/*` contains generated SQLite migrations; the older PostgreSQL directories are historical.
 
 ### Routes And Feature UI
 
@@ -172,7 +172,7 @@ Authenticated `/api/v1` requests consume fixed-window per-token and defensive pe
 
 ### Document Storage
 
-Envelope metadata lives in Neon. Source and final PDFs live in R2 under envelope-scoped keys. The database stores R2 key, content type, byte size, and SHA-256 hash so API status and audit behavior do not need to inspect R2 for every decision.
+Envelope metadata lives in D1. Source and final PDFs live in R2 under envelope-scoped keys. The database stores R2 key, content type, byte size, and SHA-256 hash so API status and audit behavior do not need to inspect R2 for every decision.
 
 ### Time
 
@@ -184,7 +184,7 @@ Route files should stay thin. Feature components own UI state and fetch/mutation
 
 ### Issue-Driven Work
 
-For future pilot issues, start from the live issue acceptance criteria and load the local TDD skill for the implementation loop. The architecture map should help choose the right public boundary: HTTP API for lifecycle work, component boundary for signer/editor UX, or R2/PDF artifact boundary for finalization. Agentic changes must also preserve the runtime/OpenAPI drift contract, universal mutation-idempotency enumeration, credential redaction scan, capability matrix, and browser compatibility evidence.
+For future pilot issues, start from the live issue acceptance criteria and use the repository public-boundary tests; apply an available implementation skill when useful. The architecture map should help choose the right public boundary: HTTP API for lifecycle work, component boundary for signer/editor UX, or R2/PDF artifact boundary for finalization. Agentic changes must also preserve the runtime/OpenAPI drift contract, universal mutation-idempotency enumeration, credential redaction scan, capability matrix, and browser compatibility evidence.
 
 Documents have no automatic retention expiry. Source and final PDFs remain in R2 until creator deletion. The retention API returns a null automatic deletion date and false eligibility; explicit creator deletion remains available, including through Agentic human approval. Successful sender email verification remembers the browser for seven days, and returning to the homepage uses that session to open My Documents or the requested signing mode.
 
