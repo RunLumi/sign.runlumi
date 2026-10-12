@@ -9,7 +9,7 @@ product positioning and composition do not replace Lumi Sign's existing task flo
 
 - Light only: Paper White `#f4f0e8`, opaque Surface White `#ffffff`, Civic Navy `#102a43`, Ink `#172033`.
 - Lumi Blue `#006093` is the primary action color; hover `#004f80`, pressed `#003e6a`.
-- Self-hosted variable Geist Latin and Latin Extended fonts cover English and Vietnamese. The SIL OFL is in `public/fonts/Geist-OFL.txt`.
+- Self-hosted variable Geist and Geist Mono Latin and Latin Extended fonts cover English and Vietnamese. Geist Mono is limited to technical fragments. Their SIL OFL notices are in `public/fonts/`.
 - The official folded-L SVG and email PNG are copied without modification into `public/brand/`. Preserve their ownership notice.
 - Functional application icons use intact Tabler Outline glyphs. Its MIT notice is in `public/brand/Tabler-LICENSE.txt`. Generated Shadcn primitives retain their supplied internal icons; do not edit generated files manually.
 - Opaque white sheets hold document content. Glass is confined to the header and product navigation, with opaque, reduced-transparency, contrast, and reduced-motion treatments.

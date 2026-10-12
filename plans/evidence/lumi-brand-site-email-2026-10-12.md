@@ -4,7 +4,7 @@
 
 - Copied root `DESIGN.md` exactly from RunLumi/brand.runlumi commit `7a158f6e31227b9a5b76a5d2648bce4459c802d1`; byte comparison passed.
 - Official `lumi-logo.svg`, `adaptive/splashscreen_logo.png` (stored as `lumi-email-logo.png`), and ownership notice copied without modification.
-- Geist Variable 5.2.6 Latin and Latin Extended font assets are self-hosted with their SIL OFL; Tabler React 3.35.0 supplies application glyphs with MIT notice retained.
+- Geist and Geist Mono Variable 5.2.6 Latin and Latin Extended font assets are self-hosted with their SIL OFL; Tabler React 3.35.0 supplies application glyphs with MIT notice retained.
 - Shared shell, page headings, forms, navigation, sheets, statuses, favicon, social metadata, and email template use the Lumi identity. PDF placement coordinates and lifecycle authority are preserved.
 - Root design guidance is adapted to a signing application; no landing-page product taxonomy or invented product claims were imported.
 
