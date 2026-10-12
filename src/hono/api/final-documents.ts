@@ -4,9 +4,11 @@ import {
 	regenerateFinalDocumentArtifact,
 } from "@/db/envelope";
 import { isCurrentFinalPdfArtifact } from "@/db/envelope/final-pdf-renderer";
+import finalDocumentEmailEndpoint from "@/hono/api/final-document-email";
 import { createHono } from "@/hono/factory";
 
 const finalDocumentsEndpoint = createHono();
+finalDocumentsEndpoint.route("/", finalDocumentEmailEndpoint);
 
 finalDocumentsEndpoint.get("/:token/pdf", async (c) => {
 	const document = await getFinalDocumentByToken(c.req.param("token"), {
@@ -44,7 +46,12 @@ finalDocumentsEndpoint.get("/:token/pdf", async (c) => {
 
 	const responseBytes = repaired?.bytes ?? bytes;
 	return new Response(toArrayBuffer(responseBytes), {
-		headers: { "content-type": repaired?.document.contentType ?? document.contentType },
+		headers: {
+			"content-type": repaired?.document.contentType ?? document.contentType,
+			"content-disposition": `attachment; filename="lumi-sign-${document.envelopeId}.pdf"`,
+			"cache-control": "private, no-store",
+			"x-content-type-options": "nosniff",
+		},
 	});
 });
 

@@ -7,6 +7,7 @@ import {
 	addRecipients,
 	controlEnvelope,
 	createEnvelope,
+	deleteEnvelopeField,
 	deleteRecipient,
 	type EmailDeliveryEnv,
 	EmailDeliveryError,
@@ -883,6 +884,41 @@ envelopesEndpoint.post("/:id/fields", async (c) => {
 		throw error;
 	}
 	return c.json({ data: fields.map(toEnvelopeFieldResponse) }, 201);
+});
+
+envelopesEndpoint.delete("/:id/fields/:fieldId", async (c) => {
+	const userId = await getEnvelopeActor(c, c.req.param("id"));
+	if (!userId) {
+		return c.json(
+			{ error: { code: "UNAUTHORIZED", message: "Missing x-internal-user-id header" } },
+			401,
+		);
+	}
+
+	try {
+		const deleted = await deleteEnvelopeField(c.req.param("id"), c.req.param("fieldId"));
+		if (!deleted) {
+			return c.json(
+				{ error: { code: "FIELD_NOT_FOUND", message: "Placement is no longer available" } },
+				404,
+			);
+		}
+		return c.json({ data: { deleted: true } });
+	} catch (error) {
+		if (error instanceof Error && error.message === "Envelope must be draft") {
+			return c.json(
+				{
+					error: {
+						code: "ENVELOPE_NOT_DRAFT",
+						message: "Fields can only be changed while the envelope is draft",
+						allowedActions: ["remove_fields"],
+					},
+				},
+				409,
+			);
+		}
+		throw error;
+	}
 });
 
 export default envelopesEndpoint;

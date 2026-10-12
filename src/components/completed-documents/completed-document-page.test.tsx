@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { CompletedDocumentPage } from "./completed-document-page";
+
+const completedDocumentTestKey = "90000000-0000-4000-8000-000000000001";
 
 describe("CompletedDocumentPage", () => {
 	it("renders final PDF access, parties, signed dates, status, and public history", async () => {
@@ -65,7 +68,12 @@ describe("CompletedDocumentPage", () => {
 			),
 		);
 
-		render(<CompletedDocumentPage token="90000000-0000-4000-8000-000000000001" />);
+		const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+		render(
+			<QueryClientProvider client={queryClient}>
+				<CompletedDocumentPage token={completedDocumentTestKey} />
+			</QueryClientProvider>,
+		);
 
 		await screen.findByText("Completed document");
 		expect(screen.getByText("Final status")).toBeTruthy();

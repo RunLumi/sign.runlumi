@@ -21,6 +21,7 @@ interface TransactionalEmail {
 	subject: string;
 	html: string;
 	text: string;
+	attachments?: EmailAttachment[];
 }
 
 interface PartnerVerificationEmailInput {
@@ -99,6 +100,9 @@ export async function deliverTransactionalEmail(
 			throw new EmailDeliveryError(502, "Cloudflare Email Service rejected the message");
 		}
 	}
+	if (email.attachments?.length) {
+		throw new EmailDeliveryError(503, "Cloudflare Email Service is required to send attachments");
+	}
 	const config = getResendConfig(options.env);
 	if (!config) return { providerMessage: null };
 
@@ -128,6 +132,37 @@ export async function deliverTransactionalEmail(
 				? body.id
 				: null,
 	};
+}
+
+export async function deliverSignedPdfBackupEmail(
+	input: {
+		to: string;
+		envelopeId: string;
+		bytes: Uint8Array;
+	},
+	options: EmailDeliveryOptions,
+): Promise<{ providerMessage: string | null }> {
+	if (!options.env?.EMAIL || !options.env.EMAIL_FROM) {
+		throw new EmailDeliveryError(503, "Cloudflare Email Service is not configured for attachments");
+	}
+	const filename = `lumi-sign-${input.envelopeId}.pdf`;
+	return deliverTransactionalEmail(
+		{
+			to: input.to,
+			subject: "Your signed document from Lumi Sign",
+			text: `Your signed PDF is attached for safekeeping.\n\nEnvelope: ${input.envelopeId}`,
+			html: `<p>Your signed PDF is attached for safekeeping.</p><p>Envelope: ${escapeHtml(input.envelopeId)}</p>`,
+			attachments: [
+				{
+					content: input.bytes,
+					filename,
+					type: "application/pdf",
+					disposition: "attachment",
+				},
+			],
+		},
+		options,
+	);
 }
 
 export function buildPartnerVerificationEmail(

@@ -64,6 +64,16 @@ export function EnvelopeFieldEditor({
 			);
 		},
 	});
+	const deleteMutation = useMutation({
+		mutationFn: (fieldId: string) =>
+			deleteField(envelopeId, fieldId, senderSessionToken, historyAccess),
+		onSuccess: (_result, fieldId) => {
+			queryClient.setQueryData<EnvelopeFieldResponse[]>(
+				fieldQueryKey(envelopeId, senderSessionToken, historyAccess),
+				(existing = []) => existing.filter((field) => field.id !== fieldId),
+			);
+		},
+	});
 	const form = useForm({
 		defaultValues: {
 			...defaultFieldValues,
@@ -142,6 +152,8 @@ export function EnvelopeFieldEditor({
 						allSignaturesPlaced={allSignaturesPlaced}
 						isSaving={saveMutation.isPending}
 						isSaveError={saveMutation.isError}
+						isDeleting={deleteMutation.isPending}
+						isDeleteError={deleteMutation.isError}
 						previewRef={previewRef}
 						onSelectRecipient={(recipientId) => form.setFieldValue("recipientId", recipientId)}
 						onSelectPage={(page) => {
@@ -149,6 +161,7 @@ export function EnvelopeFieldEditor({
 							form.setFieldValue("page", page);
 						}}
 						onSubmit={() => void form.handleSubmit()}
+						onDeleteField={(fieldId) => deleteMutation.mutate(fieldId)}
 						onStartDragging={startDragging}
 						onContinueDragging={continueDragging}
 						onStopDragging={stopDragging}
@@ -192,6 +205,19 @@ async function saveField(
 	};
 	if (!response.ok || !Array.isArray(payload.data)) throw new Error("Unable to save field");
 	return payload.data;
+}
+
+async function deleteField(
+	envelopeId: string,
+	fieldId: string,
+	senderSessionToken: string | undefined,
+	historyAccess = false,
+): Promise<void> {
+	const response = await fetch(`/api/envelopes/${envelopeId}/fields/${fieldId}`, {
+		method: "DELETE",
+		headers: authHeaders(senderSessionToken, historyAccess),
+	});
+	if (!response.ok) throw new Error("Unable to clear placement");
 }
 
 function pointFromPreview(

@@ -45,10 +45,13 @@ type FieldPlacementWorkspaceProps = {
 	allSignaturesPlaced: boolean;
 	isSaving: boolean;
 	isSaveError: boolean;
+	isDeleting: boolean;
+	isDeleteError: boolean;
 	previewRef: RefObject<HTMLFieldSetElement | null>;
 	onSelectRecipient: (recipientId: string) => void;
 	onSelectPage: (page: number) => void;
 	onSubmit: () => void;
+	onDeleteField: (fieldId: string) => void;
 	onStartDragging: (
 		event: PointerEvent<HTMLElement> | MouseEvent<HTMLElement>,
 		field: PlacedField,
@@ -69,10 +72,13 @@ export function FieldPlacementWorkspace({
 	allSignaturesPlaced,
 	isSaving,
 	isSaveError,
+	isDeleting,
+	isDeleteError,
 	previewRef,
 	onSelectRecipient,
 	onSelectPage,
 	onSubmit,
+	onDeleteField,
 	onStartDragging,
 	onContinueDragging,
 	onStopDragging,
@@ -99,11 +105,15 @@ export function FieldPlacementWorkspace({
 				recipients={recipients}
 				activeRecipient={activeRecipient}
 				signatureRecipientIds={signatureRecipientIds}
+				placedFields={placedFields}
 				isSaving={isSaving}
 				isSaveError={isSaveError}
+				isDeleting={isDeleting}
+				isDeleteError={isDeleteError}
 				allSignaturesPlaced={allSignaturesPlaced}
 				onSelectRecipient={onSelectRecipient}
 				onSubmit={onSubmit}
+				onDeleteField={onDeleteField}
 			/>
 		</div>
 	);
@@ -113,20 +123,28 @@ function SignaturePlacementActions({
 	recipients,
 	activeRecipient,
 	signatureRecipientIds,
+	placedFields,
 	isSaving,
 	isSaveError,
+	isDeleting,
+	isDeleteError,
 	allSignaturesPlaced,
 	onSelectRecipient,
 	onSubmit,
+	onDeleteField,
 }: {
 	recipients: FieldEditorRecipient[];
 	activeRecipient: FieldEditorRecipient | null;
 	signatureRecipientIds: Set<string>;
+	placedFields: EnvelopeFieldResponse[];
 	isSaving: boolean;
 	isSaveError: boolean;
+	isDeleting: boolean;
+	isDeleteError: boolean;
 	allSignaturesPlaced: boolean;
 	onSelectRecipient: (recipientId: string) => void;
 	onSubmit: () => void;
+	onDeleteField: (fieldId: string) => void;
 }) {
 	return (
 		<form
@@ -144,6 +162,43 @@ function SignaturePlacementActions({
 				signatureRecipientIds={signatureRecipientIds}
 				onSelect={onSelectRecipient}
 			/>
+			{placedFields.length > 0 ? (
+				<section aria-labelledby="placed-fields-heading" className="space-y-2">
+					<h3 id="placed-fields-heading" className="font-medium text-sm">
+						Placed fields
+					</h3>
+					<ul className="space-y-2">
+						{placedFields.map((field) => {
+							const recipientName =
+								recipients.find((recipient) => recipient.id === field.recipientId)?.name ??
+								"Signer";
+							return (
+								<li
+									key={field.id}
+									className="flex items-center justify-between gap-3 rounded-lg border p-3"
+								>
+									<span className="min-w-0 text-sm">
+										<span className="block truncate font-medium">{recipientName}</span>
+										<span className="text-muted-foreground capitalize">
+											{field.type} · page {field.page}
+										</span>
+									</span>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										disabled={isDeleting}
+										aria-label={`Clear ${recipientName} ${field.type} on page ${field.page}`}
+										onClick={() => onDeleteField(field.id)}
+									>
+										{isDeleting ? "Clearing…" : "Clear"}
+									</Button>
+								</li>
+							);
+						})}
+					</ul>
+				</section>
+			) : null}
 			<Button type="submit" className="w-full" disabled={isSaving || !activeRecipient}>
 				<Save aria-hidden="true" className="size-4" />
 				{signatureButtonLabel(isSaving, activeRecipient)}
@@ -152,6 +207,12 @@ function SignaturePlacementActions({
 				<Alert variant="destructive" role="alert">
 					<AlertTitle>Placement failed</AlertTitle>
 					<AlertDescription>Unable to place signature</AlertDescription>
+				</Alert>
+			) : null}
+			{isDeleteError ? (
+				<Alert variant="destructive" role="alert">
+					<AlertTitle>Unable to clear placement</AlertTitle>
+					<AlertDescription>Try clearing it again.</AlertDescription>
 				</Alert>
 			) : null}
 		</form>

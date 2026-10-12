@@ -4,6 +4,7 @@ export * from "./controls";
 export * from "./creator-signing";
 export * from "./delivery";
 export * from "./email-delivery";
+export * from "./final-document-email";
 export * from "./finalization";
 export * from "./history";
 export * from "./partner-verification";

@@ -17,7 +17,7 @@ Tighten the existing no-account signing workflow around a sender-first flow:
 - Signing date is fixed to the current date at signing time and is not editable by signers.
 - If the partner disagrees with the document, they can request changes with a comment. V1 stores and shows that first comment; threaded negotiation is deferred.
 - When both parties have signed, any relevant signing/final link routes to a completed-document view with a final PDF download, party summary, signed dates, final status, and user-facing audit/history events.
-- Both parties receive a completion email containing a link only. The PDF is not attached.
+- Both parties receive an automatic completion email containing a link only. From the completed-document view, either party can separately request a PDF attachment as a backup.
 - Final download is available to anyone holding the final download token.
 
 ## User Stories
@@ -39,6 +39,7 @@ Tighten the existing no-account signing workflow around a sender-first flow:
 15. As either party, I want the completed-document view to include the final PDF download, party summary, signed dates, final status, and user-facing audit/history events, so that I can understand what happened and retrieve the artifact.
 16. As either party, I want a completion email with a link to the completed-document view/download and no PDF attachment, so that the final artifact is accessed through the product instead of email attachments.
 17. As a recipient of a final download link, I want anyone holding the final download token to be able to download the signed PDF, so that sharing the final artifact is simple.
+18. As either party, I want to email the signed PDF to an address I choose after completion, so that I can keep an attachment backup as well as download it.
 
 ## Implementation Decisions
 
@@ -55,7 +56,8 @@ Tighten the existing no-account signing workflow around a sender-first flow:
 - **Change requests**: v1 supports a first request-changes comment visible to the sender. Full negotiation threads and sender replies are out of scope.
 - **Completion routing**: fully signed envelopes route to a dedicated completed-document view from signing/final links.
 - **Final download access**: final PDF download uses a bearer final download token. Anyone with the token can download.
-- **Completion email**: completion emails go to both parties and include a link only, not a PDF attachment.
+- **Completion email**: automatically sent completion emails go to both parties and include a link only. A separate user-initiated action can email the PDF attachment.
+- **PDF backup email**: use the Cloudflare Email Service binding, accept only a valid destination email, attach the current final PDF, limit attachments to 3.5 MiB for headroom under Cloudflare's 5 MiB message limit, and cap requests at five per final-document token per hour. Failed email must leave the download action available.
 - **User-facing audit**: completed-document history shows user-facing events only: created, sent, viewed, signed, requested changes/declined, completed.
 
 ## Assumptions
@@ -68,7 +70,7 @@ Tighten the existing no-account signing workflow around a sender-first flow:
 - Automated tests can use an explicit Turnstile bypass without weakening production behavior.
 - The first request-changes comment is enough for this UX pass. A full negotiation thread will be planned separately.
 - Public bearer final download tokens are acceptable for this pilot despite being less restrictive than signer-specific access links.
-- Completion email link delivery is enough; users do not need PDF attachments in email.
+- Automatic completion email link delivery is enough for notifications; users may still request an attachment backup from the completed-document page.
 
 ## Tradeoffs Considered
 
@@ -80,7 +82,7 @@ Tighten the existing no-account signing workflow around a sender-first flow:
 - **Always saving signature content** - rejected because reusable signature content should require explicit consent.
 - **Editable signing date** - rejected because the signing date should represent the actual signing event.
 - **Full negotiation thread in v1** - rejected because the immediate need is a clear first request-changes comment and notification.
-- **PDF email attachments** - rejected because link-only delivery keeps access and download behavior inside the product.
+- **Automatic PDF email attachments** - rejected because link-only notifications keep routine access inside the product; a user-initiated backup remains available after completion.
 - **Signer-specific final download only** - rejected because the desired final artifact access model is anyone with the final download token.
 
 ## Validation Strategy
@@ -102,6 +104,7 @@ Tighten the existing no-account signing workflow around a sender-first flow:
 15. **Completed view content**: component/API tests assert final PDF download, party summary, signed dates, final status, and user-facing audit/history events are present.
 16. **Completion email link only**: email send-record test asserts both parties receive completion email with link and no PDF attachment payload.
 17. **Final download token**: download access test asserts the signed PDF can be downloaded with the final token and without signer-specific session/login.
+18. **On-demand PDF backup**: completed-page test submits a destination address; API test asserts Cloudflare Email Service receives the current signed PDF as an `application/pdf` attachment, rejects invalid/oversized requests, and rate-limits after five attempts per token per hour. Provider failure leaves the download available.
 
 Done means the sliced implementation issues pass their own TDD acceptance criteria and the repo readiness commands pass before any implementation is called ready: `pnpm types`, `pnpm test`, `pnpm lint`, and `pnpm build`.
 
@@ -111,7 +114,7 @@ Done means the sliced implementation issues pass their own TDD acceptance criter
 - Full request-changes negotiation threads, sender replies, or multi-message history.
 - Partner editing document content directly.
 - User-editable signing date, admin/support date overrides, or backdating.
-- PDF attachments in completion emails.
+- PDF attachments in automatically triggered completion emails; users can request a separate backup email from the completed-document page.
 - Stronger final-download auth than a bearer final download token.
 - Certified/trust-service signing or regulated e-signature compliance claims.
 - Public API keys, webhooks, billing, templates, and additional field types.
